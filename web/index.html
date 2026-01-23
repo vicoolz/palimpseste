@@ -1629,6 +1629,40 @@
             background: var(--accent);
             color: white;
         }
+        .feed-refresh {
+            padding: 0.5rem 0.7rem;
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+            margin-left: 0.5rem;
+        }
+        .feed-refresh:hover {
+            color: var(--accent);
+            transform: rotate(180deg);
+        }
+        .feed-refresh.spinning {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .feed-live-indicator {
+            padding: 0.4rem 1rem;
+            font-size: 0.75rem;
+            color: var(--muted);
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+        .feed-live-indicator.new-content {
+            background: rgba(42, 157, 143, 0.1);
+            color: var(--accent);
+            cursor: pointer;
+        }
         
         /* Share button on cards */
         .btn-share {
@@ -2402,7 +2436,9 @@
                 <button class="feed-tab" onclick="switchSocialTab('popular')" id="tabPopular">⭐ Populaires</button>
                 <button class="feed-tab" onclick="switchSocialTab('discover')" id="tabDiscover">🔎 Découvrir</button>
                 <button class="feed-tab" onclick="switchSocialTab('mine')" id="tabMine">👤 Mes extraits</button>
+                <button class="feed-refresh" onclick="refreshFeed()" id="refreshBtn" title="Actualiser">🔄</button>
             </div>
+            <div class="feed-live-indicator" id="liveIndicator">🟢 En direct</div>
             <div id="socialFeed"></div>
         </div>
     </div>
@@ -2829,13 +2865,80 @@
         // 📱 FEED SOCIAL
         // ═══════════════════════════════════════════════════════════
         
+        let feedSubscription = null;
+        let likesSubscription = null;
+        let lastFeedUpdate = null;
+        
         function openSocialFeed() {
             document.getElementById('socialOverlay').classList.add('open');
             loadSocialFeed();
+            setupRealtimeSubscriptions();
         }
         
         function closeSocialFeed() {
             document.getElementById('socialOverlay').classList.remove('open');
+            // Cleanup subscriptions when closing
+            if (feedSubscription) {
+                supabaseClient.removeChannel(feedSubscription);
+                feedSubscription = null;
+            }
+            if (likesSubscription) {
+                supabaseClient.removeChannel(likesSubscription);
+                likesSubscription = null;
+            }
+        }
+        
+        // Setup realtime subscriptions
+        function setupRealtimeSubscriptions() {
+            if (!supabaseClient || feedSubscription) return;
+            
+            // Subscribe to new extraits
+            feedSubscription = supabaseClient
+                .channel('extraits-changes')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'extraits' },
+                    (payload) => {
+                        console.log('📨 Nouveau changement extraits:', payload);
+                        showNewContentIndicator();
+                    }
+                )
+                .subscribe();
+            
+            // Subscribe to likes changes
+            likesSubscription = supabaseClient
+                .channel('likes-changes')
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'likes' },
+                    (payload) => {
+                        console.log('❤️ Nouveau changement likes:', payload);
+                        showNewContentIndicator();
+                    }
+                )
+                .subscribe();
+            
+            console.log('🔴 Subscriptions realtime activées');
+        }
+        
+        function showNewContentIndicator() {
+            const indicator = document.getElementById('liveIndicator');
+            indicator.textContent = '🔔 Nouveau contenu disponible - Cliquez pour actualiser';
+            indicator.classList.add('new-content');
+            indicator.onclick = () => refreshFeed();
+        }
+        
+        async function refreshFeed() {
+            const btn = document.getElementById('refreshBtn');
+            const indicator = document.getElementById('liveIndicator');
+            
+            btn.classList.add('spinning');
+            indicator.textContent = '🟢 En direct';
+            indicator.classList.remove('new-content');
+            indicator.onclick = null;
+            
+            await loadSocialFeed();
+            
+            setTimeout(() => btn.classList.remove('spinning'), 500);
+            toast('🔄 Feed actualisé !');
         }
         
         function switchSocialTab(tab) {
