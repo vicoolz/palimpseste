@@ -2433,6 +2433,7 @@
             <div class="feed-tabs">
                 <button class="feed-tab active" onclick="switchSocialTab('recent')" id="tabRecent">🔥 Récents</button>
                 <button class="feed-tab" onclick="switchSocialTab('friends')" id="tabFriends">👥 Amis</button>
+                <button class="feed-tab" onclick="switchSocialTab('followers')" id="tabFollowers">💌 Abonnés</button>
                 <button class="feed-tab" onclick="switchSocialTab('popular')" id="tabPopular">⭐ Populaires</button>
                 <button class="feed-tab" onclick="switchSocialTab('discover')" id="tabDiscover">🔎 Découvrir</button>
                 <button class="feed-tab" onclick="switchSocialTab('mine')" id="tabMine">👤 Mes extraits</button>
@@ -3053,6 +3054,10 @@
                 await loadUserFollowing();
                 await loadDiscoverUsers();
                 return;
+            } else if (currentSocialTab === 'followers') {
+                // Afficher mes abonnés (qui me suivent)
+                await loadMyFollowers();
+                return;
             }
             
             const { data, error } = await query;
@@ -3374,6 +3379,79 @@
                                     <div class="discover-stats">${p.extraitCount} extrait${p.extraitCount > 1 ? 's' : ''}</div>
                                 </div>
                                 <button class="btn-follow-small ${isFollowing ? 'following' : ''}" onclick="toggleFollow('${p.id}', event)">
+                                    ${isFollowing ? '✓ Suivi' : '+ Suivre'}
+                                </button>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+        
+        // Charger mes abonnés (les gens qui me suivent)
+        async function loadMyFollowers() {
+            const container = document.getElementById('socialFeed');
+            
+            if (!supabaseClient || !currentUser) {
+                container.innerHTML = `
+                    <div class="social-empty">
+                        <div class="social-empty-icon">🔐</div>
+                        <div class="social-empty-title">Connexion requise</div>
+                        <div class="social-empty-text">Connectez-vous pour voir qui vous suit</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Récupérer les followers
+            const { data: followers, error } = await supabaseClient
+                .from('follows')
+                .select('follower_id, created_at, profiles!follows_follower_id_fkey(id, username)')
+                .eq('following_id', currentUser.id)
+                .order('created_at', { ascending: false });
+            
+            if (error) {
+                container.innerHTML = '<div class="social-empty">❌ Erreur lors du chargement</div>';
+                console.error('Erreur followers:', error);
+                return;
+            }
+            
+            if (!followers || followers.length === 0) {
+                container.innerHTML = `
+                    <div class="social-empty">
+                        <div class="social-empty-icon">💌</div>
+                        <div class="social-empty-title">Pas encore d'abonnés</div>
+                        <div class="social-empty-text">
+                            Personne ne vous suit encore.<br>
+                            Partagez des extraits pour attirer des lecteurs !
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Charger qui on suit
+            await loadUserFollowing();
+            
+            container.innerHTML = `
+                <div class="discover-header">
+                    <h3>💌 Vos abonnés (${followers.length})</h3>
+                    <p>Ces personnes vous suivent et voient vos extraits</p>
+                </div>
+                <div class="discover-grid">
+                    ${followers.map(f => {
+                        const username = f.profiles?.username || 'Anonyme';
+                        const initial = username.charAt(0).toUpperCase();
+                        const isFollowing = userFollowing.has(f.follower_id);
+                        const followedAt = formatTimeAgo(new Date(f.created_at));
+                        return `
+                            <div class="discover-card">
+                                <div class="discover-avatar" onclick="openUserProfile('${f.follower_id}', '${username}')">${initial}</div>
+                                <div class="discover-info" onclick="openUserProfile('${f.follower_id}', '${username}')">
+                                    <div class="discover-name">${escapeHtml(username)}</div>
+                                    <div class="discover-stats">Vous suit depuis ${followedAt}</div>
+                                </div>
+                                <button class="btn-follow-small ${isFollowing ? 'following' : ''}" onclick="toggleFollow('${f.follower_id}', event)">
                                     ${isFollowing ? '✓ Suivi' : '+ Suivre'}
                                 </button>
                             </div>
@@ -5113,7 +5191,8 @@
         let searchResults = {
             wikisource: [],
             poetrydb: [],
-            gutenberg: []
+            gutenberg: [],
+            users: []
         };
         let currentSearchTab = 'all';
         let currentSearchQuery = '';
@@ -5177,7 +5256,7 @@
             tabs.innerHTML = '';
             
             // Réinitialiser les résultats
-            searchResults = { wikisource: [], poetrydb: [], gutenberg: [] };
+            searchResults = { wikisource: [], poetrydb: [], gutenberg: [], users: [] };
             
             // Lancer les recherches en parallèle
             toast('🔍 Recherche...');
@@ -5185,12 +5264,47 @@
             await Promise.all([
                 searchWikisource(query),
                 searchPoetryDB(query),
-                searchGutenberg(query)
+                searchGutenberg(query),
+                searchUsers(query)
             ]);
             
             // Afficher les résultats
             renderSearchTabs();
             renderSearchResults('all');
+        }
+        
+        // Recherche d'utilisateurs sur Palimpseste
+        async function searchUsers(query) {
+            if (!supabaseClient) return;
+            
+            try {
+                const { data: users } = await supabaseClient
+                    .from('profiles')
+                    .select('id, username, created_at')
+                    .ilike('username', `%${query}%`)
+                    .limit(20);
+                
+                if (users && users.length > 0) {
+                    // Charger qui on suit
+                    await loadUserFollowing();
+                    
+                    // Compter les extraits pour chaque user
+                    searchResults.users = await Promise.all(users.map(async (u) => {
+                        const { count } = await supabaseClient
+                            .from('extraits')
+                            .select('*', { count: 'exact', head: true })
+                            .eq('user_id', u.id);
+                        return {
+                            ...u,
+                            extraitCount: count || 0,
+                            source: 'users'
+                        };
+                    }));
+                }
+            } catch (e) {
+                console.error('User search error:', e);
+            }
+        }
         }
         
         async function searchWikisource(query) {
@@ -5290,10 +5404,14 @@
         function renderSearchTabs() {
             const tabs = document.getElementById('searchResultsTabs');
             const totalAll = searchResults.wikisource.length + searchResults.poetrydb.length + searchResults.gutenberg.length;
+            const usersCount = searchResults.users?.length || 0;
             
             tabs.innerHTML = `
+                <button class="search-tab ${currentSearchTab === 'users' ? 'active' : ''}" onclick="switchSearchTab('users')">
+                    👥 Utilisateurs <span class="count">${usersCount}</span>
+                </button>
                 <button class="search-tab ${currentSearchTab === 'all' ? 'active' : ''}" onclick="switchSearchTab('all')">
-                    📚 Tous <span class="count">${totalAll}</span>
+                    📚 Textes <span class="count">${totalAll}</span>
                 </button>
                 <button class="search-tab ${currentSearchTab === 'wikisource' ? 'active' : ''}" onclick="switchSearchTab('wikisource')">
                     📜 Wikisource <span class="count">${searchResults.wikisource.length}</span>
@@ -5315,6 +5433,47 @@
         
         function renderSearchResults(tab) {
             const grid = document.getElementById('searchResultsGrid');
+            
+            // Si onglet utilisateurs
+            if (tab === 'users') {
+                const users = searchResults.users || [];
+                
+                if (users.length === 0) {
+                    grid.innerHTML = `
+                        <div class="search-no-results">
+                            <div class="search-no-results-icon">👤</div>
+                            <p>Aucun utilisateur trouvé pour "${escapeHtml(currentSearchQuery)}"</p>
+                            <p style="font-size: 0.8rem; margin-top: 0.5rem;">Vérifiez l'orthographe du pseudo</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                grid.innerHTML = `
+                    <div class="discover-grid" style="padding: 0.5rem;">
+                        ${users.map(u => {
+                            const initial = (u.username || '?').charAt(0).toUpperCase();
+                            const isFollowing = userFollowing.has(u.id);
+                            const isMe = currentUser && u.id === currentUser.id;
+                            return `
+                                <div class="discover-card">
+                                    <div class="discover-avatar" onclick="openUserProfile('${u.id}', '${u.username}')">${initial}</div>
+                                    <div class="discover-info" onclick="openUserProfile('${u.id}', '${u.username}')">
+                                        <div class="discover-name">${escapeHtml(u.username || 'Anonyme')}</div>
+                                        <div class="discover-stats">${u.extraitCount} extrait${u.extraitCount > 1 ? 's' : ''}</div>
+                                    </div>
+                                    ${!isMe ? `
+                                        <button class="btn-follow-small ${isFollowing ? 'following' : ''}" onclick="toggleFollowFromSearch('${u.id}', event)">
+                                            ${isFollowing ? '✓ Suivi' : '+ Suivre'}
+                                        </button>
+                                    ` : '<span style="color:var(--muted);font-size:0.8rem;">C\'est vous</span>'}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                return;
+            }
             
             let results = [];
             if (tab === 'all') {
@@ -5363,6 +5522,15 @@
                     </div>
                 `;
             }).join('');
+        }
+        
+        // Follow depuis la recherche
+        async function toggleFollowFromSearch(userId, event) {
+            event.stopPropagation();
+            await toggleFollow(userId);
+            // Re-render les résultats pour mettre à jour les boutons
+            renderSearchResults(currentSearchTab);
+        }
         }
         
         function escapeRegex(string) {
