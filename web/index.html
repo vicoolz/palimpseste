@@ -998,9 +998,35 @@
             padding: 1.25rem 1.75rem;
             border-top: 1px solid var(--border);
             display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            gap: 0.5rem;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .card-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            padding-bottom: 0.5rem;
+        }
+        .keyword-tag {
+            font-size: 0.65rem;
+            padding: 0.25rem 0.6rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: lowercase;
+        }
+        .keyword-tag:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+            transform: translateY(-1px);
+        }
+        .keyword-tag::before {
+            content: '#';
+            opacity: 0.5;
         }
         .actions { display: flex; gap: 0.4rem; }
         .btn {
@@ -8877,6 +8903,12 @@
                 remaining = text.substring(cutPoint + 1).trim();
             }
             
+            // Générer les mots-clés pour ce texte
+            const keywords = extractKeywords(text, title, author, tag);
+            const keywordsHtml = keywords.map(kw => 
+                `<span class="keyword-tag" onclick="exploreKeyword('${kw}')" title="Explorer #${kw}">${kw}</span>`
+            ).join('');
+            
             const card = document.createElement('div');
             card.className = 'card';
             card.id = cardId;
@@ -8896,6 +8928,7 @@
                 </div>
                 <div class="related-authors" id="related-${cardId}" style="display:none;"></div>
                 <div class="card-foot">
+                    <div class="card-keywords">${keywordsHtml}</div>
                     <div class="actions">
                         <button class="btn" onclick="toggleLike('${cardId}',this)">♥</button>
                         <button class="btn btn-share" onclick="shareCardExtrait('${cardId}')" title="Partager cet extrait">🐦 Partager</button>
@@ -9577,6 +9610,76 @@
         // �🎲 FONCTIONNALITÉS FUN - Le génie des graphes
         // ═══════════════════════════════════════════════════════════
         
+        // ═══════════════════════════════════════════════════════════
+        // 🏷️ SYSTÈME DE MOTS-CLÉS - Extraction et exploration
+        // ═══════════════════════════════════════════════════════════
+        
+        // Dictionnaire de thèmes littéraires pour enrichir l'extraction
+        const LITERARY_THEMES = {
+            emotions: ['amour', 'haine', 'joie', 'tristesse', 'mélancolie', 'désespoir', 'espoir', 'passion', 'colère', 'peur', 'angoisse', 'bonheur', 'souffrance', 'douleur', 'extase', 'ennui', 'solitude', 'nostalgie', 'regret', 'jalousie'],
+            nature: ['forêt', 'mer', 'océan', 'montagne', 'rivière', 'fleuve', 'lac', 'ciel', 'étoiles', 'lune', 'soleil', 'aurore', 'crépuscule', 'nuit', 'jour', 'saison', 'printemps', 'été', 'automne', 'hiver', 'tempête', 'orage', 'pluie', 'neige', 'vent', 'fleur', 'arbre', 'jardin', 'campagne', 'désert'],
+            existence: ['mort', 'vie', 'âme', 'destin', 'temps', 'éternité', 'infini', 'néant', 'existence', 'être', 'devenir', 'mémoire', 'oubli', 'rêve', 'sommeil', 'éveil', 'conscience', 'liberté', 'fatalité', 'hasard'],
+            societe: ['roi', 'reine', 'prince', 'peuple', 'guerre', 'paix', 'justice', 'loi', 'pouvoir', 'gloire', 'honneur', 'vertu', 'crime', 'châtiment', 'révolte', 'révolution', 'patrie', 'exil', 'prison', 'esclavage'],
+            spirituel: ['dieu', 'diable', 'ange', 'démon', 'paradis', 'enfer', 'péché', 'grâce', 'prière', 'foi', 'doute', 'mystère', 'sacré', 'profane', 'miracle', 'prophétie', 'apocalypse', 'résurrection', 'salut', 'damnation'],
+            corps: ['coeur', 'yeux', 'regard', 'visage', 'main', 'sang', 'larme', 'sourire', 'baiser', 'étreinte', 'beauté', 'laideur', 'jeunesse', 'vieillesse', 'maladie', 'guérison', 'blessure', 'cicatrice'],
+            art: ['poésie', 'musique', 'chant', 'danse', 'peinture', 'sculpture', 'théâtre', 'roman', 'conte', 'fable', 'légende', 'mythe', 'héros', 'muse', 'inspiration', 'génie', 'création'],
+            voyage: ['voyage', 'chemin', 'route', 'errance', 'aventure', 'découverte', 'horizon', 'lointain', 'ailleurs', 'retour', 'départ', 'arrivée', 'navire', 'île', 'continent', 'orient', 'occident'],
+            amour_passion: ['amant', 'amante', 'maîtresse', 'époux', 'épouse', 'fiancé', 'séduction', 'désir', 'volupté', 'ivresse', 'abandon', 'trahison', 'fidélité', 'rupture', 'retrouvailles']
+        };
+        
+        // Mots vides à ignorer
+        const STOP_WORDS = new Set(['le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'et', 'ou', 'mais', 'donc', 'car', 'ni', 'que', 'qui', 'quoi', 'dont', 'ce', 'cette', 'ces', 'mon', 'ton', 'son', 'ma', 'ta', 'sa', 'mes', 'tes', 'ses', 'notre', 'votre', 'leur', 'nos', 'vos', 'leurs', 'je', 'tu', 'il', 'elle', 'nous', 'vous', 'ils', 'elles', 'on', 'se', 'ne', 'pas', 'plus', 'moins', 'tout', 'tous', 'toute', 'toutes', 'autre', 'autres', 'bien', 'peu', 'trop', 'aussi', 'encore', 'jamais', 'toujours', 'rien', 'personne', 'chaque', 'quelque', 'aucun', 'sans', 'avec', 'pour', 'par', 'dans', 'sur', 'sous', 'entre', 'vers', 'chez', 'comme', 'ainsi', 'alors', 'puis', 'quand', 'avoir', 'faire', 'dire', 'voir', 'aller', 'venir', 'pouvoir', 'vouloir', 'devoir', 'falloir', 'savoir', 'prendre', 'mettre', 'fait', 'dit', 'sont', 'ont', 'aux', 'the', 'and', 'are', 'was', 'were', 'been', 'being', 'have', 'has', 'had', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'for', 'with', 'from', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'nor', 'not', 'only', 'own', 'same', 'than', 'too', 'very', 'just', 'now', 'its', 'this', 'that', 'these', 'those', 'myself', 'our', 'ours', 'ourselves', 'your', 'yours', 'yourself', 'yourselves', 'him', 'his', 'himself', 'her', 'hers', 'herself', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'whom', 'whose']);
+        
+        function extractKeywords(text, title, author, tag) {
+            const keywords = new Set();
+            const fullText = (text + ' ' + title).toLowerCase();
+            
+            // 1. Chercher les thèmes littéraires présents dans le texte
+            for (const [category, themes] of Object.entries(LITERARY_THEMES)) {
+                for (const theme of themes) {
+                    if (fullText.includes(theme.toLowerCase())) {
+                        keywords.add(theme);
+                        if (keywords.size >= 8) break;
+                    }
+                }
+                if (keywords.size >= 8) break;
+            }
+            
+            // 2. Extraire les mots significatifs du texte
+            const words = fullText
+                .replace(/[.,;:!?()\[\]{}"']/g, ' ')
+                .split(/\s+/)
+                .filter(w => w.length > 4 && !STOP_WORDS.has(w));
+            
+            // Compter les occurrences
+            const wordCount = {};
+            words.forEach(w => wordCount[w] = (wordCount[w] || 0) + 1);
+            
+            // Ajouter les mots les plus fréquents
+            const sorted = Object.entries(wordCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            for (const [word] of sorted) {
+                if (keywords.size < 5 && word.length > 3 && !keywords.has(word)) {
+                    keywords.add(word);
+                }
+            }
+            
+            // 3. Ajouter le genre comme mot-clé si pas assez
+            if (tag && keywords.size < 5) {
+                keywords.add(tag);
+            }
+            
+            return [...keywords].slice(0, 5);
+        }
+        
+        // Explorer un mot-clé
+        async function exploreKeyword(keyword) {
+            toast(`🏷️ Exploration de #${keyword}...`);
+            await exploreAuthor(keyword);
+        }
+        
         // Auteurs "secrets" - pépites cachées mondiales à découvrir
         const HIDDEN_GEMS = [
             // Français
@@ -9633,19 +9736,57 @@
         
         // Saut aléatoire SANS thématique (ignore l'ambiance)
         async function pureRandomJump() {
-            // Liste d'auteurs classiques pour le mode libre
+            // Liste étendue d'auteurs classiques de toutes époques et cultures
             const classicAuthors = [
+                // Français - Classiques
                 'Victor Hugo', 'Charles Baudelaire', 'Gustave Flaubert', 'Émile Zola',
                 'Marcel Proust', 'Stendhal', 'Honoré de Balzac', 'Guy de Maupassant',
                 'Alexandre Dumas', 'Jules Verne', 'Voltaire', 'Molière', 'Jean Racine',
                 'Arthur Rimbaud', 'Paul Verlaine', 'Gérard de Nerval', 'Alfred de Musset',
                 'François Rabelais', 'Michel de Montaigne', 'Jean de La Fontaine',
+                'Pierre Corneille', 'Denis Diderot', 'Alphonse Daudet', 'Théophile Gautier',
+                // Français - Modernes
+                'Albert Camus', 'Jean-Paul Sartre', 'Simone de Beauvoir', 'Marguerite Duras',
+                'André Gide', 'Colette', 'Anatole France', 'Paul Claudel', 'André Malraux',
+                // Français - Poètes
+                'Stéphane Mallarmé', 'Paul Valéry', 'Guillaume Apollinaire', 'René Char',
+                'Saint-John Perse', 'Francis Ponge', 'Henri Michaux', 'Yves Bonnefoy',
+                // Anglais
                 'Shakespeare', 'Oscar Wilde', 'Edgar Allan Poe', 'Mary Shelley',
-                'Johann Wolfgang von Goethe', 'Dante Alighieri', 'Cervantes'
+                'Charles Dickens', 'Jane Austen', 'Emily Brontë', 'Charlotte Brontë',
+                'Virginia Woolf', 'James Joyce', 'William Blake', 'John Milton',
+                'Geoffrey Chaucer', 'Lord Byron', 'Percy Shelley', 'John Keats',
+                'William Wordsworth', 'Samuel Taylor Coleridge', 'Alfred Tennyson',
+                // Américains
+                'Herman Melville', 'Nathaniel Hawthorne', 'Mark Twain', 'Walt Whitman',
+                'Emily Dickinson', 'Henry David Thoreau', 'Ralph Waldo Emerson',
+                'F. Scott Fitzgerald', 'Ernest Hemingway', 'William Faulkner',
+                // Allemands
+                'Johann Wolfgang von Goethe', 'Friedrich Schiller', 'Heinrich Heine',
+                'Thomas Mann', 'Franz Kafka', 'Hermann Hesse', 'Rainer Maria Rilke',
+                // Russes
+                'Fiodor Dostoïevski', 'Léon Tolstoï', 'Anton Tchekhov', 'Alexandre Pouchkine',
+                'Nicolas Gogol', 'Ivan Tourgueniev', 'Boris Pasternak', 'Anna Akhmatova',
+                // Italiens
+                'Dante Alighieri', 'Pétrarque', 'Boccace', 'Machiavel', 'Luigi Pirandello',
+                'Giacomo Leopardi', 'Italo Calvino', 'Primo Levi',
+                // Espagnols
+                'Cervantes', 'Federico García Lorca', 'Jorge Luis Borges', 'Pablo Neruda',
+                'Octavio Paz', 'Gabriel García Márquez', 'Julio Cortázar',
+                // Portugais
+                'Fernando Pessoa', 'Luís de Camões', 'José Saramago',
+                // Japonais
+                'Matsuo Bashō', 'Murasaki Shikibu', 'Sei Shōnagon', 'Yukio Mishima',
+                // Autres
+                'Omar Khayyam', 'Rabindranath Tagore', 'Khalil Gibran', 'Rûmî',
+                'Confucius', 'Lao Tseu', 'Li Bai', 'Du Fu',
+                // Antiques
+                'Homère', 'Virgile', 'Ovide', 'Horace', 'Sophocle', 'Euripide',
+                'Eschyle', 'Platon', 'Aristote', 'Cicéron', 'Sénèque', 'Marc Aurèle'
             ];
             
             const discoveredAuthors = Object.keys(state.authorStats);
-            const universalTerms = ['sonnet', 'elegy', 'ode', 'ballade', 'fable', 'nocturne', 'poème', 'conte'];
+            const universalTerms = ['sonnet', 'elegy', 'ode', 'ballade', 'fable', 'nocturne', 'poème', 'conte', 'méditation', 'hymne', 'élégie', 'satire'];
             const allOptions = [...discoveredAuthors, ...HIDDEN_GEMS, ...universalTerms, ...classicAuthors];
             const unvisited = allOptions.filter(a => !state.authorStats[a]);
             const pool = unvisited.length > 3 ? unvisited : allOptions;
