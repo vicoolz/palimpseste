@@ -1970,6 +1970,44 @@
             color: var(--text-secondary);
             line-height: 1.4;
         }
+        .comment-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.4rem;
+        }
+        .comment-like-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 0.2rem 0.4rem;
+            border-radius: 10px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .comment-like-btn:hover {
+            background: rgba(255,69,58,0.1);
+            color: var(--accent);
+        }
+        .comment-like-btn.liked {
+            color: var(--accent);
+        }
+        .comment-like-btn.liked .like-icon {
+            animation: likePopComment 0.3s ease;
+        }
+        @keyframes likePopComment {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        .comment-like-count {
+            font-size: 0.7rem;
+            min-width: 12px;
+        }
         .comment-delete {
             background: none;
             border: none;
@@ -4278,12 +4316,31 @@
                     .in('id', userIds);
                 const profileMap = new Map((profiles || []).map(p => [p.id, p]));
                 
+                // Récupérer les likes de tous les commentaires
+                const commentIds = comments.map(c => c.id);
+                const { data: commentLikes } = await supabaseClient
+                    .from('comment_likes')
+                    .select('comment_id, user_id')
+                    .in('comment_id', commentIds);
+                
+                // Compter les likes par commentaire et vérifier si l'utilisateur a liké
+                const likesCountMap = new Map();
+                const userLikedMap = new Map();
+                (commentLikes || []).forEach(like => {
+                    likesCountMap.set(like.comment_id, (likesCountMap.get(like.comment_id) || 0) + 1);
+                    if (currentUser && like.user_id === currentUser.id) {
+                        userLikedMap.set(like.comment_id, true);
+                    }
+                });
+                
                 container.innerHTML = comments.map(comment => {
                     const profile = profileMap.get(comment.user_id);
                     const username = profile?.username || 'Anonyme';
                     const initial = username.charAt(0).toUpperCase();
                     const timeAgo = formatTimeAgo(new Date(comment.created_at));
                     const canDelete = currentUser && comment.user_id === currentUser.id;
+                    const likeCount = likesCountMap.get(comment.id) || 0;
+                    const isLiked = userLikedMap.get(comment.id) || false;
                     
                     return `
                         <div class="comment-item" data-id="${comment.id}">
@@ -4295,6 +4352,12 @@
                                     ${canDelete ? `<button class="comment-delete" onclick="deleteComment('${comment.id}', '${extraitId}')">🗑️</button>` : ''}
                                 </div>
                                 <div class="comment-text">${escapeHtml(comment.content)}</div>
+                                <div class="comment-actions">
+                                    <button class="comment-like-btn ${isLiked ? 'liked' : ''}" onclick="toggleCommentLike('${comment.id}', '${extraitId}')">
+                                        <span class="like-icon">${isLiked ? '❤️' : '🤍'}</span>
+                                        <span class="comment-like-count">${likeCount > 0 ? likeCount : ''}</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -4392,6 +4455,50 @@
             } catch (err) {
                 console.error('Erreur suppression commentaire:', err);
                 toast('❌ Erreur de suppression');
+            }
+        }
+        
+        // Liker/Unliker un commentaire
+        async function toggleCommentLike(commentId, extraitId) {
+            if (!currentUser) {
+                openAuthModal('login');
+                toast('❤️ Connectez-vous pour liker');
+                return;
+            }
+            
+            if (!supabaseClient) return;
+            
+            try {
+                // Vérifier si déjà liké
+                const { data: existing } = await supabaseClient
+                    .from('comment_likes')
+                    .select('id')
+                    .eq('comment_id', commentId)
+                    .eq('user_id', currentUser.id)
+                    .single();
+                
+                if (existing) {
+                    // Unlike
+                    await supabaseClient
+                        .from('comment_likes')
+                        .delete()
+                        .eq('id', existing.id);
+                } else {
+                    // Like
+                    await supabaseClient
+                        .from('comment_likes')
+                        .insert({
+                            comment_id: commentId,
+                            user_id: currentUser.id,
+                            created_at: new Date().toISOString()
+                        });
+                }
+                
+                // Rafraîchir l'affichage des commentaires
+                await loadComments(extraitId);
+                
+            } catch (err) {
+                console.error('Erreur like commentaire:', err);
             }
         }
         

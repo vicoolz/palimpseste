@@ -351,6 +351,37 @@ CREATE TRIGGER on_auth_user_created
     EXECUTE FUNCTION handle_new_user();
 
 -- ═══════════════════════════════════════════════════════════════════════════
+-- 💜 Table des likes sur les commentaires
+-- ═══════════════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS comment_likes (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    comment_id UUID REFERENCES comments(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(comment_id, user_id)
+);
+
+-- Index pour les performances
+CREATE INDEX IF NOT EXISTS idx_comment_likes_comment ON comment_likes(comment_id);
+CREATE INDEX IF NOT EXISTS idx_comment_likes_user ON comment_likes(user_id);
+
+-- RLS pour comment_likes
+ALTER TABLE comment_likes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Les likes de commentaires sont visibles par tous"
+    ON comment_likes FOR SELECT
+    USING (true);
+
+CREATE POLICY "Les utilisateurs connectés peuvent liker des commentaires"
+    ON comment_likes FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Les utilisateurs peuvent retirer leurs likes de commentaires"
+    ON comment_likes FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- ═══════════════════════════════════════════════════════════════════════════
 -- ✅ Terminé ! 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- 
