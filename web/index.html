@@ -748,9 +748,13 @@
         
         /* Ambiances de lecture */
         .ambiance-bar {
+            position: sticky;
+            top: 52px; /* Hauteur du header */
+            z-index: 90;
             display: flex;
             gap: 0.5rem;
             padding: 0.75rem 1rem;
+            margin-left: 260px;
             background: var(--bg-card);
             border-bottom: 1px solid var(--border);
             overflow-x: auto;
@@ -1394,6 +1398,7 @@
             main { margin-left: auto; padding: 5rem 1rem 3rem; }
             .reco-banner { margin-left: 1rem; margin-right: 1rem; max-width: none; }
             .progress { left: 0; }
+            .ambiance-bar { margin-left: 0; top: 48px; }
         }
         
         /* Achievement popup */
