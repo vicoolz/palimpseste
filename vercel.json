@@ -1,14 +1,5 @@
 {
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/web/index.html"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/web/$1"
-    }
-  ],
+  "outputDirectory": "web",
   "headers": [
     {
       "source": "/(.*)",

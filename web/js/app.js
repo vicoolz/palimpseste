@@ -201,7 +201,7 @@ async function sendPasswordReset() {
     document.getElementById('forgotBtn').textContent = 'Envoi...';
     
     // URL de redirection - utiliser l'URL de production
-    const redirectUrl = 'https://palimpseste.vercel.app/web/index.html';
+    const redirectUrl = 'https://palimpseste.vercel.app/';
     
     try {
         const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
