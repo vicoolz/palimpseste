@@ -3553,3 +3553,347 @@ cursor: pointer;
 transition: all 0.2s;
 }
 .login-prompt-btn:hover { background: #ff4757; }
+
+/* ═══════════════════════════════════════════════════════════
+   📱 RESPONSIVE MOBILE (iPhone & petits écrans)
+   ═══════════════════════════════════════════════════════════ */
+
+/* Tablettes et petits écrans */
+@media (max-width: 768px) {
+    /* Header mobile */
+    .header-inner {
+        padding: 0.5rem 0.75rem;
+        gap: 0.5rem;
+    }
+    .header-title {
+        font-size: 0.65rem;
+        letter-spacing: 0.05em;
+    }
+    .search-container {
+        min-width: 120px;
+        max-width: none;
+        flex: 1;
+        margin: 0 0.5rem;
+    }
+    .search-input {
+        padding: 0.5rem 0.75rem 0.5rem 2rem;
+        font-size: 0.8rem;
+    }
+    .header-btn {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.65rem;
+    }
+    
+    /* Main content */
+    main {
+        padding: 4.5rem 0.75rem 5rem;
+    }
+    
+    /* Cards */
+    .card {
+        padding: 1.25rem;
+        border-radius: 12px;
+    }
+    .card-quote {
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+    .card-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    /* Modals */
+    .auth-modal-content,
+    .share-modal-content,
+    .detail-modal-content {
+        width: 95%;
+        max-width: none;
+        margin: 1rem;
+        padding: 1.25rem;
+        border-radius: 16px;
+    }
+    
+    /* Social feed tabs */
+    .exploration-tabs {
+        padding: 0 0.5rem;
+        gap: 0.25rem;
+    }
+    .exploration-tab {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.7rem;
+    }
+    
+    /* Feed items */
+    .feed-card {
+        padding: 1rem;
+    }
+    .feed-quote {
+        font-size: 1rem;
+    }
+    
+    /* Messages modal */
+    .messages-modal-content {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        border-radius: 0;
+    }
+    
+    /* Notifications dropdown */
+    .notif-dropdown {
+        width: 100vw;
+        max-width: 100vw;
+        right: -1rem;
+        border-radius: 0 0 12px 12px;
+    }
+    
+    /* User dropdown */
+    .user-dropdown {
+        width: 200px;
+        right: 0;
+    }
+}
+
+/* iPhone et très petits écrans */
+@media (max-width: 480px) {
+    /* Header ultra compact */
+    .header-inner {
+        padding: 0.4rem 0.5rem;
+    }
+    .header-title {
+        display: none; /* Cacher le titre sur très petits écrans */
+    }
+    .search-container {
+        margin: 0 0.25rem;
+    }
+    .search-input {
+        padding: 0.45rem 0.6rem 0.45rem 1.8rem;
+        font-size: 0.75rem;
+        border-radius: 20px;
+    }
+    .search-icon {
+        left: 0.6rem;
+        font-size: 0.8rem;
+    }
+    .header-btn {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.6rem;
+    }
+    /* Cacher certains boutons header sur mobile */
+    .lang-selector {
+        display: none;
+    }
+    
+    /* Main content */
+    main {
+        padding: 4rem 0.5rem 5rem;
+    }
+    
+    /* Cards encore plus compactes */
+    .card {
+        padding: 1rem;
+        border-radius: 10px;
+    }
+    .card-quote {
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+    .card-source {
+        font-size: 0.75rem;
+    }
+    .card-actions {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .card-action {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.7rem;
+    }
+    
+    /* Bouton flottant d'action */
+    .float-btn {
+        bottom: 1rem;
+        right: 1rem;
+        width: 50px;
+        height: 50px;
+    }
+    
+    /* Auth modal */
+    .auth-modal-content {
+        padding: 1rem;
+    }
+    .auth-modal-content h2 {
+        font-size: 1.25rem;
+    }
+    .auth-input {
+        padding: 0.7rem;
+        font-size: 0.9rem;
+    }
+    .auth-btn {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Feed tabs scroll horizontal */
+    .exploration-container {
+        padding: 0;
+    }
+    .exploration-tabs {
+        padding: 0 0.25rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .exploration-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    .exploration-tab {
+        padding: 0.35rem 0.5rem;
+        font-size: 0.65rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    
+    /* Detail modal full screen */
+    .detail-modal-content {
+        width: 100%;
+        height: 100%;
+        max-height: 100%;
+        border-radius: 0;
+        margin: 0;
+    }
+    
+    /* Share modal */
+    .share-modal-content {
+        padding: 1rem;
+    }
+    .share-options {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+    }
+    .share-option {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.65rem;
+    }
+    .share-option-icon {
+        font-size: 1.25rem;
+    }
+    
+    /* Reco banner */
+    .reco-banner {
+        padding: 1rem;
+        margin: 0 0.5rem;
+    }
+    .reco-text {
+        font-size: 0.8rem;
+    }
+    
+    /* Ambiance intro */
+    .ambiance-intro {
+        padding: 1rem;
+        margin: 0.5rem;
+        border-radius: 12px;
+    }
+    .ambiance-intro h2 {
+        font-size: 1.2rem;
+    }
+    .ambiance-intro p {
+        font-size: 0.8rem;
+    }
+    
+    /* Achievement popup */
+    .achievement-popup {
+        bottom: 1rem;
+        right: 0.5rem;
+        left: 0.5rem;
+        padding: 1rem;
+    }
+    .achievement-icon {
+        font-size: 2rem;
+    }
+    .achievement-name {
+        font-size: 1rem;
+    }
+    
+    /* Toast notifications */
+    .toast {
+        left: 0.5rem;
+        right: 0.5rem;
+        bottom: 1rem;
+        max-width: none;
+    }
+    
+    /* Comments section */
+    .comments-section {
+        padding: 0.75rem;
+    }
+    .comment-input {
+        font-size: 0.85rem;
+    }
+    
+    /* Profile page */
+    .profile-page-header {
+        padding: 1rem;
+        flex-direction: column;
+        text-align: center;
+    }
+    .profile-page-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+    .profile-page-stats {
+        justify-content: center;
+    }
+}
+
+/* Fix pour le safe area sur iPhone (notch) */
+@supports (padding: max(0px)) {
+    header {
+        padding-top: max(0px, env(safe-area-inset-top));
+    }
+    main {
+        padding-bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));
+    }
+    .float-btn {
+        bottom: max(1rem, calc(1rem + env(safe-area-inset-bottom)));
+    }
+    .achievement-popup {
+        bottom: max(2rem, calc(2rem + env(safe-area-inset-bottom)));
+    }
+    .toast {
+        bottom: max(1rem, calc(1rem + env(safe-area-inset-bottom)));
+    }
+}
+
+/* Amélioration du touch sur mobile */
+@media (hover: none) and (pointer: coarse) {
+    /* Zones de tap plus grandes */
+    .card-action,
+    .header-btn,
+    .exploration-tab,
+    .auth-btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Désactiver les effets hover qui ne marchent pas bien sur touch */
+    .card:hover {
+        transform: none;
+    }
+    .card-action:hover {
+        transform: none;
+    }
+    
+    /* Feedback visuel pour tap */
+    .card-action:active,
+    .header-btn:active,
+    .auth-btn:active {
+        opacity: 0.7;
+        transform: scale(0.98);
+    }
+}
