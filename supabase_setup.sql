@@ -191,7 +191,43 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- �🔧 Trigger pour créer automatiquement un profil à l'inscription
+-- 💬 Table des messages privés
+-- ═══════════════════════════════════════════════════════════════════════════
+
+CREATE TABLE messages (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    sender_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    receiver_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    content TEXT NOT NULL,
+    read_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Index pour les performances
+CREATE INDEX idx_messages_sender ON messages(sender_id);
+CREATE INDEX idx_messages_receiver ON messages(receiver_id);
+CREATE INDEX idx_messages_created ON messages(created_at DESC);
+
+-- RLS pour messages
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+
+-- Les utilisateurs peuvent voir les messages qu'ils ont envoyés ou reçus
+CREATE POLICY "Les utilisateurs voient leurs messages"
+    ON messages FOR SELECT
+    USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
+
+-- Les utilisateurs peuvent envoyer des messages
+CREATE POLICY "Les utilisateurs peuvent envoyer des messages"
+    ON messages FOR INSERT
+    WITH CHECK (auth.uid() = sender_id);
+
+-- Les utilisateurs peuvent marquer comme lu leurs messages reçus
+CREATE POLICY "Les utilisateurs peuvent marquer leurs messages comme lus"
+    ON messages FOR UPDATE
+    USING (auth.uid() = receiver_id);
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 🔧 Trigger pour créer automatiquement un profil à l'inscription
 -- ═══════════════════════════════════════════════════════════════════════════
 
 CREATE OR REPLACE FUNCTION handle_new_user()
