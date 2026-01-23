@@ -124,18 +124,8 @@ async function sendPasswordReset() {
         
         if (error) {
             console.error('Reset password error:', error);
-            // Message plus détaillé
-            let errorMsg = 'Erreur lors de l\'envoi';
-            if (error.message.includes('rate limit')) {
-                errorMsg = 'Trop de tentatives. Attendez quelques minutes.';
-            } else if (error.message.includes('SMTP') || error.message.includes('smtp')) {
-                errorMsg = 'Erreur configuration email serveur. Contactez l\'admin.';
-            } else if (error.message.includes('not found') || error.message.includes('User not found')) {
-                errorMsg = 'Aucun compte trouvé avec cet email.';
-            } else {
-                errorMsg = error.message;
-            }
-            showAuthError('forgot', errorMsg);
+            // Afficher le message d'erreur avec option de contacter l'admin
+            showForgotErrorWithContact(error.message);
         } else {
             // Afficher le message de succès
             document.getElementById('forgotError').classList.remove('show');
@@ -147,8 +137,21 @@ async function sendPasswordReset() {
         console.error('Erreur reset password:', e);
         document.getElementById('forgotBtn').disabled = false;
         document.getElementById('forgotBtn').textContent = 'Envoyer le lien';
-        showAuthError('forgot', 'Une erreur est survenue. Réessayez.');
+        showForgotErrorWithContact('Une erreur est survenue');
     }
+}
+
+// Afficher erreur mot de passe oublié avec option contact admin
+function showForgotErrorWithContact(errorMsg) {
+    const errorEl = document.getElementById('forgotError');
+    errorEl.innerHTML = `
+        <div>❌ ${errorMsg}</div>
+        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);">
+            <strong>Alternative :</strong> Contactez l'admin sur Discord ou par email pour réinitialiser votre mot de passe manuellement.
+        </div>
+    `;
+    errorEl.classList.add('show');
+    document.getElementById('forgotSuccess').classList.remove('show');
 }
 
 async function loginWithEmail() {
