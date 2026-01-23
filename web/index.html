@@ -907,6 +907,27 @@
             position: relative;
             color: var(--text-secondary);
             font-weight: 300;
+            cursor: default;
+        }
+        .card-body .like-heart-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 4rem;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 10;
+            filter: drop-shadow(0 0 10px rgba(255,69,58,0.5));
+        }
+        .card-body .like-heart-overlay.animate {
+            animation: likeHeartPop 0.8s ease-out forwards;
+        }
+        @keyframes likeHeartPop {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            15% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+            30% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
         }
         .text-teaser {
             white-space: pre-wrap;
@@ -8525,7 +8546,8 @@
                     </div>
                     <span class="tag ${tag}" onclick="event.stopPropagation(); exploreCategory('${tag}')" title="Explorer ce genre">${tag}</span>
                 </div>
-                <div class="card-body">
+                <div class="card-body" ondblclick="doubleTapLike('${cardId}', event)">
+                    <span class="like-heart-overlay" id="heart-${cardId}">❤️</span>
                     <div class="text-teaser">${esc(teaser)}</div>
                     <div class="text-full" id="full-${cardId}"></div>
                     ${remaining ? `<button class="btn-suite" onclick="showMore('${cardId}')" id="suite-${cardId}">Lire la suite<span class="arrow">→</span></button>` : ''}
@@ -8618,7 +8640,7 @@
                 state.likes.delete(id); 
                 // Supprimer des favoris stockés
                 state.favorites = (state.favorites || []).filter(f => f.id !== id);
-                btn.classList.remove('active');
+                btn?.classList?.remove('active');
                 // Retirer l'auteur des likedAuthors si plus aucune carte likée
                 if (author && author !== 'Anonyme') {
                     const hasOtherLikes = [...state.likes].some(likeId => {
@@ -8638,7 +8660,7 @@
                     text: text?.substring(0, 200) || '',
                     timestamp: Date.now()
                 });
-                btn.classList.add('active'); 
+                btn?.classList?.add('active'); 
                 toast('💎 Ajouté aux favoris');
                 // Ajouter l'auteur aux likedAuthors
                 if (author && author !== 'Anonyme') {
@@ -8649,6 +8671,29 @@
             updateConnections();
             renderFavorites();
             updateFavCount();
+        }
+        
+        // Double-tap pour liker (style Instagram)
+        function doubleTapLike(id, event) {
+            event.preventDefault();
+            const card = document.getElementById(id);
+            const heart = document.getElementById('heart-' + id);
+            const likeBtn = card?.querySelector('.card-foot .btn');
+            
+            // Afficher l'animation du coeur
+            if (heart) {
+                heart.classList.remove('animate');
+                void heart.offsetWidth; // Force reflow
+                heart.classList.add('animate');
+            }
+            
+            // Si pas déjà liké, liker
+            if (!state.likes.has(id)) {
+                toggleLike(id, likeBtn);
+            } else {
+                // Déjà liké, juste montrer le coeur (feedback visuel)
+                toast('❤️ Déjà dans tes favoris !');
+            }
         }
         
         // Afficher la liste des favoris dans le panneau
