@@ -5546,6 +5546,82 @@
             openShareModal(textToShare, author, title, sourceUrl);
         }
         
+        // Partager rapidement et ouvrir les commentaires
+        async function quickShareAndComment(cardId) {
+            if (!currentUser) {
+                openAuthModal('login');
+                toast('📝 Connectez-vous pour commenter');
+                return;
+            }
+            
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            
+            const text = card.dataset.text || '';
+            const author = card.dataset.author || 'Inconnu';
+            const title = card.dataset.title || 'Sans titre';
+            const lang = card.dataset.lang || 'fr';
+            const sourceUrl = `https://${lang}.wikisource.org/wiki/${encodeURIComponent(title)}`;
+            
+            // Récupérer la sélection ou le teaser
+            const selection = window.getSelection().toString().trim();
+            const textToShare = selection.length >= 20 ? selection : text.substring(0, 500);
+            
+            // Vérifier si cet extrait existe déjà (même texte, même source)
+            if (supabaseClient) {
+                const { data: existing } = await supabaseClient
+                    .from('extraits')
+                    .select('id')
+                    .eq('texte', textToShare)
+                    .eq('source_title', title)
+                    .eq('user_id', currentUser.id)
+                    .maybeSingle();
+                
+                if (existing) {
+                    // Ouvrir le feed social et afficher cet extrait
+                    toast('📖 Cet extrait existe déjà, ouverture...');
+                    openSocialFeed();
+                    setTimeout(async () => {
+                        await viewExtraitById(existing.id);
+                        // Ouvrir les commentaires
+                        setTimeout(() => toggleComments(existing.id), 300);
+                    }, 300);
+                    return;
+                }
+                
+                // Créer l'extrait directement
+                const { data: newExtrait, error } = await supabaseClient
+                    .from('extraits')
+                    .insert({
+                        user_id: currentUser.id,
+                        texte: textToShare,
+                        source_title: title,
+                        source_author: author,
+                        source_url: sourceUrl,
+                        commentary: '',
+                        created_at: new Date().toISOString()
+                    })
+                    .select()
+                    .single();
+                
+                if (error) {
+                    console.error('Erreur création extrait:', error);
+                    toast('❌ Erreur: ' + error.message);
+                    return;
+                }
+                
+                toast('✅ Extrait partagé ! Ajoutez votre commentaire');
+                
+                // Ouvrir le feed social et afficher cet extrait avec les commentaires ouverts
+                openSocialFeed();
+                setTimeout(async () => {
+                    await viewExtraitById(newExtrait.id);
+                    // Ouvrir les commentaires automatiquement
+                    setTimeout(() => toggleComments(newExtrait.id), 300);
+                }, 300);
+            }
+        }
+        
         // ═══════════════════════════════════════════════════════════
         // 🌍 CONFIGURATION MULTILINGUE - Littérature mondiale
         // ═══════════════════════════════════════════════════════════
@@ -7710,6 +7786,7 @@
                     <div class="actions">
                         <button class="btn" onclick="toggleLike('${cardId}',this)">♥</button>
                         <button class="btn btn-share" onclick="shareCardExtrait('${cardId}')" title="Partager cet extrait">🐦 Partager</button>
+                        <button class="btn" onclick="quickShareAndComment('${cardId}')" title="Partager et commenter">💬</button>
                         <button class="btn" onclick="showRelatedAuthors('${cardId}')" title="Explorer auteurs proches">🔗</button>
                         <a class="btn" href="${url}" target="_blank">↗ Wikisource</a>
                     </div>
