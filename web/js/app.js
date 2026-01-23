@@ -230,6 +230,11 @@ async function registerWithEmail() {
             // Améliorer les messages d'erreur courants
             let errorMsg = error.message;
             console.error('Erreur inscription:', error);
+            console.error('Code erreur:', error.code);
+            console.error('Status:', error.status);
+            
+            // Afficher l'erreur brute pour debug
+            alert('DEBUG - Erreur brute: ' + JSON.stringify(error));
             
             if (error.message.includes('already registered') || error.message.includes('User already registered')) {
                 errorMsg = 'Cette adresse email est déjà utilisée. Connectez-vous ou utilisez une autre adresse.';
@@ -242,8 +247,8 @@ async function registerWithEmail() {
                     errorMsg = 'Ce compte existe déjà.';
                 }
             } else if (error.message.includes('Database error')) {
-                // Erreur générique de base de données - probablement un conflit
-                errorMsg = 'Erreur lors de la création du compte. Vérifiez que l\'email est valide et réessayez.';
+                // Erreur générique de base de données - probablement le trigger qui échoue
+                errorMsg = 'Erreur base de données. Détail: ' + error.message;
             } else if (error.message.includes('Invalid email')) {
                 errorMsg = 'L\'adresse email n\'est pas valide.';
             } else if (error.message.includes('Password')) {

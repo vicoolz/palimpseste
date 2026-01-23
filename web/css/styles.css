@@ -3983,74 +3983,213 @@ transition: all 0.2s;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   🍎 FIX SPÉCIFIQUE SAFARI iOS
+   📱 MOBILE RESPONSIVE - SAFARI iOS & ANDROID
+   Version complète et robuste
    ═══════════════════════════════════════════════════════════ */
 
-/* Masquage agressif du panneau stats sur mobile */
+/* Reset des transitions pour éviter les bugs Safari */
 @media screen and (max-width: 900px) {
-    .stats-panel,
-    .stats-panel * {
+    * {
+        -webkit-transition: none !important;
+        transition: none !important;
+    }
+}
+
+/* ====== TABLETTES ET MOBILE (< 900px) ====== */
+@media screen and (max-width: 900px) {
+    /* SIDEBAR - Masquage total et définitif */
+    .stats-panel {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
-        pointer-events: none !important;
-        position: fixed !important;
-        left: -99999px !important;
-        top: -99999px !important;
         width: 0 !important;
         height: 0 !important;
+        max-width: 0 !important;
+        max-height: 0 !important;
         overflow: hidden !important;
+        position: absolute !important;
+        left: -99999px !important;
+        top: -99999px !important;
+        pointer-events: none !important;
+        z-index: -9999 !important;
         clip: rect(0, 0, 0, 0) !important;
+        -webkit-clip-path: inset(100%) !important;
+        clip-path: inset(100%) !important;
+        transform: scale(0) !important;
+        -webkit-transform: scale(0) !important;
     }
     
-    /* Body sans sidebar */
-    body {
+    /* Body - empêcher le scroll horizontal */
+    html, body {
         overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        position: relative !important;
     }
     
-    /* Header prend toute la largeur */
+    /* HEADER - Pleine largeur */
     header {
+        position: fixed !important;
         left: 0 !important;
         right: 0 !important;
+        top: 0 !important;
         width: 100% !important;
+        z-index: 1000 !important;
     }
     
-    /* Header actions en flex wrap */
+    .header-inner {
+        padding: 0.5rem 0.75rem !important;
+        gap: 0.5rem !important;
+        -webkit-box-pack: justify !important;
+        justify-content: space-between !important;
+    }
+    
+    .header-title {
+        font-size: 0.65rem !important;
+        display: block !important;
+    }
+    
+    /* Search */
+    .search-container {
+        -webkit-box-flex: 1 !important;
+        flex: 1 !important;
+        min-width: 100px !important;
+        max-width: none !important;
+        margin: 0 0.5rem !important;
+    }
+    
+    .search-input {
+        font-size: 16px !important; /* Empêche zoom iOS */
+        padding: 0.5rem 0.75rem 0.5rem 2rem !important;
+        border-radius: 20px !important;
+    }
+    
+    /* Header actions */
     .header-actions {
+        display: -webkit-box !important;
         display: -webkit-flex !important;
         display: flex !important;
-        -webkit-flex-wrap: wrap !important;
-        flex-wrap: wrap !important;
-        gap: 0.25rem !important;
-        -webkit-justify-content: flex-end !important;
-        justify-content: flex-end !important;
-    }
-    
-    /* Cacher le texte des boutons, garder les icônes */
-    .header-btn {
-        font-size: 1rem !important;
-        padding: 0.4rem !important;
-        min-width: 40px !important;
-        min-height: 40px !important;
-        display: -webkit-flex !important;
-        display: flex !important;
+        -webkit-box-align: center !important;
         -webkit-align-items: center !important;
         align-items: center !important;
+        gap: 0.25rem !important;
+        -webkit-flex-shrink: 0 !important;
+        flex-shrink: 0 !important;
+    }
+    
+    .header-btn {
+        padding: 0.35rem 0.5rem !important;
+        font-size: 0.85rem !important;
+        min-height: 36px !important;
+        min-width: 36px !important;
+        display: -webkit-box !important;
+        display: -webkit-flex !important;
+        display: flex !important;
+        -webkit-box-align: center !important;
+        -webkit-align-items: center !important;
+        align-items: center !important;
+        -webkit-box-pack: center !important;
         -webkit-justify-content: center !important;
         justify-content: center !important;
     }
     
-    /* Main content centré */
+    /* Cacher sélecteur de langue */
+    .lang-selector {
+        display: none !important;
+    }
+    
+    /* MAIN CONTENT */
     main {
         margin-left: 0 !important;
         margin-right: 0 !important;
         width: 100% !important;
         max-width: 100% !important;
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
+        padding: 4.5rem 1rem 5rem 1rem !important;
+        min-height: 100vh !important;
+        -webkit-box-sizing: border-box !important;
+        box-sizing: border-box !important;
     }
     
-    /* User menu et dropdowns */
+    /* Cards */
+    .card {
+        padding: 1.25rem !important;
+        margin-bottom: 1rem !important;
+        border-radius: 12px !important;
+        max-width: 100% !important;
+    }
+    
+    .card-quote {
+        font-size: 1.05rem !important;
+        line-height: 1.6 !important;
+    }
+    
+    .card-actions {
+        display: -webkit-box !important;
+        display: -webkit-flex !important;
+        display: flex !important;
+        -webkit-flex-wrap: wrap !important;
+        flex-wrap: wrap !important;
+        gap: 0.5rem !important;
+    }
+    
+    .card-action {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.75rem !important;
+        min-height: 40px !important;
+        -webkit-tap-highlight-color: transparent !important;
+    }
+    
+    /* RECO BANNER */
+    .reco-banner {
+        margin: 0 !important;
+        padding: 1rem !important;
+        border-radius: 12px !important;
+        max-width: 100% !important;
+    }
+    
+    /* EXPLORATION TABS */
+    .exploration-container {
+        padding: 0 !important;
+    }
+    
+    .exploration-tabs {
+        display: -webkit-box !important;
+        display: -webkit-flex !important;
+        display: flex !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+        padding: 0 0.5rem !important;
+        gap: 0.5rem !important;
+    }
+    
+    .exploration-tabs::-webkit-scrollbar {
+        display: none !important;
+    }
+    
+    .exploration-tab {
+        -webkit-flex-shrink: 0 !important;
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.75rem !important;
+    }
+    
+    /* MODALS */
+    .auth-modal-content,
+    .detail-modal-content,
+    .share-modal-content,
+    .favorites-modal-content {
+        width: 95% !important;
+        max-width: 400px !important;
+        max-height: 90vh !important;
+        margin: auto !important;
+        border-radius: 16px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* DROPDOWNS - Style bottom sheet mobile */
     .user-dropdown,
     .notif-dropdown {
         position: fixed !important;
@@ -4060,36 +4199,299 @@ transition: all 0.2s;
         right: 0 !important;
         width: 100% !important;
         max-width: 100% !important;
-        border-radius: 16px 16px 0 0 !important;
         max-height: 70vh !important;
+        border-radius: 20px 20px 0 0 !important;
         overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        z-index: 2000 !important;
     }
     
     .user-dropdown-item {
-        padding: 1rem !important;
+        padding: 1rem 1.25rem !important;
         min-height: 50px !important;
         font-size: 1rem !important;
     }
+    
+    /* FLOATIN BUTTON */
+    .float-btn {
+        bottom: 1rem !important;
+        right: 1rem !important;
+        width: 56px !important;
+        height: 56px !important;
+        z-index: 900 !important;
+    }
 }
 
-/* Sur très petit écran, cacher certains boutons */
+/* ====== SMARTPHONES (< 480px) ====== */
 @media screen and (max-width: 480px) {
-    /* Cacher les boutons texte, garder icônes */
-    .header-btn {
-        overflow: hidden !important;
-        text-overflow: clip !important;
-        white-space: nowrap !important;
-    }
-    
-    /* Cacher "Social", "Tendances" texte - garder juste l'icône */
-    .header-actions .header-btn:nth-child(1),
-    .header-actions .header-btn:nth-child(2) {
-        max-width: 40px !important;
-        font-size: 1.1rem !important;
-    }
-    
-    /* Cacher favorites count */
-    .favorites-btn span {
+    /* Sidebar - redondance sécurité Safari */
+    .stats-panel {
         display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        height: 0 !important;
+        position: absolute !important;
+        left: -99999px !important;
+    }
+    
+    /* Header ultra compact */
+    .header-inner {
+        padding: 0.4rem 0.5rem !important;
+        gap: 0.3rem !important;
+    }
+    
+    .header-title {
+        display: none !important; /* Masquer titre sur petit écran */
+    }
+    
+    .search-container {
+        margin: 0 0.25rem !important;
+    }
+    
+    .search-input {
+        padding: 0.4rem 0.5rem 0.4rem 1.75rem !important;
+    }
+    
+    .header-btn {
+        padding: 0.3rem !important;
+        font-size: 0.9rem !important;
+        min-width: 34px !important;
+        min-height: 34px !important;
+    }
+    
+    /* Main */
+    main {
+        padding: 4rem 0.5rem 5rem 0.5rem !important;
+    }
+    
+    /* Cards compactes */
+    .card {
+        padding: 1rem !important;
+        border-radius: 10px !important;
+    }
+    
+    .card-quote {
+        font-size: 0.95rem !important;
+        line-height: 1.55 !important;
+    }
+    
+    .card-source {
+        font-size: 0.7rem !important;
+    }
+    
+    .card-action {
+        padding: 0.4rem 0.6rem !important;
+        font-size: 0.7rem !important;
+        min-height: 36px !important;
+    }
+    
+    /* Auth modal */
+    .auth-modal-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        border-radius: 0 !important;
+    }
+    
+    .auth-input {
+        font-size: 16px !important; /* Empêche zoom iOS */
+        padding: 0.75rem !important;
+    }
+    
+    .auth-btn {
+        padding: 0.85rem !important;
+        font-size: 1rem !important;
+        min-height: 48px !important;
+    }
+    
+    /* Detail modal plein écran */
+    .detail-modal-content {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        border-radius: 0 !important;
+    }
+    
+    /* Share options */
+    .share-options {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.5rem !important;
+    }
+    
+    .share-option {
+        padding: 0.6rem 0.4rem !important;
+        font-size: 0.6rem !important;
+    }
+    
+    /* Toast */
+    .toast {
+        left: 0.5rem !important;
+        right: 0.5rem !important;
+        bottom: 1.5rem !important;
+        max-width: none !important;
+    }
+    
+    /* Achievement popup */
+    .achievement-popup {
+        left: 0.5rem !important;
+        right: 0.5rem !important;
+        bottom: 1.5rem !important;
+    }
+    
+    /* Profile page */
+    .profile-page-header {
+        -webkit-flex-direction: column !important;
+        flex-direction: column !important;
+        text-align: center !important;
+        padding: 1rem !important;
+    }
+    
+    .profile-page-avatar {
+        width: 60px !important;
+        height: 60px !important;
+    }
+}
+
+/* ====== TRÈS PETITS ÉCRANS (< 375px) - iPhone SE, etc ====== */
+@media screen and (max-width: 375px) {
+    .header-inner {
+        padding: 0.35rem 0.4rem !important;
+    }
+    
+    .search-input {
+        min-width: 60px !important;
+        padding: 0.35rem 0.4rem 0.35rem 1.5rem !important;
+        font-size: 14px !important;
+    }
+    
+    .header-btn {
+        min-width: 30px !important;
+        min-height: 30px !important;
+        font-size: 0.8rem !important;
+    }
+    
+    main {
+        padding: 3.75rem 0.4rem 4.5rem 0.4rem !important;
+    }
+    
+    .card {
+        padding: 0.85rem !important;
+    }
+    
+    .card-quote {
+        font-size: 0.9rem !important;
+    }
+    
+    .card-action {
+        padding: 0.35rem 0.5rem !important;
+        min-height: 32px !important;
+    }
+}
+
+/* ====== SAFE AREA iOS (Notch iPhone X+) ====== */
+@supports (padding-top: env(safe-area-inset-top)) {
+    @media screen and (max-width: 900px) {
+        header {
+            padding-top: env(safe-area-inset-top) !important;
+        }
+        
+        main {
+            padding-bottom: calc(5rem + env(safe-area-inset-bottom)) !important;
+        }
+        
+        .float-btn {
+            bottom: calc(1rem + env(safe-area-inset-bottom)) !important;
+        }
+        
+        .toast,
+        .achievement-popup {
+            bottom: calc(1.5rem + env(safe-area-inset-bottom)) !important;
+        }
+        
+        .user-dropdown,
+        .notif-dropdown {
+            padding-bottom: env(safe-area-inset-bottom) !important;
+        }
+    }
+}
+
+/* ====== TOUCH DEVICES ====== */
+@media (hover: none) and (pointer: coarse) {
+    /* Zones de tap Apple-compliant (44x44 minimum) */
+    .card-action,
+    .header-btn,
+    .exploration-tab,
+    .auth-btn,
+    .user-dropdown-item {
+        min-height: 44px !important;
+    }
+    
+    /* Désactiver hover effects */
+    .card:hover,
+    .card-action:hover,
+    .header-btn:hover {
+        transform: none !important;
+        -webkit-transform: none !important;
+    }
+    
+    /* Touch feedback */
+    .card-action:active,
+    .header-btn:active,
+    .auth-btn:active,
+    .exploration-tab:active {
+        opacity: 0.7 !important;
+        transform: scale(0.97) !important;
+        -webkit-transform: scale(0.97) !important;
+    }
+    
+    /* Smooth scrolling */
+    .exploration-tabs,
+    .favorites-section,
+    .user-dropdown,
+    .notif-dropdown,
+    main {
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* Empêcher sélection accidentelle */
+    .card-action,
+    .header-btn,
+    .exploration-tab {
+        -webkit-user-select: none !important;
+        user-select: none !important;
+        -webkit-touch-callout: none !important;
+    }
+}
+
+/* ====== ORIENTATION PAYSAGE MOBILE ====== */
+@media screen and (max-width: 900px) and (orientation: landscape) {
+    header {
+        padding-top: 0 !important;
+    }
+    
+    main {
+        padding-top: 3.5rem !important;
+        padding-bottom: 3rem !important;
+    }
+    
+    .auth-modal-content,
+    .detail-modal-content {
+        max-height: 95vh !important;
+    }
+    
+    .user-dropdown,
+    .notif-dropdown {
+        max-height: 80vh !important;
+    }
+}
+
+/* ====== FORCE REPAINT SAFARI (Bug fix) ====== */
+@media screen and (max-width: 900px) {
+    .stats-panel {
+        -webkit-backface-visibility: hidden !important;
+        backface-visibility: hidden !important;
+        -webkit-perspective: 1000 !important;
+        perspective: 1000 !important;
     }
 }
