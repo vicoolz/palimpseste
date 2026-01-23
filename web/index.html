@@ -1912,6 +1912,70 @@
         .btn-follow-small.following:hover {
             background: rgba(42, 157, 143, 0.2);
         }
+        
+        /* Discover Users Grid */
+        .discover-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .discover-header h3 {
+            font-size: 1.1rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+        .discover-header p {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+        .discover-grid {
+            display: grid;
+            gap: 0.75rem;
+        }
+        .discover-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+        .discover-card:hover {
+            border-color: var(--accent);
+            transform: translateX(4px);
+        }
+        .discover-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .discover-info {
+            flex: 1;
+            cursor: pointer;
+        }
+        .discover-name {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 1rem;
+        }
+        .discover-stats {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 0.2rem;
+        }
+        
         .btn-close-profile {
             background: var(--bg-elevated);
             color: var(--text);
@@ -2336,6 +2400,7 @@
                 <button class="feed-tab active" onclick="switchSocialTab('recent')" id="tabRecent">🔥 Récents</button>
                 <button class="feed-tab" onclick="switchSocialTab('friends')" id="tabFriends">👥 Amis</button>
                 <button class="feed-tab" onclick="switchSocialTab('popular')" id="tabPopular">⭐ Populaires</button>
+                <button class="feed-tab" onclick="switchSocialTab('discover')" id="tabDiscover">🔎 Découvrir</button>
                 <button class="feed-tab" onclick="switchSocialTab('mine')" id="tabMine">👤 Mes extraits</button>
             </div>
             <div id="socialFeed"></div>
@@ -2831,7 +2896,7 @@
                             <div class="social-empty-title">Aucun ami suivi</div>
                             <div class="social-empty-text">
                                 Vous ne suivez personne pour l'instant.<br>
-                                Parcourez les extraits et cliquez sur un profil pour suivre quelqu'un !
+                                Allez dans l'onglet "🔎 Découvrir" pour trouver des utilisateurs !
                             </div>
                         </div>
                     `;
@@ -2844,6 +2909,11 @@
                     .in('user_id', Array.from(userFollowing))
                     .order('created_at', { ascending: false })
                     .limit(50);
+            } else if (currentSocialTab === 'discover') {
+                // Afficher tous les utilisateurs actifs
+                await loadUserFollowing();
+                await loadDiscoverUsers();
+                return;
             }
             
             const { data, error } = await query;
@@ -3033,6 +3103,78 @@
                 .eq('follower_id', currentUser.id);
             
             userFollowing = new Set(data?.map(f => f.following_id) || []);
+        }
+        
+        // Charger et afficher les utilisateurs à découvrir
+        async function loadDiscoverUsers() {
+            const container = document.getElementById('socialFeed');
+            
+            if (!supabaseClient) {
+                container.innerHTML = '<div class="social-empty">⚠️ Non connecté</div>';
+                return;
+            }
+            
+            // Récupérer tous les profils avec leur nombre d'extraits
+            const { data: profiles, error } = await supabaseClient
+                .from('profiles')
+                .select('id, username, created_at')
+                .order('created_at', { ascending: false })
+                .limit(50);
+            
+            if (error || !profiles) {
+                container.innerHTML = '<div class="social-empty">❌ Erreur lors du chargement</div>';
+                return;
+            }
+            
+            // Compter les extraits pour chaque profil
+            const profilesWithStats = await Promise.all(profiles.map(async (p) => {
+                const { count } = await supabaseClient
+                    .from('extraits')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', p.id);
+                return { ...p, extraitCount: count || 0 };
+            }));
+            
+            // Filtrer pour ne pas s'afficher soi-même
+            const filteredProfiles = profilesWithStats.filter(p => 
+                !currentUser || p.id !== currentUser.id
+            );
+            
+            if (filteredProfiles.length === 0) {
+                container.innerHTML = `
+                    <div class="social-empty">
+                        <div class="social-empty-icon">🌱</div>
+                        <div class="social-empty-title">Pas encore d'utilisateurs</div>
+                        <div class="social-empty-text">Soyez le premier à inviter des amis !</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="discover-header">
+                    <h3>👥 Utilisateurs à découvrir</h3>
+                    <p>Suivez des personnes pour voir leurs extraits dans l'onglet "Amis"</p>
+                </div>
+                <div class="discover-grid">
+                    ${filteredProfiles.map(p => {
+                        const isFollowing = userFollowing.has(p.id);
+                        const initial = (p.username || '?').charAt(0).toUpperCase();
+                        return `
+                            <div class="discover-card">
+                                <div class="discover-avatar" onclick="openUserProfile('${p.id}', '${p.username}')">${initial}</div>
+                                <div class="discover-info" onclick="openUserProfile('${p.id}', '${p.username}')">
+                                    <div class="discover-name">${escapeHtml(p.username || 'Anonyme')}</div>
+                                    <div class="discover-stats">${p.extraitCount} extrait${p.extraitCount > 1 ? 's' : ''}</div>
+                                </div>
+                                <button class="btn-follow-small ${isFollowing ? 'following' : ''}" onclick="toggleFollow('${p.id}', event)">
+                                    ${isFollowing ? '✓ Suivi' : '+ Suivre'}
+                                </button>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
         }
         
         // Ouvrir le profil d'un utilisateur
