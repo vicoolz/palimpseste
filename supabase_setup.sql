@@ -123,6 +123,9 @@ CREATE POLICY "Les utilisateurs peuvent retirer leurs likes"
     ON likes FOR DELETE
     USING (auth.uid() = user_id);
 
+-- Activer Realtime sur likes pour le feed d'activité en temps réel
+ALTER PUBLICATION supabase_realtime ADD TABLE likes;
+
 -- ═══════════════════════════════════════════════════════════════════════════
 -- � Table des follows (système d'amis)
 -- ═══════════════════════════════════════════════════════════════════════════

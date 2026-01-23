@@ -4293,6 +4293,8 @@
         }
         
         // Feed d'activité - voir les likes récents de tout le monde
+        let activitySubscription = null;
+        
         async function loadActivityFeed() {
             const container = document.getElementById('socialFeed');
             
@@ -4308,7 +4310,13 @@
                 .order('created_at', { ascending: false })
                 .limit(50);
             
-            if (error || !recentLikes || recentLikes.length === 0) {
+            if (error) {
+                console.error('Erreur chargement activité:', error);
+                container.innerHTML = `<div class="social-empty">❌ Erreur: ${error.message}</div>`;
+                return;
+            }
+            
+            if (!recentLikes || recentLikes.length === 0) {
                 container.innerHTML = `
                     <div class="social-empty">
                         <div class="social-empty-icon">❤️</div>
@@ -4321,27 +4329,27 @@
             
             // Récupérer les profils des utilisateurs qui ont liké
             const userIds = [...new Set(recentLikes.map(l => l.user_id))];
-            const userMap = new Map();
-            for (const uid of userIds) {
-                const { data: user } = await supabaseClient.from('profiles').select('id, username').eq('id', uid).maybeSingle();
-                if (user) userMap.set(uid, user);
-            }
+            const { data: users } = await supabaseClient
+                .from('profiles')
+                .select('id, username')
+                .in('id', userIds);
+            const userMap = new Map((users || []).map(u => [u.id, u]));
             
             // Récupérer les extraits likés
             const extraitIds = [...new Set(recentLikes.map(l => l.extrait_id))];
             const { data: extraits } = await supabaseClient
                 .from('extraits')
-                .select('id, texte, source_titre, user_id')
+                .select('id, texte, source_title, user_id')
                 .in('id', extraitIds);
-            const extraitMap = new Map(extraits?.map(e => [e.id, e]) || []);
+            const extraitMap = new Map((extraits || []).map(e => [e.id, e]));
             
             // Récupérer les auteurs des extraits
-            const extraitAuthorIds = [...new Set(extraits?.map(e => e.user_id) || [])];
-            const authorMap = new Map();
-            for (const aid of extraitAuthorIds) {
-                const { data: author } = await supabaseClient.from('profiles').select('id, username').eq('id', aid).maybeSingle();
-                if (author) authorMap.set(aid, author);
-            }
+            const extraitAuthorIds = [...new Set((extraits || []).map(e => e.user_id))];
+            const { data: authors } = await supabaseClient
+                .from('profiles')
+                .select('id, username')
+                .in('id', extraitAuthorIds);
+            const authorMap = new Map((authors || []).map(a => [a.id, a]));
             
             container.innerHTML = `
                 <div class="discover-header">
@@ -4377,6 +4385,49 @@
                     }).join('')}
                 </div>
             `;
+            
+            // S'abonner aux nouveaux likes en temps réel
+            subscribeToActivityFeed();
+        }
+        
+        // Abonnement temps réel à l'activité
+        function subscribeToActivityFeed() {
+            if (activitySubscription) return; // Déjà abonné
+            
+            if (!supabaseClient) return;
+            
+            activitySubscription = supabaseClient
+                .channel('activity-likes')
+                .on('postgres_changes', 
+                    { event: 'INSERT', schema: 'public', table: 'likes' },
+                    (payload) => {
+                        console.log('Nouveau like détecté:', payload);
+                        // Rafraîchir le feed si on est sur l'onglet activité
+                        if (currentSocialTab === 'activity') {
+                            loadActivityFeed();
+                        }
+                    }
+                )
+                .on('postgres_changes',
+                    { event: 'DELETE', schema: 'public', table: 'likes' },
+                    (payload) => {
+                        console.log('Like supprimé:', payload);
+                        if (currentSocialTab === 'activity') {
+                            loadActivityFeed();
+                        }
+                    }
+                )
+                .subscribe((status) => {
+                    console.log('Statut abonnement activité:', status);
+                });
+        }
+        
+        // Se désabonner quand on quitte
+        function unsubscribeFromActivityFeed() {
+            if (activitySubscription) {
+                activitySubscription.unsubscribe();
+                activitySubscription = null;
+            }
         }
         
         // Voir un extrait par son ID
