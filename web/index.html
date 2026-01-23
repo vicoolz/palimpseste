@@ -1334,6 +1334,159 @@
             text-transform: uppercase;
         }
         
+        /* Trending view styles */
+        .trending-view {
+            max-width: 700px;
+        }
+        .trending-subtitle {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 2rem;
+            font-style: italic;
+        }
+        .trending-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .trending-loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--muted);
+        }
+        .trending-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .trending-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        .trending-card-header {
+            padding: 1rem 1.25rem;
+            background: linear-gradient(135deg, rgba(255,69,58,0.05), rgba(191,90,242,0.05));
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .trending-card-author {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+        }
+        .trending-card-author:hover .trending-username {
+            color: var(--accent);
+        }
+        .trending-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: white;
+        }
+        .trending-username {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            transition: color 0.2s;
+        }
+        .trending-time {
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+        .trending-rank {
+            font-size: 1.5rem;
+            opacity: 0.3;
+        }
+        .trending-card-body {
+            padding: 1.25rem;
+        }
+        .trending-text {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: var(--text);
+            font-family: 'Playfair Display', serif;
+            white-space: pre-wrap;
+            margin-bottom: 1rem;
+        }
+        .trending-source {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-style: italic;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+        }
+        .trending-source strong {
+            color: var(--text-secondary);
+        }
+        .trending-card-footer {
+            padding: 0.75rem 1.25rem;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .trending-stats {
+            display: flex;
+            gap: 1.5rem;
+        }
+        .trending-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+        .trending-stat.hot {
+            color: #ff6b6b;
+        }
+        .trending-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .trending-action-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .trending-action-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+        .trending-action-btn.liked {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+        .trending-empty {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--muted);
+        }
+        .trending-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+        
         /* Bouton favoris dans le header */
         .favorites-btn {
             color: var(--accent) !important;
@@ -3456,6 +3609,8 @@
             </div>
             
             <div class="header-actions">
+                <button class="header-btn" onclick="pureRandomJump()" title="Découvrir un texte au hasard (ignore l'ambiance)">🎲 Hasard</button>
+                <button class="header-btn" onclick="openTrendingFeed()" title="Textes populaires du moment">🔥 Tendances</button>
                 <div class="lang-selector">
                     <span class="lang-icon">🌍</span>
                     <select class="lang-select" id="langSelect" onchange="changeLanguage(this.value)" title="Choisir les langues">
@@ -3647,6 +3802,20 @@
             <div class="share-actions">
                 <button class="share-btn secondary" onclick="closeShareModal()">Annuler</button>
                 <button class="share-btn primary" onclick="publishExtrait()" id="publishBtn">🚀 Publier</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Overlay Tendances (doom scrolling) -->
+    <div class="favorites-overlay" id="trendingOverlay">
+        <div class="favorites-view trending-view">
+            <div class="favorites-header">
+                <div class="favorites-title">🔥 TENDANCES DU MOMENT</div>
+                <button class="reader-close" onclick="closeTrendingFeed()">✕</button>
+            </div>
+            <div class="trending-subtitle">Les textes les plus aimés et commentés</div>
+            <div class="trending-feed" id="trendingFeed">
+                <div class="trending-loading">Chargement des tendances...</div>
             </div>
         </div>
     </div>
@@ -4045,6 +4214,179 @@
                 closeUserDropdown();
             }
         });
+        
+        // ═══════════════════════════════════════════════════════════
+        // 🔥 TENDANCES - Feed doom scrolling des textes populaires
+        // ═══════════════════════════════════════════════════════════
+        
+        function openTrendingFeed() {
+            document.getElementById('trendingOverlay').classList.add('open');
+            loadTrendingFeed();
+        }
+        
+        function closeTrendingFeed() {
+            document.getElementById('trendingOverlay').classList.remove('open');
+        }
+        
+        async function loadTrendingFeed() {
+            const container = document.getElementById('trendingFeed');
+            container.innerHTML = '<div class="trending-loading">🔥 Chargement des tendances...</div>';
+            
+            if (!supabaseClient) {
+                container.innerHTML = '<div class="trending-empty"><div class="trending-empty-icon">🔌</div><p>Connexion requise pour voir les tendances</p></div>';
+                return;
+            }
+            
+            try {
+                // Charger les extraits les plus likés et commentés récemment
+                const { data: extraits, error } = await supabaseClient
+                    .from('extraits')
+                    .select(`
+                        *,
+                        profiles:user_id (username, avatar_url)
+                    `)
+                    .order('likes_count', { ascending: false })
+                    .order('comments_count', { ascending: false })
+                    .order('created_at', { ascending: false })
+                    .limit(30);
+                
+                if (error) throw error;
+                
+                if (!extraits || extraits.length === 0) {
+                    container.innerHTML = `
+                        <div class="trending-empty">
+                            <div class="trending-empty-icon">📭</div>
+                            <p>Aucun texte populaire pour le moment</p>
+                            <p style="font-size: 0.8rem; margin-top: 0.5rem;">Soyez le premier à partager un extrait !</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Vérifier les likes de l'utilisateur actuel
+                const userId = currentUser?.id;
+                let userLikes = new Set();
+                if (userId) {
+                    const { data: likes } = await supabaseClient
+                        .from('likes')
+                        .select('extrait_id')
+                        .eq('user_id', userId);
+                    userLikes = new Set((likes || []).map(l => l.extrait_id));
+                }
+                
+                container.innerHTML = extraits.map((extrait, index) => {
+                    const username = extrait.profiles?.username || 'Anonyme';
+                    const avatar = extrait.profiles?.avatar_url || username[0].toUpperCase();
+                    const isLiked = userLikes.has(extrait.id);
+                    const likesCount = extrait.likes_count || 0;
+                    const commentsCount = extrait.comments_count || 0;
+                    const isHot = likesCount >= 5 || commentsCount >= 3;
+                    const timeAgo = formatTimeAgo(new Date(extrait.created_at));
+                    const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                    
+                    return `
+                        <div class="trending-card" data-extrait-id="${extrait.id}">
+                            <div class="trending-card-header">
+                                <div class="trending-card-author" onclick="openUserProfile('${extrait.user_id}')">
+                                    <div class="trending-avatar">${avatar.startsWith('http') ? `<img src="${avatar}" style="width:100%;height:100%;border-radius:50%;">` : avatar}</div>
+                                    <div>
+                                        <div class="trending-username">${escapeHtml(username)}</div>
+                                        <div class="trending-time">${timeAgo}</div>
+                                    </div>
+                                </div>
+                                <div class="trending-rank">${rankEmoji}</div>
+                            </div>
+                            <div class="trending-card-body">
+                                <div class="trending-text">${escapeHtml(extrait.texte)}</div>
+                                ${extrait.source_author || extrait.source_title ? `
+                                    <div class="trending-source">
+                                        <strong>${escapeHtml(extrait.source_author || '')}</strong>
+                                        ${extrait.source_title ? ` — ${escapeHtml(extrait.source_title)}` : ''}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="trending-card-footer">
+                                <div class="trending-stats">
+                                    <div class="trending-stat ${isHot ? 'hot' : ''}">
+                                        <span>${isHot ? '🔥' : '❤️'}</span>
+                                        <span>${likesCount}</span>
+                                    </div>
+                                    <div class="trending-stat">
+                                        <span>💬</span>
+                                        <span>${commentsCount}</span>
+                                    </div>
+                                </div>
+                                <div class="trending-actions">
+                                    <button class="trending-action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLikeTrending('${extrait.id}', this)">
+                                        ${isLiked ? '❤️' : '🤍'} Like
+                                    </button>
+                                    <button class="trending-action-btn" onclick="viewTrendingComments('${extrait.id}')">
+                                        💬 Commenter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (err) {
+                console.error('Erreur chargement tendances:', err);
+                container.innerHTML = '<div class="trending-empty"><div class="trending-empty-icon">⚠️</div><p>Erreur de chargement</p></div>';
+            }
+        }
+        
+        async function toggleLikeTrending(extraitId, btn) {
+            if (!currentUser) {
+                toast('🔐 Connectez-vous pour liker');
+                return;
+            }
+            
+            const isLiked = btn.classList.contains('liked');
+            
+            try {
+                if (isLiked) {
+                    await supabaseClient
+                        .from('likes')
+                        .delete()
+                        .eq('extrait_id', extraitId)
+                        .eq('user_id', currentUser.id);
+                    btn.classList.remove('liked');
+                    btn.innerHTML = '🤍 Like';
+                } else {
+                    await supabaseClient
+                        .from('likes')
+                        .insert({ extrait_id: extraitId, user_id: currentUser.id });
+                    btn.classList.add('liked');
+                    btn.innerHTML = '❤️ Like';
+                    toast('❤️ Aimé !');
+                }
+                
+                // Update count
+                const card = btn.closest('.trending-card');
+                const statEl = card.querySelector('.trending-stat');
+                const countEl = statEl.querySelector('span:last-child');
+                const currentCount = parseInt(countEl.textContent) || 0;
+                countEl.textContent = isLiked ? currentCount - 1 : currentCount + 1;
+                
+            } catch (err) {
+                console.error('Erreur like trending:', err);
+                toast('❌ Erreur');
+            }
+        }
+        
+        function viewTrendingComments(extraitId) {
+            // Fermer le trending et ouvrir le social feed sur cet extrait
+            closeTrendingFeed();
+            openSocialFeed();
+            // Scroll to the extrait after a short delay
+            setTimeout(() => {
+                const card = document.querySelector(`[data-extrait-id="${extraitId}"]`);
+                if (card) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    toggleComments(extraitId);
+                }
+            }, 500);
+        }
         
         // ═══════════════════════════════════════════════════════════
         // 📤 PARTAGE D'EXTRAITS
@@ -9285,6 +9627,25 @@
             renaissance: { icon: '🏛️', name: 'Renaissance', desc: 'Lire 3 auteurs du XVIe' },
             symbolist: { icon: '🦢', name: 'Symboliste', desc: 'Explorer Mallarmé et Verlaine' }
         };
+        
+        // Saut aléatoire SANS thématique (ignore l'ambiance)
+        async function pureRandomJump() {
+            const discoveredAuthors = Object.keys(state.authorStats);
+            const universalTerms = ['sonnet', 'elegy', 'ode', 'ballade', 'fable', 'hymn', 'nocturne', 'poème', 'conte', 'roman'];
+            const allOptions = [...discoveredAuthors, ...HIDDEN_GEMS, ...universalTerms, ...DEFAULT_AUTHORS];
+            const unvisited = allOptions.filter(a => !state.authorStats[a]);
+            const pool = unvisited.length > 3 ? unvisited : allOptions;
+            
+            const chosen = pool[Math.floor(Math.random() * pool.length)];
+            
+            toast('🎲 Découverte libre...');
+            
+            setTimeout(async () => {
+                await exploreAuthor(chosen);
+                checkAchievements();
+                updateFunStat();
+            }, 800);
+        }
         
         // Saut aléatoire vers un auteur ou terme de recherche aléatoire
         async function randomJump() {
