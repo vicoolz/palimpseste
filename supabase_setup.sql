@@ -227,7 +227,61 @@ CREATE POLICY "Les utilisateurs peuvent marquer leurs messages comme lus"
     USING (auth.uid() = receiver_id);
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- 🔧 Trigger pour créer automatiquement un profil à l'inscription
+-- � Table des commentaires sur les extraits
+-- ═══════════════════════════════════════════════════════════════════════════
+
+CREATE TABLE comments (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    extrait_id UUID REFERENCES extraits(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Index pour les performances
+CREATE INDEX idx_comments_extrait ON comments(extrait_id);
+CREATE INDEX idx_comments_user ON comments(user_id);
+CREATE INDEX idx_comments_created ON comments(created_at DESC);
+
+-- RLS pour comments
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+
+-- Les commentaires sont visibles par tous
+CREATE POLICY "Les commentaires sont visibles par tous"
+    ON comments FOR SELECT
+    USING (true);
+
+-- Les utilisateurs connectés peuvent commenter
+CREATE POLICY "Les utilisateurs peuvent commenter"
+    ON comments FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+-- Les utilisateurs peuvent supprimer leurs propres commentaires
+CREATE POLICY "Les utilisateurs peuvent supprimer leurs commentaires"
+    ON comments FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- Ajouter compteur de commentaires dans extraits
+ALTER TABLE extraits ADD COLUMN IF NOT EXISTS comments_count INTEGER DEFAULT 0;
+
+-- Fonction pour incrémenter le compteur de commentaires
+CREATE OR REPLACE FUNCTION increment_comments(p_extrait_id UUID)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE extraits SET comments_count = comments_count + 1 WHERE id = p_extrait_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Fonction pour décrémenter le compteur de commentaires
+CREATE OR REPLACE FUNCTION decrement_comments(p_extrait_id UUID)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE extraits SET comments_count = GREATEST(0, comments_count - 1) WHERE id = p_extrait_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- �🔧 Trigger pour créer automatiquement un profil à l'inscription
 -- ═══════════════════════════════════════════════════════════════════════════
 
 CREATE OR REPLACE FUNCTION handle_new_user()

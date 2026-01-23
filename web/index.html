@@ -1796,6 +1796,138 @@
         }
         .share-btn.secondary:hover { border-color: var(--text); color: var(--text); }
         
+        /* ═══════════════════════════════════════════════════════════
+           💬 COMMENTAIRES
+           ═══════════════════════════════════════════════════════════ */
+        .comments-section {
+            border-top: 1px solid var(--border);
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+        }
+        .comments-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 0.25rem 0;
+            transition: color 0.2s;
+        }
+        .comments-toggle:hover { color: var(--text); }
+        .comments-container {
+            display: none;
+            margin-top: 0.75rem;
+        }
+        .comments-container.open { display: block; }
+        .comments-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 0.75rem;
+        }
+        .comment-item {
+            display: flex;
+            gap: 0.6rem;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .comment-item:last-child { border-bottom: none; }
+        .comment-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: white;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .comment-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .comment-header {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin-bottom: 0.2rem;
+        }
+        .comment-username {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+        }
+        .comment-username:hover { color: var(--accent); }
+        .comment-time {
+            font-size: 0.65rem;
+            color: var(--muted);
+        }
+        .comment-text {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        .comment-delete {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 0.7rem;
+            cursor: pointer;
+            padding: 0.1rem 0.3rem;
+            opacity: 0;
+            transition: opacity 0.2s, color 0.2s;
+        }
+        .comment-item:hover .comment-delete { opacity: 1; }
+        .comment-delete:hover { color: #e74c3c; }
+        .comment-input-area {
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-end;
+        }
+        .comment-input {
+            flex: 1;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 0.5rem 0.9rem;
+            font-size: 0.8rem;
+            color: var(--text);
+            outline: none;
+            resize: none;
+            max-height: 80px;
+            min-height: 32px;
+        }
+        .comment-input:focus { border-color: var(--accent); }
+        .comment-send {
+            background: var(--accent-tertiary);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 0.8rem;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+        .comment-send:hover { transform: scale(1.05); }
+        .comment-send:disabled { opacity: 0.5; cursor: not-allowed; }
+        .comments-empty {
+            text-align: center;
+            padding: 1rem;
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+        
         /* Extrait Card (social feed) */
         .extrait-card {
             background: var(--bg-card);
@@ -3726,6 +3858,20 @@
                                 <span>Copier</span>
                             </button>
                         </div>
+                        <div class="comments-section">
+                            <button class="comments-toggle" onclick="toggleComments('${extrait.id}')">
+                                💬 <span id="commentCount-${extrait.id}">${extrait.comments_count || 0}</span> commentaire${(extrait.comments_count || 0) !== 1 ? 's' : ''}
+                            </button>
+                            <div class="comments-container" id="comments-${extrait.id}">
+                                <div class="comments-list" id="commentsList-${extrait.id}">
+                                    <div class="comments-empty">Chargement...</div>
+                                </div>
+                                <div class="comment-input-area">
+                                    <textarea class="comment-input" id="commentInput-${extrait.id}" placeholder="Écrire un commentaire..." rows="1" onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); postComment('${extrait.id}'); }"></textarea>
+                                    <button class="comment-send" onclick="postComment('${extrait.id}')">➤</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -3771,6 +3917,148 @@
             const text = `"${extrait.texte}"\n— ${extrait.source_author}, ${extrait.source_title}`;
             navigator.clipboard.writeText(text);
             toast('📋 Extrait copié !');
+        }
+        
+        // ═══════════════════════════════════════════════════════════
+        // 💬 COMMENTAIRES
+        // ═══════════════════════════════════════════════════════════
+        
+        // Afficher/masquer les commentaires
+        async function toggleComments(extraitId) {
+            const container = document.getElementById(`comments-${extraitId}`);
+            const isOpen = container.classList.contains('open');
+            
+            if (isOpen) {
+                container.classList.remove('open');
+            } else {
+                container.classList.add('open');
+                await loadComments(extraitId);
+            }
+        }
+        
+        // Charger les commentaires d'un extrait
+        async function loadComments(extraitId) {
+            if (!supabaseClient) return;
+            
+            const container = document.getElementById(`commentsList-${extraitId}`);
+            container.innerHTML = '<div class="comments-empty">Chargement...</div>';
+            
+            try {
+                const { data: comments, error } = await supabaseClient
+                    .from('comments')
+                    .select(`
+                        *,
+                        profiles:user_id (username)
+                    `)
+                    .eq('extrait_id', extraitId)
+                    .order('created_at', { ascending: true });
+                
+                if (error) throw error;
+                
+                if (!comments || comments.length === 0) {
+                    container.innerHTML = '<div class="comments-empty">Aucun commentaire. Soyez le premier !</div>';
+                    return;
+                }
+                
+                container.innerHTML = comments.map(comment => {
+                    const username = comment.profiles?.username || 'Anonyme';
+                    const initial = username.charAt(0).toUpperCase();
+                    const timeAgo = formatTimeAgo(new Date(comment.created_at));
+                    const canDelete = currentUser && comment.user_id === currentUser.id;
+                    
+                    return `
+                        <div class="comment-item" data-id="${comment.id}">
+                            <div class="comment-avatar" onclick="openUserProfile('${comment.user_id}', '${username}')" style="cursor:pointer">${initial}</div>
+                            <div class="comment-content">
+                                <div class="comment-header">
+                                    <span class="comment-username" onclick="openUserProfile('${comment.user_id}', '${username}')">${username}</span>
+                                    <span class="comment-time">${timeAgo}</span>
+                                    ${canDelete ? `<button class="comment-delete" onclick="deleteComment('${comment.id}', '${extraitId}')">🗑️</button>` : ''}
+                                </div>
+                                <div class="comment-text">${escapeHtml(comment.content)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Mettre à jour le compteur
+                document.getElementById(`commentCount-${extraitId}`).textContent = comments.length;
+                
+            } catch (err) {
+                console.error('Erreur chargement commentaires:', err);
+                container.innerHTML = '<div class="comments-empty">Erreur de chargement</div>';
+            }
+        }
+        
+        // Poster un commentaire
+        async function postComment(extraitId) {
+            if (!currentUser) {
+                openAuthModal('login');
+                toast('📝 Connectez-vous pour commenter');
+                return;
+            }
+            
+            if (!supabaseClient) return;
+            
+            const input = document.getElementById(`commentInput-${extraitId}`);
+            const content = input.value.trim();
+            
+            if (!content) return;
+            
+            input.value = '';
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('comments')
+                    .insert({
+                        extrait_id: extraitId,
+                        user_id: currentUser.id,
+                        content: content,
+                        created_at: new Date().toISOString()
+                    });
+                
+                if (error) throw error;
+                
+                // Incrémenter le compteur (optionnel, via trigger ou manuellement)
+                await supabaseClient.rpc('increment_comments', { p_extrait_id: extraitId });
+                
+                toast('💬 Commentaire ajouté !');
+                
+                // Recharger les commentaires
+                await loadComments(extraitId);
+                
+            } catch (err) {
+                console.error('Erreur post commentaire:', err);
+                toast('❌ Erreur d\'envoi');
+            }
+        }
+        
+        // Supprimer un commentaire
+        async function deleteComment(commentId, extraitId) {
+            if (!currentUser || !supabaseClient) return;
+            
+            if (!confirm('Supprimer ce commentaire ?')) return;
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('comments')
+                    .delete()
+                    .eq('id', commentId);
+                
+                if (error) throw error;
+                
+                // Décrémenter le compteur
+                await supabaseClient.rpc('decrement_comments', { p_extrait_id: extraitId });
+                
+                toast('🗑️ Commentaire supprimé');
+                
+                // Recharger les commentaires
+                await loadComments(extraitId);
+                
+            } catch (err) {
+                console.error('Erreur suppression commentaire:', err);
+                toast('❌ Erreur de suppression');
+            }
         }
         
         async function loadUserStats() {
