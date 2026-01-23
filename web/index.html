@@ -2358,11 +2358,12 @@
         async function createUserProfile(userId, username) {
             if (!supabaseClient) return;
             
-            await supabaseClient.from('profiles').insert({
+            // Utiliser upsert pour mettre à jour si le profil existe déjà (créé par le trigger)
+            await supabaseClient.from('profiles').upsert({
                 id: userId,
                 username: username,
                 created_at: new Date().toISOString()
-            });
+            }, { onConflict: 'id' });
         }
         
         // Callbacks auth
