@@ -1,0 +1,23 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/web/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/web/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    }
+  ]
+}
