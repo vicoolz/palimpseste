@@ -247,9 +247,6 @@ async function registerWithEmail() {
             console.error('Code erreur:', error.code);
             console.error('Status:', error.status);
             
-            // Afficher l'erreur brute pour debug
-            alert('DEBUG - Erreur brute: ' + JSON.stringify(error));
-            
             if (error.message.includes('already registered') || error.message.includes('User already registered')) {
                 errorMsg = 'Cette adresse email est déjà utilisée. Connectez-vous ou utilisez une autre adresse.';
             } else if (error.message.includes('duplicate key') || error.message.includes('unique constraint')) {
