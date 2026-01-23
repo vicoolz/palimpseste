@@ -746,6 +746,86 @@
         .tag.théâtre { border-color: #3d9be9; color: #3d9be9; }
         .tag.conte { border-color: var(--accent-secondary); color: var(--accent-secondary); }
         
+        /* Ambiances de lecture */
+        .ambiance-bar {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .ambiance-bar::-webkit-scrollbar { display: none; }
+        .ambiance-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .ambiance-pill:hover {
+            border-color: var(--text-secondary);
+            color: var(--text);
+            transform: translateY(-1px);
+        }
+        .ambiance-pill.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+            box-shadow: 0 2px 8px rgba(255,69,58,0.3);
+        }
+        .ambiance-pill .ambiance-icon {
+            font-size: 1rem;
+        }
+        .ambiance-pill .ambiance-name {
+            font-weight: 500;
+        }
+        .ambiance-intro {
+            padding: 1.5rem;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(255,69,58,0.05), rgba(191,90,242,0.05));
+            border-bottom: 1px solid var(--border);
+            animation: fadeIn 0.5s ease;
+        }
+        .ambiance-intro h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+        .ambiance-intro p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .ambiance-intro .ambiance-tags {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .ambiance-intro .ambiance-tag {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.6rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--muted);
+        }
+        
         /* Language badge */
         .lang-badge {
             font-size: 0.6rem;
@@ -3322,8 +3402,6 @@
                         <option value="el">🇬🇷 Ελληνικά</option>
                     </select>
                 </div>
-                <button class="header-btn" onclick="shuffleFeed()" title="Tout effacer et découvrir de nouveaux textes aléatoires">🌊 Nouveau fil</button>
-                <button class="header-btn" onclick="randomJump()" title="Se laisser surprendre par un auteur ou un thème au hasard">🎲 Surprise</button>
                 <button class="header-btn favorites-btn" onclick="openFavoritesView()" title="Voir tous mes favoris">♥ <span id="favCount">0</span></button>
                 <button class="header-btn" onclick="openSocialFeed()" title="Voir le feed communautaire">🐦 Social</button>
                 <button class="header-btn" onclick="openMessaging()" title="Messages privés" style="position: relative;">💬<span id="unreadBadge" class="messages-badge" style="display: none;">0</span></button>
@@ -3361,6 +3439,61 @@
         <div class="cat-subcategories" id="catSubcategories"></div>
         <button class="cat-close" onclick="closeCategoryMode()">✕ Quitter</button>
     </div>
+    
+    <!-- Barre d'ambiances de lecture -->
+    <div class="ambiance-bar" id="ambianceBar">
+        <div class="ambiance-pill active" data-ambiance="libre" onclick="setAmbiance('libre')">
+            <span class="ambiance-icon">🌊</span>
+            <span class="ambiance-name">Dérive libre</span>
+        </div>
+        <div class="ambiance-pill" data-ambiance="gothique" onclick="setAmbiance('gothique')">
+            <span class="ambiance-icon">🦇</span>
+            <span class="ambiance-name">Gothique</span>
+        </div>
+        <div class="ambiance-pill" data-ambiance="surrealiste" onclick="setAmbiance('surrealiste')">
+            <span class="ambiance-icon">🎭</span>
+            <span class="ambiance-name">Surréaliste</span>
+        </div>
+        <div class="ambiance-pill" data-ambiance="romantique" onclick="setAmbiance('romantique')">
+            <span class="ambiance-icon">🌹</span>
+            <span class="ambiance-name">Romantique</span>
+        </div>
+        <div class="ambiance-pill" data-ambiance="melancolie" onclick="setAmbiance('melancolie')">
+            <span class="ambiance-icon">🌧️</span>
+            <span class="ambiance-name">Mélancolie</span>
+        </div>
+        <div class="ambiance-pill" data-ambiance="mystique" onclick="setAmbiance('mystique')">
+            <span class="ambiance-icon">🔮</span>
+            <span class="ambiance-name">Mystique</span>
+        </div>
+        <div class="ambiance-pill" data-ambiance="epique" onclick="setAmbiance('epique')">
+            <span class="ambiance-icon">⚔️</span>
+            <span class="ambiance-name">Épique</span>
+        </div>
+        <div class="ambiance-pill" data-ambiance="pastoral" onclick="setAmbiance('pastoral')">
+            <span class="ambiance-icon">🌾</span>
+            <span class="ambiance-name">Pastoral</span>
+        </div>
+        <div class="ambiance-pill" data-ambiance="decadent" onclick="setAmbiance('decadent')">
+            <span class="ambiance-icon">💀</span>
+            <span class="ambiance-name">Décadent</span>
+        </div>
+        <div class="ambiance-pill" data-ambiance="antique" onclick="setAmbiance('antique')">
+            <span class="ambiance-icon">🏛️</span>
+            <span class="ambiance-name">Antique</span>
+        </div>
+        <div class="ambiance-pill" data-ambiance="voyage" onclick="setAmbiance('voyage')">
+            <span class="ambiance-icon">🚢</span>
+            <span class="ambiance-name">Voyage</span>
+        </div>
+        <div class="ambiance-pill" data-ambiance="philosophie" onclick="setAmbiance('philosophie')">
+            <span class="ambiance-icon">🧠</span>
+            <span class="ambiance-name">Philosophie</span>
+        </div>
+    </div>
+    
+    <!-- Intro d'ambiance -->
+    <div class="ambiance-intro" id="ambianceIntro" style="display: none;"></div>
     
     <main id="feed"></main>
     <div id="recoBanner" class="reco-banner" style="display:none;">
@@ -8806,7 +8939,177 @@
         }
 
         // ═══════════════════════════════════════════════════════════
-        // 🎲 FONCTIONNALITÉS FUN - Le génie des graphes
+        // � AMBIANCES DE LECTURE
+        // ═══════════════════════════════════════════════════════════
+        
+        const AMBIANCES = {
+            libre: {
+                name: 'Dérive libre',
+                icon: '🌊',
+                description: 'Laissez-vous porter par le hasard des textes',
+                authors: [], // Utilise les auteurs par défaut
+                keywords: [],
+                color: '#64b5f6'
+            },
+            gothique: {
+                name: 'Gothique',
+                icon: '🦇',
+                description: 'Châteaux hantés, spectres et terreurs nocturnes',
+                authors: ['Edgar Allan Poe', 'Ann Radcliffe', 'Matthew Lewis', 'Horace Walpole', 'Mary Shelley', 'Bram Stoker', 'Charles Maturin', 'Sheridan Le Fanu', 'Théophile Gautier', 'Villiers de l\'Isle-Adam'],
+                keywords: ['fantôme', 'spectre', 'château', 'terreur', 'nuit', 'vampire', 'mort', 'tombe', 'ténèbres', 'effroi'],
+                color: '#6a1b9a'
+            },
+            surrealiste: {
+                name: 'Surréaliste',
+                icon: '🎭',
+                description: 'L\'inconscient libéré, les rêves éveillés',
+                authors: ['André Breton', 'Paul Éluard', 'Robert Desnos', 'Philippe Soupault', 'Louis Aragon', 'Benjamin Péret', 'René Crevel', 'Antonin Artaud', 'Lautréamont', 'Alfred Jarry'],
+                keywords: ['rêve', 'automatique', 'hasard', 'inconscient', 'merveilleux', 'étrange', 'absurde'],
+                color: '#ff6f00'
+            },
+            romantique: {
+                name: 'Romantique',
+                icon: '🌹',
+                description: 'Passions intenses et âmes tourmentées',
+                authors: ['Victor Hugo', 'Alphonse de Lamartine', 'Alfred de Musset', 'Alfred de Vigny', 'Gérard de Nerval', 'François-René de Chateaubriand', 'George Sand', 'Lord Byron', 'Percy Shelley', 'John Keats'],
+                keywords: ['amour', 'passion', 'coeur', 'âme', 'sentiment', 'larmes', 'désespoir', 'nature'],
+                color: '#e91e63'
+            },
+            melancolie: {
+                name: 'Mélancolie',
+                icon: '🌧️',
+                description: 'Spleen, tristesse douce et contemplation',
+                authors: ['Charles Baudelaire', 'Paul Verlaine', 'Jules Laforgue', 'Maurice Rollinat', 'Sully Prudhomme', 'Albert Samain', 'Francis Jammes', 'Giacomo Leopardi'],
+                keywords: ['spleen', 'ennui', 'tristesse', 'automne', 'pluie', 'brume', 'solitude', 'regret', 'nostalgie'],
+                color: '#546e7a'
+            },
+            mystique: {
+                name: 'Mystique',
+                icon: '🔮',
+                description: 'Quêtes spirituelles et visions ésotériques',
+                authors: ['William Blake', 'Emanuel Swedenborg', 'Jakob Böhme', 'Angelus Silesius', 'San Juan de la Cruz', 'Sainte Thérèse d\'Avila', 'Maître Eckhart', 'Hildegarde de Bingen', 'Rûmî'],
+                keywords: ['âme', 'divin', 'extase', 'vision', 'lumière', 'éternel', 'sacré', 'céleste', 'spirituel'],
+                color: '#7e57c2'
+            },
+            epique: {
+                name: 'Épique',
+                icon: '⚔️',
+                description: 'Héros, batailles et destinées grandioses',
+                authors: ['Homère', 'Virgile', 'Le Tasse', 'L\'Arioste', 'Milton', 'Camoens', 'Dante Alighieri', 'Victor Hugo'],
+                keywords: ['héros', 'bataille', 'gloire', 'honneur', 'guerre', 'victoire', 'destin', 'épée', 'conquête'],
+                color: '#d32f2f'
+            },
+            pastoral: {
+                name: 'Pastoral',
+                icon: '🌾',
+                description: 'Campagnes idylliques et nature apaisante',
+                authors: ['Théocrite', 'Virgile', 'Pierre de Ronsard', 'Joachim du Bellay', 'Maurice Scève', 'Francis Jammes', 'Jean Giono', 'Colette'],
+                keywords: ['berger', 'prairie', 'champ', 'fleur', 'ruisseau', 'oiseau', 'printemps', 'nature', 'campagne'],
+                color: '#66bb6a'
+            },
+            decadent: {
+                name: 'Décadent',
+                icon: '💀',
+                description: 'Fin de siècle, artifice et beauté morbide',
+                authors: ['Joris-Karl Huysmans', 'Jean Lorrain', 'Rachilde', 'Villiers de l\'Isle-Adam', 'Jules Barbey d\'Aurevilly', 'Oscar Wilde', 'Gabriele D\'Annunzio', 'Maurice Rollinat'],
+                keywords: ['artifice', 'opium', 'décadence', 'luxe', 'pervers', 'morbide', 'exquis', 'raffiné', 'poison'],
+                color: '#4a148c'
+            },
+            antique: {
+                name: 'Antique',
+                icon: '🏛️',
+                description: 'Sagesse grecque et grandeur romaine',
+                authors: ['Homère', 'Sophocle', 'Euripide', 'Platon', 'Aristote', 'Virgile', 'Ovide', 'Horace', 'Sénèque', 'Marc Aurèle', 'Cicéron'],
+                keywords: ['Olympe', 'dieux', 'muse', 'oracle', 'temple', 'philosophe', 'vertu', 'sagesse'],
+                color: '#8d6e63'
+            },
+            voyage: {
+                name: 'Voyage',
+                icon: '🚢',
+                description: 'Horizons lointains et découvertes',
+                authors: ['Jules Verne', 'Pierre Loti', 'Joseph Conrad', 'Herman Melville', 'Robert Louis Stevenson', 'Jack London', 'Marco Polo', 'Ibn Battûta'],
+                keywords: ['voyage', 'mer', 'île', 'horizon', 'aventure', 'découverte', 'navire', 'explorateur', 'orient'],
+                color: '#0288d1'
+            },
+            philosophie: {
+                name: 'Philosophie',
+                icon: '🧠',
+                description: 'Méditations sur l\'existence et la pensée',
+                authors: ['Platon', 'Aristote', 'Montaigne', 'Blaise Pascal', 'René Descartes', 'Jean-Jacques Rousseau', 'Voltaire', 'Friedrich Nietzsche', 'Arthur Schopenhauer', 'Sénèque'],
+                keywords: ['pensée', 'raison', 'vérité', 'existence', 'mort', 'liberté', 'sagesse', 'doute', 'être'],
+                color: '#455a64'
+            }
+        };
+        
+        let currentAmbiance = 'libre';
+        
+        // Changer d'ambiance
+        async function setAmbiance(ambianceId) {
+            const ambiance = AMBIANCES[ambianceId];
+            if (!ambiance) return;
+            
+            currentAmbiance = ambianceId;
+            
+            // Mettre à jour l'UI
+            document.querySelectorAll('.ambiance-pill').forEach(pill => {
+                pill.classList.toggle('active', pill.dataset.ambiance === ambianceId);
+            });
+            
+            // Afficher l'intro si ce n'est pas "libre"
+            const introEl = document.getElementById('ambianceIntro');
+            if (ambianceId !== 'libre') {
+                introEl.innerHTML = `
+                    <h2>${ambiance.icon} ${ambiance.name}</h2>
+                    <p>${ambiance.description}</p>
+                    <div class="ambiance-tags">
+                        ${ambiance.authors.slice(0, 5).map(a => `<span class="ambiance-tag">${a}</span>`).join('')}
+                        ${ambiance.authors.length > 5 ? `<span class="ambiance-tag">+${ambiance.authors.length - 5} auteurs</span>` : ''}
+                    </div>
+                `;
+                introEl.style.display = 'block';
+            } else {
+                introEl.style.display = 'none';
+            }
+            
+            // Effacer le feed et recharger avec la nouvelle ambiance
+            document.getElementById('feed').innerHTML = '';
+            state.loading = false;
+            
+            // Toast
+            toast(`${ambiance.icon} Mode ${ambiance.name} activé`);
+            
+            // Charger les textes de cette ambiance
+            await loadAmbianceContent(ambianceId);
+        }
+        
+        // Charger le contenu d'une ambiance
+        async function loadAmbianceContent(ambianceId) {
+            const ambiance = AMBIANCES[ambianceId];
+            
+            if (ambianceId === 'libre' || !ambiance.authors.length) {
+                // Mode libre : utiliser le comportement par défaut
+                await exploreAuthor(DEFAULT_AUTHORS[Math.floor(Math.random() * DEFAULT_AUTHORS.length)]);
+                return;
+            }
+            
+            // Choisir des auteurs/mots-clés de l'ambiance au hasard
+            const shuffledAuthors = [...ambiance.authors].sort(() => Math.random() - 0.5);
+            const shuffledKeywords = [...ambiance.keywords].sort(() => Math.random() - 0.5);
+            
+            // Charger 2-3 auteurs + 1-2 mots-clés pour variété
+            const toLoad = [
+                ...shuffledAuthors.slice(0, 2),
+                ...shuffledKeywords.slice(0, 1)
+            ];
+            
+            for (const term of toLoad) {
+                await exploreAuthor(term);
+            }
+        }
+        
+        // Modifier randomJump pour respecter l'ambiance
+        // ═══════════════════════════════════════════════════════════
+        // �🎲 FONCTIONNALITÉS FUN - Le génie des graphes
         // ═══════════════════════════════════════════════════════════
         
         // Auteurs "secrets" - pépites cachées mondiales à découvrir
@@ -8865,12 +9168,21 @@
         
         // Saut aléatoire vers un auteur ou terme de recherche aléatoire
         async function randomJump() {
-            // Combiner les auteurs découverts, les hidden gems, et quelques termes de recherche génériques
-            const discoveredAuthors = Object.keys(state.authorStats);
-            const universalTerms = ['sonnet', 'elegy', 'ode', 'ballade', 'fable', 'hymn', 'nocturne'];
-            const allOptions = [...discoveredAuthors, ...HIDDEN_GEMS, ...universalTerms];
-            const unvisited = allOptions.filter(a => !state.authorStats[a] && !HIDDEN_GEMS.includes(a) || HIDDEN_GEMS.includes(a));
-            const pool = unvisited.length > 3 ? unvisited : allOptions;
+            const ambiance = AMBIANCES[currentAmbiance];
+            let pool = [];
+            
+            // Si une ambiance spécifique est active, utiliser ses auteurs/mots-clés
+            if (currentAmbiance !== 'libre' && ambiance.authors.length > 0) {
+                pool = [...ambiance.authors, ...ambiance.keywords];
+            } else {
+                // Mode libre : comportement classique
+                const discoveredAuthors = Object.keys(state.authorStats);
+                const universalTerms = ['sonnet', 'elegy', 'ode', 'ballade', 'fable', 'hymn', 'nocturne'];
+                const allOptions = [...discoveredAuthors, ...HIDDEN_GEMS, ...universalTerms];
+                const unvisited = allOptions.filter(a => !state.authorStats[a] && !HIDDEN_GEMS.includes(a) || HIDDEN_GEMS.includes(a));
+                pool = unvisited.length > 3 ? unvisited : allOptions;
+            }
+            
             const chosen = pool[Math.floor(Math.random() * pool.length)];
             
             toast(FUN_MESSAGES[Math.floor(Math.random() * FUN_MESSAGES.length)]);
