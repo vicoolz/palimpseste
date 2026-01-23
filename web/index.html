@@ -2418,13 +2418,14 @@
                 </div>
             </div>
         </div>
-        <!-- Navigateur de Catégories (Arborescence) -->
-        <div id="categoryNav" class="category-nav" style="display:none;">
-            <div class="cat-breadcrumbs" id="catBreadcrumbs"></div>
-            <div class="cat-subcategories" id="catSubcategories"></div>
-            <button class="cat-close" onclick="closeCategoryMode()">✕ Quitter l'exploration</button>
-        </div>
     </header>
+    
+    <!-- Navigateur de Catégories (Barre flottante en bas - hors du header) -->
+    <div id="categoryNav" class="category-nav" style="display:none;">
+        <div class="cat-breadcrumbs" id="catBreadcrumbs"></div>
+        <div class="cat-subcategories" id="catSubcategories"></div>
+        <button class="cat-close" onclick="closeCategoryMode()">✕ Quitter</button>
+    </div>
     
     <main id="feed"></main>
     <div id="recoBanner" class="reco-banner" style="display:none;">
