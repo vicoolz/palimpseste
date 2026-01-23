@@ -3941,37 +3941,54 @@
             if (!supabaseClient) return;
             
             const container = document.getElementById(`commentsList-${extraitId}`);
+            if (!container) return;
             container.innerHTML = '<div class="comments-empty">Chargement...</div>';
             
             try {
+                // Récupérer les commentaires
                 const { data: comments, error } = await supabaseClient
                     .from('comments')
-                    .select(`
-                        *,
-                        profiles:user_id (username)
-                    `)
+                    .select('*')
                     .eq('extrait_id', extraitId)
                     .order('created_at', { ascending: true });
                 
-                if (error) throw error;
+                if (error) {
+                    console.error('Erreur SQL comments:', error);
+                    // Vérifier si c'est une erreur de table non existante
+                    if (error.message?.includes('does not exist') || error.code === '42P01') {
+                        container.innerHTML = '<div class="comments-empty">⚠️ Table comments non créée.<br><small>Exécutez le SQL dans Supabase.</small></div>';
+                    } else {
+                        container.innerHTML = '<div class="comments-empty">Erreur: ' + error.message + '</div>';
+                    }
+                    return;
+                }
                 
                 if (!comments || comments.length === 0) {
                     container.innerHTML = '<div class="comments-empty">Aucun commentaire. Soyez le premier !</div>';
                     return;
                 }
                 
+                // Récupérer les profils des commentateurs
+                const userIds = [...new Set(comments.map(c => c.user_id))];
+                const { data: profiles } = await supabaseClient
+                    .from('profiles')
+                    .select('id, username')
+                    .in('id', userIds);
+                const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+                
                 container.innerHTML = comments.map(comment => {
-                    const username = comment.profiles?.username || 'Anonyme';
+                    const profile = profileMap.get(comment.user_id);
+                    const username = profile?.username || 'Anonyme';
                     const initial = username.charAt(0).toUpperCase();
                     const timeAgo = formatTimeAgo(new Date(comment.created_at));
                     const canDelete = currentUser && comment.user_id === currentUser.id;
                     
                     return `
                         <div class="comment-item" data-id="${comment.id}">
-                            <div class="comment-avatar" onclick="openUserProfile('${comment.user_id}', '${username}')" style="cursor:pointer">${initial}</div>
+                            <div class="comment-avatar" onclick="openUserProfile('${comment.user_id}', '${escapeHtml(username)}')" style="cursor:pointer">${initial}</div>
                             <div class="comment-content">
                                 <div class="comment-header">
-                                    <span class="comment-username" onclick="openUserProfile('${comment.user_id}', '${username}')">${username}</span>
+                                    <span class="comment-username" onclick="openUserProfile('${comment.user_id}', '${escapeHtml(username)}')">${escapeHtml(username)}</span>
                                     <span class="comment-time">${timeAgo}</span>
                                     ${canDelete ? `<button class="comment-delete" onclick="deleteComment('${comment.id}', '${extraitId}')">🗑️</button>` : ''}
                                 </div>
@@ -3982,11 +3999,12 @@
                 }).join('');
                 
                 // Mettre à jour le compteur
-                document.getElementById(`commentCount-${extraitId}`).textContent = comments.length;
+                const countEl = document.getElementById(`commentCount-${extraitId}`);
+                if (countEl) countEl.textContent = comments.length;
                 
             } catch (err) {
                 console.error('Erreur chargement commentaires:', err);
-                container.innerHTML = '<div class="comments-empty">Erreur de chargement</div>';
+                container.innerHTML = '<div class="comments-empty">Erreur: ' + (err.message || err) + '</div>';
             }
         }
         
@@ -4017,10 +4035,18 @@
                         created_at: new Date().toISOString()
                     });
                 
-                if (error) throw error;
+                if (error) {
+                    console.error('Erreur insert comment:', error);
+                    toast('❌ Erreur: ' + error.message);
+                    return;
+                }
                 
-                // Incrémenter le compteur (optionnel, via trigger ou manuellement)
-                await supabaseClient.rpc('increment_comments', { p_extrait_id: extraitId });
+                // Incrémenter le compteur (ignorer les erreurs si la fonction n'existe pas)
+                try {
+                    await supabaseClient.rpc('increment_comments', { p_extrait_id: extraitId });
+                } catch (rpcErr) {
+                    console.warn('RPC increment_comments non disponible:', rpcErr);
+                }
                 
                 toast('💬 Commentaire ajouté !');
                 
