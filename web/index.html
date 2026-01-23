@@ -3441,7 +3441,7 @@
                 return;
             }
             
-            // Récupérer les profils des followers un par un (plus fiable que .in())
+            // Récupérer les profils des followers
             const followerIds = follows.map(f => f.follower_id);
             const profileMap = new Map();
             
@@ -3450,7 +3450,7 @@
                     .from('profiles')
                     .select('id, username')
                     .eq('id', fid)
-                    .single();
+                    .maybeSingle();
                 if (profile) {
                     profileMap.set(fid, profile);
                 }
@@ -3502,11 +3502,11 @@
                 return;
             }
             
-            // Récupérer les profils des utilisateurs qui ont liké (un par un pour fiabilité)
+            // Récupérer les profils des utilisateurs qui ont liké
             const userIds = [...new Set(recentLikes.map(l => l.user_id))];
             const userMap = new Map();
             for (const uid of userIds) {
-                const { data: user } = await supabaseClient.from('profiles').select('id, username').eq('id', uid).single();
+                const { data: user } = await supabaseClient.from('profiles').select('id, username').eq('id', uid).maybeSingle();
                 if (user) userMap.set(uid, user);
             }
             
@@ -3518,11 +3518,11 @@
                 .in('id', extraitIds);
             const extraitMap = new Map(extraits?.map(e => [e.id, e]) || []);
             
-            // Récupérer les auteurs des extraits (un par un pour fiabilité)
+            // Récupérer les auteurs des extraits
             const extraitAuthorIds = [...new Set(extraits?.map(e => e.user_id) || [])];
             const authorMap = new Map();
             for (const aid of extraitAuthorIds) {
-                const { data: author } = await supabaseClient.from('profiles').select('id, username').eq('id', aid).single();
+                const { data: author } = await supabaseClient.from('profiles').select('id, username').eq('id', aid).maybeSingle();
                 if (author) authorMap.set(aid, author);
             }
             
@@ -4687,16 +4687,12 @@
 
             
             for (const ws of shuffledSources) {
-                const terms = [...(SEARCH_TERMS[ws.lang] || SEARCH_TERMS.en)]; // Copier pour ne pas muter
-                // Choisir 4-5 termes aléatoires (plus de variété)
+                const terms = [...(SEARCH_TERMS[ws.lang] || SEARCH_TERMS.en)];
                 const selectedTerms = terms.sort(() => Math.random() - 0.5).slice(0, 5);
-                
-                console.log('fillPool: recherche', ws.lang, selectedTerms);
                 
                 for (const term of selectedTerms) {
                     try {
-                        const results = await searchTexts(term, 15, ws); // Plus de résultats
-                        console.log('fillPool:', term, '=', results.length, 'résultats');
+                        const results = await searchTexts(term, 15, ws);
                         for (const r of results) {
                             if (!state.shownPages.has(r.title) && !state.textPool.some(t => t.title === r.title)) {
                                 // Filtrage généraliste par structure du titre
@@ -4721,7 +4717,6 @@
                     }
                 }
             }
-            console.log('fillPool: pool final =', state.textPool.length, 'items');
             state.textPool = [...state.textPool].sort(() => Math.random() - 0.5);
         }
         
@@ -4902,19 +4897,15 @@
         }
 
         async function init() {
-            console.log('init: démarrage');
-            
             // Initialiser Supabase (social features)
             initSupabase();
             
             loadState();
             
-            // Restaurer le choix de langue (avec validation)
+            // Restaurer le choix de langue
             const savedLang = localStorage.getItem('palimpseste_lang') || 'all';
-            // Vérifier que la langue est valide
             const validLangs = ['all', ...WIKISOURCES.map(w => w.lang)];
             selectedLang = validLangs.includes(savedLang) ? savedLang : 'all';
-            console.log('init: langue =', selectedLang);
             
             const langSelect = document.getElementById('langSelect');
             if (langSelect) langSelect.value = selectedLang;
@@ -4928,13 +4919,9 @@
             updateFunStat();
             
             document.getElementById('loading').style.display = 'block';
-            console.log('init: appel fillPool...');
             await fillPool();
-            console.log('init: fillPool terminé, pool =', state.textPool.length);
             document.getElementById('loading').style.display = 'none';
-            console.log('init: appel loadMore...');
             await loadMore();
-            console.log('init: terminé');
             
             // Mise à jour périodique du fun stat
             setInterval(updateFunStat, 15000);
@@ -5749,26 +5736,18 @@
             if (state.loading) return;
             state.loading = true;
             document.getElementById('loading').style.display = 'block';
-            
-            console.log('loadMore: démarrage, pool =', state.textPool.length);
 
             let loaded = 0, attempts = 0;
             while (loaded < 3 && attempts < 15) {
                 attempts++;
-                // Ne pas refill en mode exploration de catégorie!
                 const isExploringCategory = currentCategoryPath.length > 0;
                 if (state.textPool.length < 3 && !isExploringCategory) {
-                    console.log('loadMore: refill pool...');
                     await fillPool();
                 }
-                if (state.textPool.length === 0) {
-                    console.log('loadMore: pool vide après fillPool');
-                    break;
-                }
+                if (state.textPool.length === 0) break;
                 
                 const item = state.textPool.shift();
                 const itemKey = (item.source === 'poetrydb' ? 'poetrydb:' : '') + item.title;
-                console.log('loadMore: tentative', item.title, item.source || 'wikisource');
                 if (state.shownPages.has(itemKey)) continue;
                 
                 // Si c'est un item pré-chargé (PoetryDB), on l'affiche directement
@@ -5781,7 +5760,6 @@
                         source: item.source
                     }, item.title, { lang: item.lang, url: 'https://poetrydb.org', name: 'PoetryDB' });
                     loaded++;
-                    console.log('📜 PoetryDB carte rendue:', item.title);
                     continue;
                 }
                 
@@ -5792,13 +5770,8 @@
                     state.shownPages.add(itemKey);
                     renderCard(result, item.title, ws);
                     loaded++;
-                    console.log('loadMore: carte rendue', item.title);
-                } else {
-                    console.log('loadMore: texte trop court ou null', result?.text?.length);
                 }
             }
-            
-            console.log('loadMore: fin, loaded =', loaded);
 
             document.getElementById('loading').style.display = 'none';
             state.loading = false;
