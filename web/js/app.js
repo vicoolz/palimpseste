@@ -119,8 +119,8 @@ async function registerWithEmail() {
         return;
     }
     
-    const username = document.getElementById('registerUsername').value;
-    const email = document.getElementById('registerEmail').value;
+    const username = document.getElementById('registerUsername').value.trim();
+    const email = document.getElementById('registerEmail').value.trim().toLowerCase();
     const password = document.getElementById('registerPassword').value;
     
     if (!username || !email || !password) {
@@ -133,37 +133,85 @@ async function registerWithEmail() {
         return;
     }
     
+    // Validation du username (pas de caractères spéciaux problématiques)
+    if (!/^[a-zA-Z0-9_àâäéèêëïîôùûüç\-]+$/.test(username)) {
+        showAuthError('register', 'Le nom d\'utilisateur ne peut contenir que des lettres, chiffres, tirets et underscores');
+        return;
+    }
+    
+    if (username.length < 2 || username.length > 30) {
+        showAuthError('register', 'Le nom d\'utilisateur doit faire entre 2 et 30 caractères');
+        return;
+    }
+    
     document.getElementById('registerBtn').disabled = true;
+    document.getElementById('registerBtn').textContent = 'Inscription...';
     
-    const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password,
-        options: {
-            data: { username }
+    try {
+        // Vérifier d'abord si le username existe déjà
+        const { data: existingUser, error: checkError } = await supabaseClient
+            .from('profiles')
+            .select('username')
+            .ilike('username', username)
+            .maybeSingle();
+        
+        if (existingUser) {
+            document.getElementById('registerBtn').disabled = false;
+            document.getElementById('registerBtn').textContent = 'S\'inscrire';
+            showAuthError('register', 'Ce nom d\'utilisateur est déjà pris. Choisissez-en un autre.');
+            return;
         }
-    });
-    
-    document.getElementById('registerBtn').disabled = false;
-    
-    if (error) {
-        // Améliorer les messages d'erreur courants
-        let errorMsg = error.message;
-        if (error.message.includes('duplicate key') || error.message.includes('unique constraint')) {
-            if (error.message.includes('username')) {
-                errorMsg = 'Ce nom d\'utilisateur est déjà pris. Choisissez-en un autre.';
-            } else if (error.message.includes('email')) {
-                errorMsg = 'Cette adresse email est déjà utilisée.';
-            } else {
-                errorMsg = 'Ce compte existe déjà.';
+        
+        // Créer le compte
+        const { data, error } = await supabaseClient.auth.signUp({
+            email,
+            password,
+            options: {
+                data: { username }
             }
-        } else if (error.message.includes('Database error')) {
-            errorMsg = 'Ce nom d\'utilisateur est déjà pris ou une erreur est survenue. Essayez un autre nom.';
+        });
+        
+        document.getElementById('registerBtn').disabled = false;
+        document.getElementById('registerBtn').textContent = 'S\'inscrire';
+        
+        if (error) {
+            // Améliorer les messages d'erreur courants
+            let errorMsg = error.message;
+            console.error('Erreur inscription:', error);
+            
+            if (error.message.includes('already registered') || error.message.includes('User already registered')) {
+                errorMsg = 'Cette adresse email est déjà utilisée. Connectez-vous ou utilisez une autre adresse.';
+            } else if (error.message.includes('duplicate key') || error.message.includes('unique constraint')) {
+                if (error.message.includes('username')) {
+                    errorMsg = 'Ce nom d\'utilisateur est déjà pris. Choisissez-en un autre.';
+                } else if (error.message.includes('email')) {
+                    errorMsg = 'Cette adresse email est déjà utilisée.';
+                } else {
+                    errorMsg = 'Ce compte existe déjà.';
+                }
+            } else if (error.message.includes('Database error')) {
+                // Erreur générique de base de données - probablement un conflit
+                errorMsg = 'Erreur lors de la création du compte. Vérifiez que l\'email est valide et réessayez.';
+            } else if (error.message.includes('Invalid email')) {
+                errorMsg = 'L\'adresse email n\'est pas valide.';
+            } else if (error.message.includes('Password')) {
+                errorMsg = 'Le mot de passe ne respecte pas les critères requis (min. 6 caractères).';
+            }
+            showAuthError('register', errorMsg);
+        } else {
+            // Succès ! Le profil est créé automatiquement par un trigger Supabase
+            closeAuthModal();
+            if (data.user && !data.user.email_confirmed_at) {
+                toast('🎉 Compte créé ! Vérifiez votre email pour confirmer.');
+            } else {
+                toast('🎉 Compte créé avec succès !');
+            }
         }
-        showAuthError('register', errorMsg);
-    } else {
-        // Le profil est créé automatiquement par un trigger Supabase
-        closeAuthModal();
-        toast('🎉 Compte créé ! Vérifiez votre email.');
+    } catch (e) {
+        console.error('Exception lors de l\'inscription:', e);
+        document.getElementById('registerBtn').disabled = false;
+        document.getElementById('registerBtn').textContent = 'S\'inscrire';
+        showAuthError('register', 'Une erreur est survenue. Veuillez réessayer.');
     }
 }
 
