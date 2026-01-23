@@ -86,11 +86,102 @@ function switchAuthForm(mode) {
     document.getElementById('loginForm').style.display = mode === 'login' ? 'block' : 'none';
     document.getElementById('registerForm').style.display = mode === 'register' ? 'block' : 'none';
     document.getElementById('forgotForm').style.display = mode === 'forgot' ? 'block' : 'none';
+    document.getElementById('resetPasswordForm').style.display = mode === 'reset' ? 'block' : 'none';
     // Reset messages
     document.getElementById('loginError').classList.remove('show');
     document.getElementById('registerError').classList.remove('show');
     document.getElementById('forgotError').classList.remove('show');
     document.getElementById('forgotSuccess').classList.remove('show');
+    if (document.getElementById('resetError')) {
+        document.getElementById('resetError').classList.remove('show');
+    }
+    if (document.getElementById('resetSuccess')) {
+        document.getElementById('resetSuccess').classList.remove('show');
+    }
+}
+
+// Vérifier si l'URL contient un token de reset password
+function checkPasswordResetToken() {
+    // Supabase met les paramètres dans le hash (#) de l'URL
+    const hash = window.location.hash;
+    if (hash && hash.includes('type=recovery')) {
+        // C'est un lien de récupération de mot de passe
+        console.log('Token de récupération détecté');
+        // Ouvrir le modal avec le formulaire de nouveau mot de passe
+        setTimeout(() => {
+            document.getElementById('authModal').classList.add('open');
+            switchAuthForm('reset');
+        }, 500);
+    }
+}
+
+// Fonction pour mettre à jour le mot de passe
+async function updatePassword() {
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    // Validation
+    if (!newPassword || !confirmPassword) {
+        showAuthError('reset', 'Veuillez remplir tous les champs');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showAuthError('reset', 'Le mot de passe doit contenir au moins 6 caractères');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showAuthError('reset', 'Les mots de passe ne correspondent pas');
+        return;
+    }
+    
+    document.getElementById('resetBtn').disabled = true;
+    document.getElementById('resetBtn').textContent = 'Modification...';
+    
+    try {
+        const { data, error } = await supabaseClient.auth.updateUser({
+            password: newPassword
+        });
+        
+        document.getElementById('resetBtn').disabled = false;
+        document.getElementById('resetBtn').textContent = 'Changer le mot de passe';
+        
+        if (error) {
+            console.error('Erreur update password:', error);
+            showAuthError('reset', error.message);
+        } else {
+            // Succès !
+            document.getElementById('resetError').classList.remove('show');
+            const successEl = document.getElementById('resetSuccess');
+            successEl.textContent = '✅ Mot de passe modifié avec succès !';
+            successEl.classList.add('show');
+            
+            // Nettoyer l'URL (enlever le hash)
+            history.replaceState(null, '', window.location.pathname);
+            
+            // Fermer le modal après 2 secondes et rediriger vers connexion
+            setTimeout(() => {
+                closeAuthModal();
+                // Si l'utilisateur est maintenant connecté, tant mieux
+                // Sinon il pourra se reconnecter avec son nouveau mdp
+            }, 2000);
+        }
+    } catch (e) {
+        console.error('Erreur:', e);
+        document.getElementById('resetBtn').disabled = false;
+        document.getElementById('resetBtn').textContent = 'Changer le mot de passe';
+        showAuthError('reset', 'Une erreur est survenue. Réessayez.');
+    }
+}
+
+// Helper pour afficher les erreurs sur le formulaire reset
+function showAuthError(formType, message) {
+    const errorEl = document.getElementById(formType + 'Error');
+    if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.classList.add('show');
+    }
 }
 
 async function sendPasswordReset() {
@@ -4049,6 +4140,9 @@ function detectTag(title, text) {
 async function init() {
     // Initialiser Supabase (social features)
     initSupabase();
+    
+    // Vérifier si c'est un retour depuis un email de reset password
+    checkPasswordResetToken();
     
     loadState();
     

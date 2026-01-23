@@ -560,6 +560,17 @@
                 <div class="auth-switch"><a onclick="switchAuthForm('login')">← Retour à la connexion</a></div>
             </div>
             
+            <!-- Formulaire nouveau mot de passe (après clic sur lien email) -->
+            <div id="resetPasswordForm" style="display:none;">
+                <div class="auth-title">Nouveau mot de passe 🔐</div>
+                <div class="auth-subtitle">Choisissez votre nouveau mot de passe</div>
+                <div class="auth-error" id="resetError"></div>
+                <div class="auth-success" id="resetSuccess"></div>
+                <input type="password" class="auth-input" id="newPassword" placeholder="Nouveau mot de passe (min. 6 caractères)">
+                <input type="password" class="auth-input" id="confirmPassword" placeholder="Confirmer le mot de passe">
+                <button class="auth-btn" onclick="updatePassword()" id="resetBtn">Changer le mot de passe</button>
+            </div>
+            
             <!-- Formulaire d'inscription -->
             <div id="registerForm" style="display:none;">
                 <div class="auth-title">Bienvenue 🌟</div>
