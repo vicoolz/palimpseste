@@ -12,6 +12,148 @@
 --border: #2a2a2d;
 --glow: 0 0 60px rgba(230,57,70,0.1);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🚨 MOBILE FIRST - RÈGLES PRIORITAIRES (Safari iOS / Android)
+   Ces règles DOIVENT être en haut du fichier pour avoir la priorité !
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media screen and (max-width: 900px) {
+    /* CACHER COMPLÈTEMENT LA SIDEBAR */
+    .stats-panel,
+    .stats-panel *,
+    .stats-section,
+    .profile-section,
+    .favorites-section {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        max-width: 0 !important;
+        max-height: 0 !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        overflow: hidden !important;
+        position: absolute !important;
+        left: -99999px !important;
+        top: -99999px !important;
+        pointer-events: none !important;
+        z-index: -9999 !important;
+        font-size: 0 !important;
+        line-height: 0 !important;
+        clip: rect(0,0,0,0) !important;
+        -webkit-clip-path: inset(100%) !important;
+        clip-path: inset(100%) !important;
+    }
+    
+    /* HEADER - PLEINE LARGEUR, PART DE 0 */
+    header {
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+    }
+    
+    .header-inner {
+        width: 100% !important;
+        padding: 0.5rem 0.75rem !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+    }
+    
+    /* Titre header plus petit */
+    .header-title {
+        font-size: 0.6rem !important;
+        flex-shrink: 0 !important;
+    }
+    
+    /* Barre de recherche flexible */
+    .search-container {
+        flex: 1 1 auto !important;
+        min-width: 80px !important;
+        max-width: none !important;
+        margin: 0 0.25rem !important;
+    }
+    
+    .search-input {
+        width: 100% !important;
+        font-size: 16px !important; /* Empêche zoom iOS */
+        padding: 0.5rem 0.75rem 0.5rem 2rem !important;
+    }
+    
+    /* Boutons header compacts */
+    .header-actions {
+        flex-shrink: 0 !important;
+        gap: 0.25rem !important;
+    }
+    
+    .header-btn {
+        padding: 0.4rem 0.5rem !important;
+        font-size: 0.75rem !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
+    }
+    
+    /* Cacher le sélecteur de langue */
+    .lang-selector {
+        display: none !important;
+    }
+    
+    /* CONTENU PRINCIPAL - PLEINE LARGEUR */
+    main {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        padding-top: 4rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Bannière reco - pleine largeur */
+    .reco-banner {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    
+    /* Body sans scroll horizontal */
+    html, body {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+    }
+}
+
+/* SMARTPHONES - ENCORE PLUS COMPACT */
+@media screen and (max-width: 500px) {
+    .header-title {
+        display: none !important; /* Cacher titre */
+    }
+    
+    .header-btn {
+        padding: 0.3rem !important;
+        min-width: 32px !important;
+        min-height: 32px !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .search-input {
+        padding: 0.4rem 0.6rem 0.4rem 1.75rem !important;
+    }
+    
+    main {
+        padding: 3.5rem 0.5rem 4rem 0.5rem !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
 font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
