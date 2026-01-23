@@ -2767,16 +2767,53 @@
         async function createUserProfile(userId, username) {
             if (!supabaseClient) return;
             
-            // Utiliser upsert pour mettre à jour si le profil existe déjà (créé par le trigger)
-            await supabaseClient.from('profiles').upsert({
-                id: userId,
-                username: username,
-                created_at: new Date().toISOString()
-            }, { onConflict: 'id' });
+            try {
+                // Utiliser upsert pour créer ou mettre à jour le profil
+                const { error } = await supabaseClient.from('profiles').upsert({
+                    id: userId,
+                    username: username,
+                    created_at: new Date().toISOString()
+                }, { onConflict: 'id' });
+                
+                if (error) {
+                    console.error('Erreur création profil:', error);
+                }
+            } catch (e) {
+                console.error('Exception création profil:', e);
+            }
+        }
+        
+        // S'assurer que le profil existe (appelé à chaque connexion)
+        async function ensureProfileExists() {
+            if (!supabaseClient || !currentUser) return;
+            
+            // Vérifier si le profil existe
+            const { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('id, username')
+                .eq('id', currentUser.id)
+                .maybeSingle();
+            
+            if (!profile) {
+                // Profil n'existe pas, le créer
+                const username = currentUser.user_metadata?.username || 
+                                 currentUser.email?.split('@')[0] || 
+                                 'Utilisateur';
+                await createUserProfile(currentUser.id, username);
+            } else if (!profile.username && currentUser.user_metadata?.username) {
+                // Profil existe mais sans username, le mettre à jour
+                await supabaseClient
+                    .from('profiles')
+                    .update({ username: currentUser.user_metadata.username })
+                    .eq('id', currentUser.id);
+            }
         }
         
         // Callbacks auth
-        function onUserLoggedIn() {
+        async function onUserLoggedIn() {
+            // S'assurer que le profil existe dans la table profiles
+            await ensureProfileExists();
+            
             const username = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || 'Utilisateur';
             const initial = username.charAt(0).toUpperCase();
             
