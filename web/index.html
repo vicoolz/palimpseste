@@ -2947,15 +2947,33 @@
             
             // Charger les likes et follows de l'utilisateur
             let userLikes = new Set();
-            if (currentUser && supabaseClient) {
-                const { data } = await supabaseClient
+            let likeCounts = {};
+            
+            if (supabaseClient) {
+                // Compter les vrais likes pour chaque extrait depuis la table likes
+                const extraitIds = socialExtraits.map(e => e.id);
+                const { data: allLikes } = await supabaseClient
                     .from('likes')
                     .select('extrait_id')
-                    .eq('user_id', currentUser.id);
-                userLikes = new Set(data?.map(l => l.extrait_id) || []);
+                    .in('extrait_id', extraitIds);
                 
-                // Charger les follows si pas déjà fait
-                await loadUserFollowing();
+                // Compter les likes par extrait
+                if (allLikes) {
+                    allLikes.forEach(like => {
+                        likeCounts[like.extrait_id] = (likeCounts[like.extrait_id] || 0) + 1;
+                    });
+                }
+                
+                if (currentUser) {
+                    const { data } = await supabaseClient
+                        .from('likes')
+                        .select('extrait_id')
+                        .eq('user_id', currentUser.id);
+                    userLikes = new Set(data?.map(l => l.extrait_id) || []);
+                    
+                    // Charger les follows si pas déjà fait
+                    await loadUserFollowing();
+                }
             }
             
             container.innerHTML = socialExtraits.map(extrait => {
@@ -2963,6 +2981,7 @@
                 const initial = username.charAt(0).toUpperCase();
                 const timeAgo = formatTimeAgo(new Date(extrait.created_at));
                 const isLiked = userLikes.has(extrait.id);
+                const realLikeCount = likeCounts[extrait.id] || 0;
                 
                 return `
                     <div class="extrait-card" data-id="${extrait.id}">
@@ -2986,7 +3005,7 @@
                         <div class="extrait-actions">
                             <button class="extrait-action ${isLiked ? 'liked' : ''}" onclick="toggleLikeExtrait('${extrait.id}')">
                                 <span class="icon">${isLiked ? '❤️' : '🤍'}</span>
-                                <span>${extrait.likes_count || 0}</span>
+                                <span>${realLikeCount}</span>
                             </button>
                             <button class="extrait-action" onclick="copyExtrait('${extrait.id}')">
                                 <span class="icon">📋</span>
