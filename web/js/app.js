@@ -6747,15 +6747,11 @@ function initMobile() {
     // Ajouter l'écouteur pour le bouton profil mobile
     const profileBtn = document.getElementById('mobileProfileBtn');
     if (profileBtn) {
-        profileBtn.addEventListener('click', function(e) {
+        // Un seul listener avec pointerup pour compatibilité touch + mouse
+        profileBtn.addEventListener('pointerup', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            openMobileDrawer();
-        });
-        // Aussi sur touch pour mobile
-        profileBtn.addEventListener('touchend', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
+            console.log('📱 Profile button clicked');
             openMobileDrawer();
         });
     }

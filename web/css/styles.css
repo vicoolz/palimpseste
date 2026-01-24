@@ -314,7 +314,7 @@
         width: 85% !important;
         max-width: 320px !important;
         height: 100% !important;
-        z-index: 200 !important;
+        z-index: 250 !important;
         transform: translateX(-100%) !important;
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         overflow-y: auto !important;
