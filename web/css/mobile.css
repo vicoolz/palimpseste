@@ -65,14 +65,16 @@
         height: 48px !important;
         padding: 4px !important;
         margin: 0 !important;
-        background: none !important;
+        background: transparent !important;
         border: none !important;
         cursor: pointer !important;
         flex-shrink: 0 !important;
-        -webkit-tap-highlight-color: rgba(0,0,0,0.1) !important;
+        -webkit-tap-highlight-color: rgba(255,255,255,0.2) !important;
         position: relative !important;
-        z-index: 150 !important;
+        z-index: 9999 !important;
         pointer-events: auto !important;
+        touch-action: manipulation !important;
+        text-decoration: none !important;
     }
     
     .mobile-profile-avatar {
@@ -339,7 +341,7 @@
     
     main {
         margin: 0 !important;
-        padding-top: 130px !important; /* header 56px + tabs ~50px + marge 24px */
+        padding-top: 160px !important; /* header 56px + tabs ~70px + marge 34px */
         padding-bottom: calc(var(--mobile-nav-height) + var(--mobile-safe-bottom) + 24px) !important;
         padding-left: 12px !important;
         padding-right: 12px !important;
