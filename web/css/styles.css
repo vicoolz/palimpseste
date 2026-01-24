@@ -1,5 +1,6 @@
-﻿/* 📦 Import des variables centralisées */
+﻿/* 📦 Import des fichiers modulaires */
 @import 'variables.css';
+@import 'base.css';
 
 /* Variables legacy (pour rétrocompatibilité, seront supprimées progressivement) */
 :root {
@@ -771,20 +772,7 @@
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-background: var(--bg);
-color: var(--text);
-line-height: 1.7;
-min-height: 100vh;
--webkit-font-smoothing: antialiased;
-/* Grain subtil façon vieux papier + pixel grid */
-background-image: 
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1' fill='%23ffffff' opacity='0.02'/%3E%3C/svg%3E");
-background-size: auto, 4px 4px;
-}
+/* 🔄 Reset et body importés depuis base.css */
 
 /* Stats Panel - Style épuré + pixel touches */
 .stats-panel {
