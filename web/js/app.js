@@ -258,7 +258,7 @@ async function init() {
     // Créer le bouton scroll to top
     createScrollTopButton();
     
-    // Pull to refresh - quand on tire vers le haut en étant au sommet
+    // Pull to refresh - quand on tire vers le haut en étant au sommet (MOBILE)
     let pullStartY = 0;
     let isPulling = false;
     let pullIndicator = null;
@@ -299,6 +299,49 @@ async function init() {
         }
         isPulling = false;
         pullStartY = 0;
+    }, { passive: true });
+    
+    // Scroll vers le haut au sommet = charger nouveaux textes (DESKTOP)
+    let wheelUpCount = 0;
+    let wheelUpTimer = null;
+    
+    window.addEventListener('wheel', async (e) => {
+        // Si on est en haut et qu'on scrolle vers le haut (deltaY négatif)
+        if (window.scrollY <= 5 && e.deltaY < 0 && !state.loading) {
+            wheelUpCount++;
+            
+            // Afficher indicateur après 2 scrolls vers le haut
+            if (wheelUpCount >= 2 && !pullIndicator) {
+                pullIndicator = document.createElement('div');
+                pullIndicator.className = 'pull-indicator';
+                pullIndicator.style.opacity = '1';
+                pullIndicator.innerHTML = '↑ Continuer pour charger...';
+                document.body.appendChild(pullIndicator);
+            }
+            
+            // Charger après 4 scrolls vers le haut
+            if (wheelUpCount >= 4) {
+                if (pullIndicator) {
+                    pullIndicator.textContent = '↻ Chargement...';
+                }
+                wheelUpCount = 0;
+                await loadNewTextsOnTop();
+                if (pullIndicator) {
+                    pullIndicator.remove();
+                    pullIndicator = null;
+                }
+            }
+            
+            // Reset le compteur après 800ms d'inactivité
+            clearTimeout(wheelUpTimer);
+            wheelUpTimer = setTimeout(() => {
+                wheelUpCount = 0;
+                if (pullIndicator) {
+                    pullIndicator.remove();
+                    pullIndicator = null;
+                }
+            }, 800);
+        }
     }, { passive: true });
     
     // Headroom: cacher le header quand on scrolle vers le bas, afficher vers le haut
