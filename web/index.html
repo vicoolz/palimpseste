@@ -36,22 +36,21 @@
             <span class="mobile-nav-icon">🏠</span>
             <span class="mobile-nav-label">Feed</span>
         </button>
-        <button class="mobile-nav-item" onclick="mobileNavTo('search')" data-nav="search">
-            <span class="mobile-nav-icon">🔍</span>
-            <span class="mobile-nav-label">Explorer</span>
-        </button>
         <button class="mobile-nav-item" onclick="pureRandomJump()" data-nav="random">
             <span class="mobile-nav-icon">🎲</span>
             <span class="mobile-nav-label">Hasard</span>
         </button>
-        <button class="mobile-nav-item" onclick="mobileNavTo('social')" data-nav="social">
-            <span class="mobile-nav-icon">🐦</span>
-            <span class="mobile-nav-label">Social</span>
+        <button class="mobile-nav-item" onclick="openTrendingFeed()" data-nav="trending">
+            <span class="mobile-nav-icon">🔥</span>
+            <span class="mobile-nav-label">Tendances</span>
         </button>
-        <button class="mobile-nav-item" onclick="mobileNavTo('notifs')" data-nav="notifs">
-            <span class="mobile-nav-icon">🔔</span>
-            <span class="mobile-nav-label">Notifs</span>
-            <span class="mobile-nav-badge" id="mobileNotifBadge"></span>
+        <button class="mobile-nav-item" onclick="openMessaging()" data-nav="messages">
+            <span class="mobile-nav-icon">💬</span>
+            <span class="mobile-nav-label">Messages</span>
+        </button>
+        <button class="mobile-nav-item" onclick="openMobileDrawer()" data-nav="menu">
+            <span class="mobile-nav-icon">☰</span>
+            <span class="mobile-nav-label">Menu</span>
         </button>
     </nav>
     
@@ -207,9 +206,9 @@
     <header>
         <div class="header-inner">
             <!-- MOBILE: Avatar profil cliquable -->
-            <button class="mobile-profile-btn" id="mobileProfileBtn" type="button" onclick="openMobileDrawer()">
-                <span class="mobile-profile-avatar" id="mobileAvatar">👤</span>
-            </button>
+            <div class="mobile-profile-btn" id="mobileProfileBtn" onclick="openMobileDrawer()" role="button" tabindex="0">
+                <div class="mobile-profile-avatar" id="mobileAvatar" onclick="openMobileDrawer()">👤</div>
+            </div>
             
             <!-- MOBILE: Logo compact -->
             <span class="mobile-logo">📜</span>
