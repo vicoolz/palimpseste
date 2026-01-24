@@ -1,4 +1,4 @@
-﻿/* 📦 Import des fichiers modulaires */
+﻿    /* 📦 Import des fichiers modulaires */
 @import 'variables.css';
 @import 'base.css';
 
@@ -600,29 +600,47 @@
     .ambiance-intro {
         position: relative !important;
         margin-left: 0 !important;
-        margin-top: 0 !important;
-        padding: 0.75rem 1rem !important;
+        margin-top: 150px !important; /* Décale sous les headers fixes (header 58px + exploration ~92px) */
+        padding: 0.6rem 0.75rem !important;
         max-height: none !important;
         overflow-y: visible !important;
     }
     
+    /* Quand l'intro est visible, réduire le padding du main */
+    body.has-ambiance-intro main {
+        padding-top: 0.5rem !important;
+    }
+    
     .ambiance-intro h2 {
-        font-size: 1rem !important;
-        margin-bottom: 0.3rem !important;
+        font-size: 0.95rem !important;
+        margin-bottom: 0.25rem !important;
     }
     
     .ambiance-intro p {
-        font-size: 0.75rem !important;
-        margin-bottom: 0.5rem !important;
+        font-size: 0.7rem !important;
+        margin-bottom: 0.4rem !important;
+    }
+    
+    .ambiance-intro .period-badge {
+        font-size: 0.6rem !important;
+        padding: 0.15rem 0.4rem !important;
+        margin-bottom: 0.3rem !important;
     }
     
     .ambiance-intro .ambiance-tags {
-        gap: 0.3rem !important;
+        gap: 0.25rem !important;
+        margin-top: 0.4rem !important;
     }
     
     .ambiance-intro .ambiance-tag {
-        font-size: 0.65rem !important;
-        padding: 0.2rem 0.5rem !important;
+        font-size: 0.6rem !important;
+        padding: 0.15rem 0.4rem !important;
+    }
+    
+    .ambiance-intro .close-intro {
+        top: 0.5rem !important;
+        right: 0.5rem !important;
+        font-size: 1rem !important;
     }
     
     /* Progress bar */

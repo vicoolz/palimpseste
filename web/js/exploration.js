@@ -359,6 +359,7 @@ function switchExplorationMode(mode) {
     const introEl = document.getElementById('ambianceIntro');
     if (introEl) {
         introEl.style.display = 'none';
+        document.body.classList.remove('has-ambiance-intro');
     }
 }
 
@@ -393,6 +394,7 @@ async function setEpoque(epoqueId) {
             </div>
         `;
         introEl.style.display = 'block';
+        document.body.classList.add('has-ambiance-intro');
     }
     
     // Effacer et recharger
@@ -440,6 +442,7 @@ async function setCourant(courantId) {
             </div>
         `;
         introEl.style.display = 'block';
+        document.body.classList.add('has-ambiance-intro');
     }
     
     // Effacer et recharger
@@ -490,8 +493,10 @@ async function setAmbiance(ambianceId) {
                 </div>
             `;
             introEl.style.display = 'block';
+            document.body.classList.add('has-ambiance-intro');
         } else {
             introEl.style.display = 'none';
+            document.body.classList.remove('has-ambiance-intro');
         }
     }
     
@@ -518,6 +523,7 @@ function closeAmbianceIntro() {
     const introEl = document.getElementById('ambianceIntro');
     if (introEl) {
         introEl.style.display = 'none';
+        document.body.classList.remove('has-ambiance-intro');
     }
 }
 
