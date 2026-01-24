@@ -479,9 +479,20 @@
         font-size: 0.9rem !important;
     }
     
-    /* Sections du drawer */
+    /* ══════════════════════════════════════════
+       MASQUER LA SECTION PROFIL DANS LE DRAWER
+       (On a le popup profil séparé maintenant)
+       ══════════════════════════════════════════ */
+    
+    .stats-panel .profile-section,
+    .stats-panel #profileSection,
+    .stats-panel .drawer-quick-actions,
+    .stats-panel .stats-logo {
+        display: none !important;
+    }
+    
+    /* Sections du drawer (stats, favoris, badges) */
     .stats-section,
-    .profile-section,
     .favorites-section,
     .badges-section {
         display: block !important;
@@ -499,140 +510,55 @@
         color: #e8e6e3 !important;
     }
     
-    .stats-logo {
-        display: block !important;
-        font-family: var(--font-pixel, monospace) !important;
-        font-size: 1.4rem !important;
-        font-weight: bold !important;
-        color: #e63946 !important;
-        text-align: center !important;
-        margin-bottom: 12px !important;
-        padding: 8px 0 !important;
-    }
-    
     /* Texte dans le drawer */
     .stats-panel * {
         color: #e8e6e3 !important;
     }
     
-    .stats-panel .stats-logo {
-        color: #e63946 !important;
-    }
-    
     /* ══════════════════════════════════════════
-       PROFIL DANS LE DRAWER
+       PROFIL DANS LE DRAWER - MASQUÉ SUR MOBILE
        ══════════════════════════════════════════ */
     
     .profile-section {
-        padding: 16px !important;
+        display: none !important;
     }
     
     .login-prompt {
-        text-align: center !important;
-        padding: 16px 8px !important;
+        display: none !important;
     }
     
     .login-prompt-icon {
-        font-size: 2.5rem !important;
-        margin-bottom: 8px !important;
+        display: none !important;
     }
     
     .login-prompt-text {
-        font-size: 0.85rem !important;
-        color: #9d9a95 !important;
-        margin-bottom: 12px !important;
+        display: none !important;
     }
     
-    .login-prompt-btn {
+    .login-prompt-btn,
+    .login-prompt-btn.secondary,
+    .profile-header-card,
+    .profile-avatar-large,
+    .profile-name-large,
+    .profile-stats-row,
+    .profile-stat-btn,
+    .drawer-logout-btn {
+        display: none !important;
+    }
+    
+    /* ══════════════════════════════════════════
+       TITRE DU MENU DRAWER
+       ══════════════════════════════════════════ */
+    
+    .stats-panel::before {
+        content: '📊 Statistiques' !important;
         display: block !important;
-        width: 100% !important;
-        padding: 12px 16px !important;
-        margin: 6px 0 !important;
-        background: #e63946 !important;
-        border: none !important;
-        border-radius: 8px !important;
-        color: white !important;
-        font-size: 0.9rem !important;
+        font-size: 1.2rem !important;
         font-weight: 600 !important;
-        cursor: pointer !important;
-    }
-    
-    .login-prompt-btn.secondary {
-        background: transparent !important;
-        border: 1px solid #2a2a2d !important;
         color: #e8e6e3 !important;
-    }
-    
-    .profile-header-card {
-        text-align: center !important;
+        margin-bottom: 16px !important;
         padding-bottom: 12px !important;
         border-bottom: 1px solid #2a2a2d !important;
-        margin-bottom: 12px !important;
-    }
-    
-    .profile-avatar-large {
-        width: 64px !important;
-        height: 64px !important;
-        border-radius: 50% !important;
-        background: linear-gradient(135deg, #e63946, #9b5de5) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 1.8rem !important;
-        margin: 0 auto 8px auto !important;
-        border: 3px solid #2a2a2d !important;
-    }
-    
-    .profile-name-large {
-        font-size: 1.1rem !important;
-        font-weight: 600 !important;
-        color: #e8e6e3 !important;
-    }
-    
-    .profile-stats-row {
-        display: flex !important;
-        gap: 8px !important;
-        margin-bottom: 12px !important;
-    }
-    
-    .profile-stat-btn {
-        flex: 1 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        padding: 12px 8px !important;
-        background: #0d0d0d !important;
-        border: 1px solid #2a2a2d !important;
-        border-radius: 8px !important;
-        cursor: pointer !important;
-    }
-    
-    .profile-stat-btn:active {
-        background: #2a2a2d !important;
-    }
-    
-    .profile-stat-btn .stat-number {
-        font-size: 1.4rem !important;
-        font-weight: bold !important;
-        color: #e63946 !important;
-    }
-    
-    .profile-stat-btn .stat-label {
-        font-size: 0.75rem !important;
-        color: #9d9a95 !important;
-        margin-top: 2px !important;
-    }
-    
-    .drawer-logout-btn {
-        display: block !important;
-        width: 100% !important;
-        padding: 10px !important;
-        background: transparent !important;
-        border: 1px solid #5c5a56 !important;
-        border-radius: 8px !important;
-        color: #9d9a95 !important;
-        font-size: 0.8rem !important;
-        cursor: pointer !important;
     }
     
     /* ══════════════════════════════════════════
