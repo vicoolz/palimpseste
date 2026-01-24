@@ -9,101 +9,151 @@
     <meta name="format-detection" content="telephone=no">
     <meta name="theme-color" content="#0d0d0d">
     <meta name="msapplication-TileColor" content="#0d0d0d">
+    <meta name="description" content="Palimpseste - Dérive littéraire à travers les textes classiques. Découvrez la poésie, les romans et la philosophie.">
+    
     <title>Palimpseste – Dérive littéraire</title>
+    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
-    <link rel="stylesheet" href="css/styles.css">
-    <!-- Supabase SDK -->
+    
+    <!-- 📦 CSS Modulaire -->
+    <link rel="stylesheet" href="css/main.css">
+    
+    <!-- 🔗 Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <!-- ═══════════════════════════════════════════════════════════════════════
-         PROGRESS BAR
+         📊 PROGRESS BAR
          ═══════════════════════════════════════════════════════════════════════ -->
     <div class="progress" id="progress"></div>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
-         MOBILE: Overlay pour fermer le drawer
+         📱 MOBILE: Drawer Overlay
          ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="mobile-drawer-overlay" id="mobileDrawerOverlay" onclick="closeMobileDrawer()"></div>
+    <div class="drawer-overlay" id="drawer-overlay"></div>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
-         MOBILE: Navigation bottom bar (style Twitter)
+         📱 MOBILE: Drawer (Menu latéral)
          ═══════════════════════════════════════════════════════════════════════ -->
-    <nav class="mobile-bottom-nav" id="mobileBottomNav">
-        <button class="mobile-nav-item active" onclick="mobileNavTo('feed')" data-nav="feed">
-            <span class="mobile-nav-icon">🏠</span>
-            <span class="mobile-nav-label">Feed</span>
+    <aside class="drawer" id="mobile-drawer" aria-hidden="true">
+        <button class="drawer__close" aria-label="Fermer">✕</button>
+        
+        <div class="drawer__logo">PALIMPSESTE</div>
+        
+        <!-- Profil utilisateur -->
+        <div class="drawer__profile" id="drawer-profile">
+            <div class="drawer__profile-info">
+                <div class="drawer__profile-avatar" id="drawer-avatar">👤</div>
+                <div>
+                    <div class="drawer__profile-name" id="drawer-username">Connexion</div>
+                    <div class="drawer__profile-email" id="drawer-email"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation rapide -->
+        <nav class="drawer__nav">
+            <a href="#" class="drawer__nav-item" data-action="social-feed">
+                <span class="drawer__nav-icon">🐦</span>
+                Social
+            </a>
+            <a href="#" class="drawer__nav-item" data-action="trending">
+                <span class="drawer__nav-icon">🔥</span>
+                Tendances
+            </a>
+            <a href="#" class="drawer__nav-item" data-action="favorites">
+                <span class="drawer__nav-icon">♥</span>
+                Favoris
+            </a>
+            <a href="#" class="drawer__nav-item" data-action="messages">
+                <span class="drawer__nav-icon">💬</span>
+                Messages
+                <span class="drawer__nav-badge" id="drawer-msg-badge"></span>
+            </a>
+        </nav>
+        
+        <!-- Sélecteur de langue -->
+        <div class="drawer__section">
+            <label class="drawer__section-title">🌍 Langue</label>
+            <select class="select" id="drawer-language">
+                <!-- Rempli par JS -->
+            </select>
+        </div>
+        
+        <!-- Statistiques -->
+        <div class="drawer__section">
+            <div class="drawer__section-title">📊 Ma dérive</div>
+            <div class="drawer__stats">
+                <div class="drawer__stat">
+                    <span class="drawer__stat-value" id="drawer-texts-count">0</span>
+                    <span class="drawer__stat-label">textes</span>
+                </div>
+                <div class="drawer__stat">
+                    <span class="drawer__stat-value" id="drawer-likes-count">0</span>
+                    <span class="drawer__stat-label">favoris</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions auth -->
+        <div class="drawer__actions" id="drawer-auth-actions">
+            <button class="btn btn--primary btn--block" data-action="login">Se connecter</button>
+            <button class="btn btn--secondary btn--block" data-action="signup">Créer un compte</button>
+        </div>
+        
+        <div class="drawer__actions drawer__actions--logged" id="drawer-logged-actions" style="display: none;">
+            <button class="btn btn--ghost btn--block" data-action="logout">🚪 Déconnexion</button>
+        </div>
+    </aside>
+    
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         📱 MOBILE: Bottom Navigation
+         ═══════════════════════════════════════════════════════════════════════ -->
+    <nav class="mobile-nav" id="mobile-nav">
+        <button class="mobile-nav__item active" data-nav="home">
+            <span class="mobile-nav__icon">🏠</span>
+            <span class="mobile-nav__label">Feed</span>
         </button>
-        <button class="mobile-nav-item" onclick="mobileNavTo('search')" data-nav="search">
-            <span class="mobile-nav-icon">🔍</span>
-            <span class="mobile-nav-label">Explorer</span>
+        <button class="mobile-nav__item" data-nav="explore">
+            <span class="mobile-nav__icon">🔍</span>
+            <span class="mobile-nav__label">Explorer</span>
         </button>
-        <button class="mobile-nav-item" onclick="pureRandomJump()" data-nav="random">
-            <span class="mobile-nav-icon">🎲</span>
-            <span class="mobile-nav-label">Hasard</span>
+        <button class="mobile-nav__item" data-nav="random">
+            <span class="mobile-nav__icon">🎲</span>
+            <span class="mobile-nav__label">Hasard</span>
         </button>
-        <button class="mobile-nav-item" onclick="mobileNavTo('social')" data-nav="social">
-            <span class="mobile-nav-icon">🐦</span>
-            <span class="mobile-nav-label">Social</span>
+        <button class="mobile-nav__item" data-nav="social">
+            <span class="mobile-nav__icon">🐦</span>
+            <span class="mobile-nav__label">Social</span>
         </button>
-        <button class="mobile-nav-item" onclick="mobileNavTo('notifs')" data-nav="notifs">
-            <span class="mobile-nav-icon">🔔</span>
-            <span class="mobile-nav-label">Notifs</span>
-            <span class="mobile-nav-badge" id="mobileNotifBadge"></span>
+        <button class="mobile-nav__item" data-nav="notifs">
+            <span class="mobile-nav__icon">🔔</span>
+            <span class="mobile-nav__label">Notifs</span>
+            <span class="mobile-nav__badge" id="mobile-notif-badge"></span>
         </button>
     </nav>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
-         PANNEAU STATISTIQUES (Sidebar gauche / Drawer mobile)
+         📊 SIDEBAR (Desktop - Gauche)
          ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="stats-panel" id="statsPanel">
-        <!-- Bouton fermer pour mobile -->
-        <button class="drawer-close-btn" onclick="closeMobileDrawer()">✕</button>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar__logo">PALIMPSESTE</div>
         
-        <div class="stats-logo">PALIMPSESTE</div>
-        
-        <!-- Actions rapides (visible surtout sur mobile) -->
-        <div class="drawer-quick-actions">
-            <button class="drawer-action-btn" onclick="openTrendingFeed(); closeMobileDrawer();">
-                <span>🔥</span> Tendances
-            </button>
-            <button class="drawer-action-btn" onclick="openFavoritesView(); closeMobileDrawer();">
-                <span>♥</span> Favoris
-            </button>
-            <button class="drawer-action-btn" onclick="openSocialFeed(); closeMobileDrawer();">
-                <span>🐦</span> Social
-            </button>
-            <button class="drawer-action-btn" onclick="openMessaging(); closeMobileDrawer();">
-                <span>💬</span> Messages
-            </button>
-            <div class="drawer-lang-selector">
-                <span>🌍</span>
-                <select id="drawerLangSelect" onchange="changeLanguage(this.value); closeMobileDrawer();">
-                    <option value="all">Toutes langues</option>
-                    <option value="fr">🇫🇷 Français</option>
-                    <option value="en">🇬🇧 English</option>
-                    <option value="de">🇩🇪 Deutsch</option>
-                    <option value="it">🇮🇹 Italiano</option>
-                    <option value="es">🇪🇸 Español</option>
-                </select>
+        <!-- Profil -->
+        <div class="sidebar__profile" id="sidebar-profile">
+            <div id="sidebar-logged-out">
+                <p class="sidebar__login-hint">🐦 Rejoignez la communauté pour partager vos extraits préférés</p>
+                <button class="btn btn--primary btn--block" data-action="login">Se connecter</button>
             </div>
-        </div>
-        
-        <!-- Section Profil Social -->
-        <div id="profileSection" class="profile-section">
-            <div id="profileLoggedOut" class="login-prompt">
-                <div class="login-prompt-text">🐦 Rejoignez la communauté pour partager vos extraits préférés</div>
-                <button class="login-prompt-btn" onclick="openAuthModal('login')">Se connecter</button>
-            </div>
-            <div id="profileLoggedIn" style="display:none;">
-                <div class="profile-header">
-                    <div class="profile-avatar" id="sidebarAvatar">👤</div>
+            <div id="sidebar-logged-in" style="display: none;">
+                <div class="sidebar__profile-info">
+                    <div class="sidebar__avatar" id="sidebar-avatar">👤</div>
                     <div>
-                        <div class="profile-name" id="sidebarUsername">Utilisateur</div>
-                        <div class="profile-stats">
-                            <span class="profile-stat"><strong id="myExtraitsCount">0</strong> extraits</span>
-                            <span class="profile-stat"><strong id="myLikesCount">0</strong> likes</span>
+                        <div class="sidebar__username" id="sidebar-username">Utilisateur</div>
+                        <div class="sidebar__stats-mini">
+                            <span><strong id="sidebar-extraits">0</strong> extraits</span>
+                            <span><strong id="sidebar-likes">0</strong> likes</span>
                         </div>
                     </div>
                 </div>
@@ -111,597 +161,307 @@
         </div>
         
         <!-- Statistiques de dérive -->
-        <div class="stats-section">
-            <h3>🎲 Votre dérive</h3>
-            <div class="big-number" id="totalRead">0</div>
-            <div class="big-number-label">textes traversés</div>
-            <div class="mini-stats">
-                <div class="mini-stat">
-                    <div class="mini-stat-value" id="likeCountPanel">0</div>
-                    <div class="mini-stat-label">coups de ❤️</div>
+        <div class="sidebar__section">
+            <h3 class="sidebar__section-title">🎲 Votre dérive</h3>
+            <div class="sidebar__big-number" id="total-read">0</div>
+            <div class="sidebar__big-label">textes traversés</div>
+            <div class="sidebar__mini-stats">
+                <div class="sidebar__mini-stat">
+                    <div class="sidebar__mini-value" id="like-count">0</div>
+                    <div class="sidebar__mini-label">coups de ❤️</div>
                 </div>
-                <div class="mini-stat">
-                    <div class="mini-stat-value" id="authorCount">0</div>
-                    <div class="mini-stat-label">auteurs</div>
-                </div>
-            </div>
-            <div class="fun-stat" id="funStat"></div>
-        </div>
-        
-        <!-- Statistiques de lecture -->
-        <div class="stats-section reading-stats-section">
-            <h3>📊 Lecture</h3>
-            <div class="reading-stats-grid">
-                <div class="reading-stat-item">
-                    <div class="reading-stat-icon">⏱️</div>
-                    <div class="reading-stat-content">
-                        <div class="reading-stat-value" id="totalReadingTime">0 min</div>
-                        <div class="reading-stat-label">temps de lecture</div>
-                    </div>
-                </div>
-                <div class="reading-stat-item">
-                    <div class="reading-stat-icon">📖</div>
-                    <div class="reading-stat-content">
-                        <div class="reading-stat-value" id="totalWordsRead">0</div>
-                        <div class="reading-stat-label">mots lus</div>
-                    </div>
-                </div>
-                <div class="reading-stat-item streak-item">
-                    <div class="reading-stat-icon">🔥</div>
-                    <div class="reading-stat-content">
-                        <div class="reading-stat-value" id="currentStreak">0</div>
-                        <div class="reading-stat-label">jours d'affilée</div>
-                    </div>
+                <div class="sidebar__mini-stat">
+                    <div class="sidebar__mini-value" id="author-count">0</div>
+                    <div class="sidebar__mini-label">auteurs</div>
                 </div>
             </div>
-            <div class="streak-section">
-                <div class="streak-bar">
-                    <div class="streak-progress" id="streakProgress"></div>
-                </div>
-                <div class="streak-hint" id="streakHint">Continuez demain !</div>
-            </div>
-            <div class="weekly-chart" id="weeklyChart"></div>
-        </div>
-        
-        <!-- Territoire exploré -->
-        <div class="stats-section">
-            <h3>🗺️ Territoire exploré</h3>
-            <div class="author-bars" id="authorBars"></div>
-        </div>
-        
-        <!-- Genres explorés -->
-        <div class="stats-section">
-            <h3>Genres explorés</h3>
-            <div class="genre-chart" id="genreChart"></div>
-        </div>
-        
-        <!-- Connexions -->
-        <div class="stats-section connections-section" id="connectionsSection" style="display:none;">
-            <h3>🕸️ Fils à tirer</h3>
-            <p class="connections-hint">Cliquez pour vous perdre...</p>
-            <div class="connection-graph" id="connectionGraph"></div>
-        </div>
-        
-        <!-- Favoris -->
-        <div class="stats-section favorites-section" id="favoritesSection">
-            <h3>💎 Mes favoris</h3>
-            <div id="favoritesList"><div class="favorites-empty">Cliquez ♥ pour sauvegarder</div></div>
         </div>
         
         <!-- Badges -->
-        <div class="stats-section" id="achievementSection">
-            <h3>🏆 Badges</h3>
-            <div class="badges-summary">
-                <span class="badges-count"><span id="unlockedCount">0</span>/<span id="totalBadges">13</span> débloqués</span>
-                <span class="badges-toggle" id="badgesToggle" onclick="toggleBadgesView()">Voir tout</span>
-            </div>
-            <div class="achievements" id="achievementList"></div>
-            <div class="reading-path" id="readingPath"></div>
+        <div class="sidebar__section" id="achievements-section">
+            <h3 class="sidebar__section-title">🏆 Badges</h3>
+            <div id="achievements-list" class="sidebar__achievements"></div>
         </div>
-    </div>
+        
+        <!-- Favoris -->
+        <div class="sidebar__section">
+            <h3 class="sidebar__section-title">💎 Mes favoris</h3>
+            <div id="favorites-list" class="sidebar__favorites">
+                <div class="sidebar__favorites-empty">Cliquez ♥ pour sauvegarder</div>
+            </div>
+        </div>
+    </aside>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
-         HEADER
+         🔝 HEADER
          ═══════════════════════════════════════════════════════════════════════ -->
-    <header>
-        <div class="header-inner">
-            <!-- MOBILE: Avatar profil cliquable -->
-            <button class="mobile-profile-btn" id="mobileProfileBtn" type="button">
-                <span class="mobile-profile-avatar" id="mobileAvatar">👤</span>
+    <header class="header" id="header">
+        <div class="header__inner">
+            <!-- Mobile: Avatar -->
+            <button class="header__mobile-avatar" id="mobile-avatar" type="button">
+                <span id="header-mobile-avatar-emoji">👤</span>
             </button>
             
-            <!-- MOBILE: Logo compact -->
-            <span class="mobile-logo">📜</span>
+            <!-- Mobile: Logo -->
+            <span class="header__mobile-logo">📜</span>
             
-            <div class="header-title" id="headerTitle">Laissez-vous dériver...</div>
+            <!-- Titre animé -->
+            <div class="header__title" id="header-title">Laissez-vous dériver...</div>
             
-            <!-- Barre de recherche -->
-            <div class="search-container">
-                <div class="search-input-wrapper">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" class="search-input" id="searchInput" 
-                           placeholder="Rechercher un auteur, un mot, un thème..." 
-                           onkeydown="if(event.key==='Enter') performSearch()">
-                    <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
-                </div>
+            <!-- Recherche -->
+            <div class="header__search">
+                <span class="header__search-icon">🔍</span>
+                <input type="text" 
+                       class="header__search-input" 
+                       id="search-input" 
+                       placeholder="Rechercher un auteur, un mot, un thème..."
+                       autocomplete="off">
+                <button class="header__search-clear" id="search-clear">✕</button>
             </div>
             
-            <!-- Actions header -->
-            <div class="header-actions">
-                <button class="header-btn" onclick="pureRandomJump()" title="Découvrir un texte au hasard (ignore l'ambiance)">🎲 Hasard</button>
-                <button class="header-btn" onclick="openTrendingFeed()" title="Textes populaires du moment">🔥 Tendances</button>
+            <!-- Actions Desktop -->
+            <div class="header__actions">
+                <button class="header__btn" data-action="random" title="Texte au hasard">
+                    🎲 Hasard
+                </button>
+                <button class="header__btn" data-action="trending" title="Tendances">
+                    🔥 Tendances
+                </button>
                 
                 <!-- Sélecteur de langue -->
-                <div class="lang-selector">
-                    <span class="lang-icon">🌍</span>
-                    <select class="lang-select" id="langSelect" onchange="changeLanguage(this.value)" title="Choisir les langues">
-                        <option value="all">Toutes langues</option>
-                        <option value="fr">🇫🇷 Français</option>
-                        <option value="en">🇬🇧 English</option>
-                        <option value="de">🇩🇪 Deutsch</option>
-                        <option value="it">🇮🇹 Italiano</option>
-                        <option value="es">🇪🇸 Español</option>
-                        <option value="pt">🇵🇹 Português</option>
-                        <option value="ru">🇷🇺 Русский</option>
-                        <option value="la">🏛️ Latina</option>
-                        <option value="zh">🇨🇳 中文</option>
-                        <option value="ja">🇯🇵 日本語</option>
-                        <option value="ar">🇸🇦 العربية</option>
-                        <option value="el">🇬🇷 Ελληνικά</option>
+                <div class="header__lang">
+                    <span class="header__lang-icon">🌍</span>
+                    <select class="header__lang-select" id="language-selector">
+                        <!-- Rempli par JS -->
                     </select>
                 </div>
                 
-                <button class="header-btn favorites-btn" onclick="openFavoritesView()" title="Voir tous mes favoris">♥ <span id="favCount">0</span></button>
-                <button class="header-btn" onclick="openSocialFeed()" title="Voir le feed communautaire">🐦 Social</button>
-                <button class="header-btn" onclick="openMessaging()" title="Messages privés" style="position: relative;">
-                    💬<span id="unreadBadge" class="messages-badge" style="display: none;">0</span>
+                <button class="header__btn" data-action="favorites" title="Favoris">
+                    ♥ <span id="fav-count">0</span>
+                </button>
+                
+                <button class="header__btn" data-action="social-feed" title="Social">
+                    🐦 Social
+                </button>
+                
+                <button class="header__btn" data-action="messages" title="Messages">
+                    💬<span class="header__badge" id="msg-badge"></span>
                 </button>
                 
                 <!-- Notifications -->
-                <div class="notif-btn" style="position: relative;">
-                    <button class="header-btn" onclick="toggleNotifications()" title="Notifications">
-                        🔔<span id="notifBadge" class="notif-badge" style="display: none;">0</span>
+                <div class="header__notif">
+                    <button class="header__btn" data-action="notifications" title="Notifications">
+                        🔔<span class="header__badge" id="notif-badge"></span>
                     </button>
-                    <div class="notif-dropdown" id="notifDropdown">
-                        <div class="notif-header">
-                            <span class="notif-title">🔔 Notifications</span>
-                            <button class="notif-mark-read" onclick="markAllNotifsRead()">Tout marquer lu</button>
-                        </div>
-                        <div class="notif-list" id="notifList">
-                            <div class="notif-empty">Aucune notification</div>
-                        </div>
-                    </div>
                 </div>
                 
                 <!-- Menu utilisateur -->
-                <div class="user-menu" id="userMenu">
-                    <div class="user-avatar" id="headerAvatar" onclick="toggleUserDropdown()">👤</div>
-                    <div class="user-dropdown" id="userDropdown">
-                        <div class="user-dropdown-item" onclick="openAuthModal('login')" id="loginMenuItem">🔑 Se connecter</div>
-                        <div class="user-dropdown-item" onclick="openAuthModal('register')" id="registerMenuItem">✍️ Créer un compte</div>
-                        <div class="user-dropdown-item" onclick="openMyProfile()" id="profileMenuItem" style="display:none;">👤 Mon profil</div>
-                        <div class="user-dropdown-divider" id="logoutDivider" style="display:none;"></div>
-                        <div class="user-dropdown-item danger" onclick="logoutUser()" id="logoutMenuItem" style="display:none;">🚪 Déconnexion</div>
-                    </div>
+                <div class="header__user" id="user-menu">
+                    <div class="header__avatar" id="header-avatar" data-action="profile">👤</div>
                 </div>
             </div>
         </div>
     </header>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
-         NAVIGATION PAR CATÉGORIES
+         🧭 EXPLORATION (Filtres: Ambiances / Époques / Courants)
          ═══════════════════════════════════════════════════════════════════════ -->
-    <div id="categoryNav" class="category-nav" style="display:none;">
-        <div class="cat-breadcrumbs" id="catBreadcrumbs"></div>
-        <div class="cat-subcategories" id="catSubcategories"></div>
-        <button class="cat-close" onclick="closeCategoryMode()">✕ Quitter</button>
-    </div>
-    
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         BARRE D'EXPLORATION (Onglets + Pills)
-         ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="exploration-container" id="explorationContainer">
-        <!-- Onglets de navigation -->
+    <div class="exploration" id="exploration">
+        <!-- Onglets -->
         <div class="exploration-tabs">
-            <button class="exploration-tab active" data-mode="derives" onclick="switchExplorationMode('derives')">
+            <button class="exploration-tabs__tab active" data-tab="ambiances">
                 🌊 Dérives
             </button>
-            <button class="exploration-tab" data-mode="epoques" onclick="switchExplorationMode('epoques')">
+            <button class="exploration-tabs__tab" data-tab="epoques">
                 📜 Époques
             </button>
-            <button class="exploration-tab" data-mode="courants" onclick="switchExplorationMode('courants')">
+            <button class="exploration-tabs__tab" data-tab="courants">
                 🏛️ Courants
             </button>
         </div>
         
-        <!-- Contenu Dérives (par défaut) -->
-        <div class="ambiance-bar" id="ambianceBar" data-mode="derives">
-            <div class="ambiance-pill active" data-ambiance="libre" onclick="setAmbiance('libre')">
-                <span class="ambiance-icon">🌊</span>
-                <span class="ambiance-name">Dérive libre</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="gothique" onclick="setAmbiance('gothique')">
-                <span class="ambiance-icon">🦇</span>
-                <span class="ambiance-name">Gothique</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="surrealiste" onclick="setAmbiance('surrealiste')">
-                <span class="ambiance-icon">🎭</span>
-                <span class="ambiance-name">Surréaliste</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="romantique" onclick="setAmbiance('romantique')">
-                <span class="ambiance-icon">🌹</span>
-                <span class="ambiance-name">Romantique</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="melancolie" onclick="setAmbiance('melancolie')">
-                <span class="ambiance-icon">🌧️</span>
-                <span class="ambiance-name">Mélancolie</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="mystique" onclick="setAmbiance('mystique')">
-                <span class="ambiance-icon">🔮</span>
-                <span class="ambiance-name">Mystique</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="epique" onclick="setAmbiance('epique')">
-                <span class="ambiance-icon">⚔️</span>
-                <span class="ambiance-name">Épique</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="pastoral" onclick="setAmbiance('pastoral')">
-                <span class="ambiance-icon">🌾</span>
-                <span class="ambiance-name">Pastoral</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="decadent" onclick="setAmbiance('decadent')">
-                <span class="ambiance-icon">💀</span>
-                <span class="ambiance-name">Décadent</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="nocturne" onclick="setAmbiance('nocturne')">
-                <span class="ambiance-icon">🌙</span>
-                <span class="ambiance-name">Nocturne</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="voyage" onclick="setAmbiance('voyage')">
-                <span class="ambiance-icon">🚢</span>
-                <span class="ambiance-name">Voyage</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="philosophie" onclick="setAmbiance('philosophie')">
-                <span class="ambiance-icon">🧠</span>
-                <span class="ambiance-name">Philosophie</span>
-            </div>
+        <!-- Barre Ambiances -->
+        <div class="exploration-bar active" id="ambiances-bar">
+            <!-- Rempli par JS -->
         </div>
         
-        <!-- Contenu Époques -->
-        <div class="ambiance-bar" id="epoquesBar" data-mode="epoques" style="display: none;">
-            <div class="ambiance-pill" data-ambiance="antiquite" onclick="setEpoque('antiquite')">
-                <span class="ambiance-icon">🏺</span>
-                <span class="ambiance-name">Antiquité</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="medieval" onclick="setEpoque('medieval')">
-                <span class="ambiance-icon">⚔️</span>
-                <span class="ambiance-name">Moyen Âge</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="renaissance" onclick="setEpoque('renaissance')">
-                <span class="ambiance-icon">🎨</span>
-                <span class="ambiance-name">Renaissance</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="classique" onclick="setEpoque('classique')">
-                <span class="ambiance-icon">👑</span>
-                <span class="ambiance-name">Grand Siècle</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="lumieres" onclick="setEpoque('lumieres')">
-                <span class="ambiance-icon">💡</span>
-                <span class="ambiance-name">Lumières</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="xixe" onclick="setEpoque('xixe')">
-                <span class="ambiance-icon">🏭</span>
-                <span class="ambiance-name">XIXᵉ siècle</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="belleepoque" onclick="setEpoque('belleepoque')">
-                <span class="ambiance-icon">🎭</span>
-                <span class="ambiance-name">Belle Époque</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="xxe" onclick="setEpoque('xxe')">
-                <span class="ambiance-icon">💣</span>
-                <span class="ambiance-name">XXᵉ siècle</span>
-            </div>
+        <!-- Barre Époques -->
+        <div class="exploration-bar" id="epoques-bar">
+            <!-- Rempli par JS -->
         </div>
         
-        <!-- Contenu Courants -->
-        <div class="ambiance-bar" id="courantsBar" data-mode="courants" style="display: none;">
-            <div class="ambiance-pill" data-ambiance="humanisme" onclick="setCourant('humanisme')">
-                <span class="ambiance-icon">📚</span>
-                <span class="ambiance-name">Humanisme</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="baroque" onclick="setCourant('baroque')">
-                <span class="ambiance-icon">🎭</span>
-                <span class="ambiance-name">Baroque</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="classicisme" onclick="setCourant('classicisme')">
-                <span class="ambiance-icon">⚖️</span>
-                <span class="ambiance-name">Classicisme</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="romantisme" onclick="setCourant('romantisme')">
-                <span class="ambiance-icon">🌹</span>
-                <span class="ambiance-name">Romantisme</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="realisme" onclick="setCourant('realisme')">
-                <span class="ambiance-icon">🔬</span>
-                <span class="ambiance-name">Réalisme</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="naturalisme" onclick="setCourant('naturalisme')">
-                <span class="ambiance-icon">🏭</span>
-                <span class="ambiance-name">Naturalisme</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="symbolisme" onclick="setCourant('symbolisme')">
-                <span class="ambiance-icon">🌸</span>
-                <span class="ambiance-name">Symbolisme</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="surrealisme" onclick="setCourant('surrealisme')">
-                <span class="ambiance-icon">👁️</span>
-                <span class="ambiance-name">Surréalisme</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="existentialisme" onclick="setCourant('existentialisme')">
-                <span class="ambiance-icon">🚬</span>
-                <span class="ambiance-name">Existentialisme</span>
-            </div>
-            <div class="ambiance-pill" data-ambiance="absurde" onclick="setCourant('absurde')">
-                <span class="ambiance-icon">🎪</span>
-                <span class="ambiance-name">Absurde</span>
-            </div>
+        <!-- Barre Courants -->
+        <div class="exploration-bar" id="courants-bar">
+            <!-- Rempli par JS -->
         </div>
-    </div>
-    
-    <!-- Intro d'ambiance -->
-    <div class="ambiance-intro" id="ambianceIntro" style="display: none;"></div>
-    
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         CONTENU PRINCIPAL (Feed)
-         ═══════════════════════════════════════════════════════════════════════ -->
-    <main id="feed"></main>
-    
-    <!-- Bandeau de recommandations -->
-    <div id="recoBanner" class="reco-banner" style="display:none;">
-        <div class="reco-content">
-            <div class="reco-title">✨ Auteurs connexes à découvrir</div>
-            <div class="reco-text">Basé sur vos lectures favorites</div>
-            <div class="reco-authors" id="recoAuthors"></div>
-        </div>
-    </div>
-    
-    <!-- Indicateur de chargement -->
-    <div class="feed-loading" id="loading">
-        <div class="spinner"></div>
-        <span>Exploration de Wikisource...</span>
+        
+        <!-- Filtres actifs -->
+        <div class="exploration__active-filters" id="active-filters"></div>
     </div>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
-         OVERLAY LECTEUR COMPLET
+         📰 MAIN CONTENT (Feed)
          ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="reader-overlay" id="reader">
-        <div class="reader-header">
-            <div class="reader-title" id="readerTitle">Texte complet</div>
-            <button class="reader-close" onclick="closeReader()">✕</button>
+    <main class="main-content" id="main-content">
+        <div class="feed" id="feed">
+            <!-- Les cartes de textes sont injectées ici par JS -->
         </div>
-        <div class="reader-content" id="readerContent"></div>
-    </div>
+        
+        <!-- Loader -->
+        <div class="feed__loader" id="feed-loader">
+            <div class="loader"></div>
+            <span>Exploration de Wikisource...</span>
+        </div>
+    </main>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
-         OVERLAY FAVORIS
+         🔥 TRENDING PANEL (Desktop - Droite)
          ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="favorites-overlay" id="favoritesOverlay">
-        <div class="favorites-view">
-            <div class="favorites-header">
-                <div class="favorites-title">♥ MES FAVORIS</div>
-                <button class="reader-close" onclick="closeFavoritesView()">✕</button>
-            </div>
-            <div class="favorites-grid" id="favoritesGrid"></div>
+    <aside class="trending-panel" id="trending-panel">
+        <h3 class="trending-panel__title">🔥 Tendances</h3>
+        <div class="trending-panel__list" id="trending-list">
+            <!-- Rempli par JS -->
         </div>
-    </div>
+    </aside>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
-         OVERLAY TENDANCES
+         🐦 SOCIAL FEED OVERLAY
          ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="favorites-overlay" id="trendingOverlay">
-        <div class="favorites-view trending-view">
-            <div class="favorites-header">
-                <div class="favorites-title">🔥 TENDANCES DU MOMENT</div>
-                <button class="reader-close" onclick="closeTrendingFeed()">✕</button>
+    <div class="social-feed-overlay" id="social-feed-overlay">
+        <div class="social-feed">
+            <div class="social-feed__header">
+                <div class="social-feed__title">🐦 Feed Communautaire</div>
+                <button class="social-feed__close" onclick="closeSocialFeed()">✕</button>
             </div>
-            <div class="trending-subtitle">Les textes les plus aimés et commentés</div>
-            <div class="trending-feed" id="trendingFeed">
-                <div class="trending-loading">Chargement des tendances...</div>
+            <div class="social-feed__tabs">
+                <button class="social-feed__tab active" data-tab="recent">🔥 Récents</button>
+                <button class="social-feed__tab" data-tab="activity">❤️ Activité</button>
+                <button class="social-feed__tab" data-tab="following">👥 Suivis</button>
+            </div>
+            <div class="social-feed__posts" id="social-feed-posts">
+                <!-- Rempli par JS -->
             </div>
         </div>
     </div>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
-         OVERLAY FEED SOCIAL
+         🪟 MODALS
          ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="favorites-overlay" id="socialOverlay">
-        <div class="favorites-view">
-            <div class="favorites-header">
-                <div class="favorites-title">🐦 FEED COMMUNAUTAIRE</div>
-                <button class="reader-close" onclick="closeSocialFeed()">✕</button>
-            </div>
-            <div class="feed-tabs">
-                <button class="feed-tab active" onclick="switchSocialTab('recent')" id="tabRecent">🔥 Récents</button>
-                <button class="feed-tab" onclick="switchSocialTab('activity')" id="tabActivity">❤️ Activité</button>
-                <button class="feed-tab" onclick="switchSocialTab('friends')" id="tabFriends">👥 Abonnements</button>
-                <button class="feed-tab" onclick="switchSocialTab('followers')" id="tabFollowers">💌 Abonnés</button>
-                <button class="feed-tab" onclick="switchSocialTab('discover')" id="tabDiscover">🔎 Découvrir</button>
-                <button class="feed-tab" onclick="switchSocialTab('mine')" id="tabMine">👤 Mes extraits</button>
-                <button class="feed-refresh" onclick="refreshFeed()" id="refreshBtn" title="Actualiser">🔄</button>
-            </div>
-            <div class="feed-live-indicator" id="liveIndicator">🟢 En direct</div>
-            <div id="socialFeed"></div>
-        </div>
-    </div>
     
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         MODAL PROFIL UTILISATEUR
-         ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="user-profile-modal" id="userProfileModal" onclick="if(event.target === this) closeUserProfile()">
-        <div class="user-profile-content">
-            <div class="profile-header-section">
-                <div class="profile-header">
-                    <div class="profile-avatar-large" id="profileAvatar">?</div>
-                    <div class="profile-info">
-                        <h3 id="profileUsername">Utilisateur</h3>
-                        <div class="profile-stats">
-                            <span class="profile-stat" onclick="switchProfileTab('followers')"><strong id="profileFollowers">0</strong> abonnés</span>
-                            <span class="profile-stat" onclick="switchProfileTab('following')"><strong id="profileFollowing">0</strong> abonnements</span>
-                            <span class="profile-stat" onclick="switchProfileTab('extraits')"><strong id="profileExtraits">0</strong> extraits</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="profile-actions">
-                    <button class="btn-follow-large" id="profileFollowBtn" onclick="toggleFollowFromProfile()">Suivre</button>
-                    <button class="btn-message" id="profileMessageBtn" onclick="startConversation(currentProfileUserId)">💬 Message</button>
-                    <button class="btn-close-profile" onclick="closeUserProfile()">✕ Fermer</button>
-                </div>
-            </div>
-            <div class="profile-tabs">
-                <button class="profile-tab active" id="tabProfileExtraits" onclick="switchProfileTab('extraits')">📝 Extraits</button>
-                <button class="profile-tab" id="tabProfileLikes" onclick="switchProfileTab('likes')">❤️ Likes</button>
-                <button class="profile-tab" id="tabProfileFollowers" onclick="switchProfileTab('followers')">👥 Abonnés</button>
-                <button class="profile-tab" id="tabProfileFollowing" onclick="switchProfileTab('following')">📤 Abonnements</button>
-            </div>
-            <div class="profile-content" id="profileContentArea"></div>
-        </div>
-    </div>
-    
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         MODAL MESSAGERIE
-         ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="messages-modal" id="messagesModal">
-        <div class="messages-sidebar">
-            <div class="messages-sidebar-header">
-                <span class="messages-sidebar-title">💬 Messages</span>
-                <button class="messages-close" onclick="closeMessaging()">✕</button>
-            </div>
-            <div class="messages-list" id="conversationsList">
-                <div class="messages-empty">Chargement...</div>
-            </div>
-        </div>
-        <div class="messages-main">
-            <div class="messages-main-empty" id="chatPlaceholder">
-                Sélectionnez une conversation
-            </div>
-            <div id="chatArea" style="display: none; flex-direction: column; height: 100%;">
-                <div class="chat-header">
-                    <button class="chat-back" onclick="backToConversations()">←</button>
-                    <div class="chat-header-avatar" id="chatAvatar">?</div>
-                    <div class="chat-header-name" id="chatUsername">Utilisateur</div>
-                </div>
-                <div class="chat-messages" id="chatMessages"></div>
-                <div class="chat-input-area">
-                    <input type="text" class="chat-input" id="chatInput" placeholder="Écrire un message..." onkeypress="if(event.key === 'Enter') sendMessage()">
-                    <button class="chat-send" id="chatSendBtn" onclick="sendMessage()">➤</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         MODAL AUTHENTIFICATION
-         ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="auth-modal" id="authModal">
-        <div class="auth-box">
-            <button class="auth-close" onclick="closeAuthModal()">✕</button>
+    <!-- Modal Auth -->
+    <div class="modal" id="auth-modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal__content modal__content--sm">
+            <button class="modal__close" aria-label="Fermer">✕</button>
             
-            <!-- Formulaire de connexion -->
-            <div id="loginForm">
-                <div class="auth-title">Bon retour 📚</div>
-                <div class="auth-subtitle">Connectez-vous pour partager vos extraits</div>
-                <div class="auth-error" id="loginError"></div>
-                <input type="email" class="auth-input" id="loginEmail" placeholder="Email">
-                <input type="password" class="auth-input" id="loginPassword" placeholder="Mot de passe">
-                <div class="auth-forgot"><a onclick="switchAuthForm('forgot')">Mot de passe oublié ?</a></div>
-                <button class="auth-btn" onclick="loginWithEmail()" id="loginBtn">Se connecter</button>
-                <div class="auth-divider"><span>ou</span></div>
-                <button class="auth-btn secondary" onclick="loginWithGoogle()">🌐 Continuer avec Google</button>
-                <div class="auth-switch">Pas encore de compte ? <a onclick="switchAuthForm('register')">S'inscrire</a></div>
-            </div>
-            
-            <!-- Formulaire mot de passe oublié -->
-            <div id="forgotForm" style="display:none;">
-                <div class="auth-title">Mot de passe oublié 🔑</div>
-                <div class="auth-subtitle">Entrez votre email pour recevoir un lien de réinitialisation</div>
-                <div class="auth-error" id="forgotError"></div>
-                <div class="auth-success" id="forgotSuccess"></div>
-                <input type="email" class="auth-input" id="forgotEmail" placeholder="Email">
-                <button class="auth-btn" onclick="sendPasswordReset()" id="forgotBtn">Envoyer le lien</button>
-                <div class="auth-switch"><a onclick="switchAuthForm('login')">← Retour à la connexion</a></div>
-            </div>
-            
-            <!-- Formulaire nouveau mot de passe (après clic sur lien email) -->
-            <div id="resetPasswordForm" style="display:none;">
-                <div class="auth-title">Nouveau mot de passe 🔐</div>
-                <div class="auth-subtitle">Choisissez votre nouveau mot de passe</div>
-                <div class="auth-error" id="resetError"></div>
-                <div class="auth-success" id="resetSuccess"></div>
-                <input type="password" class="auth-input" id="newPassword" placeholder="Nouveau mot de passe (min. 6 caractères)">
-                <input type="password" class="auth-input" id="confirmPassword" placeholder="Confirmer le mot de passe">
-                <button class="auth-btn" onclick="updatePassword()" id="resetBtn">Changer le mot de passe</button>
-            </div>
-            
-            <!-- Formulaire d'inscription -->
-            <div id="registerForm" style="display:none;">
-                <div class="auth-title">Bienvenue 🌟</div>
-                <div class="auth-subtitle">Créez votre compte pour rejoindre la communauté</div>
-                <div class="auth-error" id="registerError"></div>
-                <input type="text" class="auth-input" id="registerUsername" placeholder="Nom d'utilisateur">
-                <input type="email" class="auth-input" id="registerEmail" placeholder="Email">
-                <input type="password" class="auth-input" id="registerPassword" placeholder="Mot de passe (min. 6 caractères)">
-                <button class="auth-btn" onclick="registerWithEmail()" id="registerBtn">Créer mon compte</button>
-                <div class="auth-divider"><span>ou</span></div>
-                <button class="auth-btn secondary" onclick="loginWithGoogle()">🌐 Continuer avec Google</button>
-                <div class="auth-switch">Déjà un compte ? <a onclick="switchAuthForm('login')">Se connecter</a></div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         MODAL PARTAGE D'EXTRAIT
-         ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="share-modal" id="shareModal">
-        <div class="share-box">
-            <div class="share-header">
-                <div class="share-title">🐦 Partager cet extrait</div>
-                <button class="auth-close" onclick="closeShareModal()">✕</button>
-            </div>
-            <div class="share-preview">
-                <div class="share-preview-text" id="sharePreviewText"></div>
-                <div class="share-preview-source" id="sharePreviewSource"></div>
-            </div>
-            <textarea class="share-commentary" id="shareCommentary" placeholder="Ajoutez un commentaire... (optionnel)"></textarea>
-            <div class="share-actions">
-                <button class="share-btn secondary" onclick="closeShareModal()">Annuler</button>
-                <button class="share-btn primary" onclick="publishExtrait()" id="publishBtn">🚀 Publier</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         OVERLAY RÉSULTATS DE RECHERCHE
-         ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="search-results-overlay" id="searchResultsOverlay" onclick="if(event.target === this) closeSearchResults()">
-        <div class="search-results-container">
-            <div class="search-results-header">
-                <div class="search-results-title">
-                    🔍 Résultats pour "<span class="search-results-query" id="searchQueryDisplay"></span>"
+            <div class="auth">
+                <!-- Tabs -->
+                <div class="auth__tabs">
+                    <button class="auth__tab active" data-tab="login">Connexion</button>
+                    <button class="auth__tab" data-tab="signup">Inscription</button>
                 </div>
-                <button class="search-results-close" onclick="closeSearchResults()">✕</button>
+                
+                <!-- Login Form -->
+                <form class="auth__form" id="login-form">
+                    <h2 class="auth__title">Bon retour 📚</h2>
+                    <p class="auth__subtitle">Connectez-vous pour partager vos extraits</p>
+                    
+                    <div class="auth__error" id="login-error"></div>
+                    
+                    <input type="email" class="auth__input" id="login-email" 
+                           placeholder="Email" required autocomplete="email">
+                    <input type="password" class="auth__input" id="login-password" 
+                           placeholder="Mot de passe" required autocomplete="current-password">
+                    
+                    <button type="submit" class="btn btn--primary btn--block">Se connecter</button>
+                    
+                    <div class="auth__divider"><span>ou</span></div>
+                    
+                    <button type="button" class="btn btn--secondary btn--block" data-action="google-login">
+                        🌐 Continuer avec Google
+                    </button>
+                </form>
+                
+                <!-- Signup Form -->
+                <form class="auth__form" id="signup-form" style="display: none;">
+                    <h2 class="auth__title">Bienvenue 🌟</h2>
+                    <p class="auth__subtitle">Rejoignez la communauté littéraire</p>
+                    
+                    <div class="auth__error" id="signup-error"></div>
+                    
+                    <input type="text" class="auth__input" id="signup-username" 
+                           placeholder="Nom d'utilisateur" required>
+                    <input type="email" class="auth__input" id="signup-email" 
+                           placeholder="Email" required autocomplete="email">
+                    <input type="password" class="auth__input" id="signup-password" 
+                           placeholder="Mot de passe (min. 6 caractères)" required 
+                           autocomplete="new-password" minlength="6">
+                    
+                    <button type="submit" class="btn btn--primary btn--block">Créer mon compte</button>
+                </form>
             </div>
-            <div class="search-results-tabs" id="searchResultsTabs"></div>
-            <div class="search-results-grid" id="searchResultsGrid"></div>
+        </div>
+    </div>
+    
+    <!-- Modal Commentaires -->
+    <div class="modal" id="comments-modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal__content modal__content--md">
+            <div class="modal__header">
+                <h2 class="modal__title">💬 Commentaires</h2>
+                <button class="modal__close" aria-label="Fermer">✕</button>
+            </div>
+            <div class="modal__body">
+                <!-- Rempli par JS -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Partage -->
+    <div class="modal" id="share-modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal__content modal__content--sm">
+            <div class="modal__header">
+                <h2 class="modal__title">📤 Partager</h2>
+                <button class="modal__close" aria-label="Fermer">✕</button>
+            </div>
+            <div class="modal__body">
+                <!-- Rempli par JS -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Profil -->
+    <div class="modal" id="profile-modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal__content modal__content--lg">
+            <div class="modal__header">
+                <h2 class="modal__title">👤 Profil</h2>
+                <button class="modal__close" aria-label="Fermer">✕</button>
+            </div>
+            <div class="modal__body">
+                <!-- Rempli par JS -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Lecteur (texte complet) -->
+    <div class="modal modal--fullscreen" id="reader-modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h2 class="modal__title" id="reader-title">Texte complet</h2>
+                <button class="modal__close" aria-label="Fermer">✕</button>
+            </div>
+            <div class="modal__body" id="reader-content">
+                <!-- Rempli par JS -->
+            </div>
         </div>
     </div>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
-         TOAST NOTIFICATIONS
+         🍞 TOAST CONTAINER
          ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="toast" id="toast"></div>
+    <div class="toast-container" id="toast-container"></div>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
-         SCRIPTS
+         📦 SCRIPTS (ES Modules)
          ═══════════════════════════════════════════════════════════════════════ -->
-    <script src="js/app.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
