@@ -48,11 +48,24 @@
             <span class="mobile-nav-icon">💬</span>
             <span class="mobile-nav-label">Messages</span>
         </button>
-        <button class="mobile-nav-item" onclick="openMobileDrawer()" data-nav="menu">
+        <button class="mobile-nav-item" id="mobileMenuBtn" data-nav="menu">
             <span class="mobile-nav-icon">☰</span>
             <span class="mobile-nav-label">Menu</span>
         </button>
     </nav>
+    <script>
+        // Menu button
+        document.getElementById('mobileMenuBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            var drawer = document.querySelector('.stats-panel');
+            var overlay = document.getElementById('mobileDrawerOverlay');
+            if (drawer) {
+                drawer.classList.add('open');
+                if (overlay) overlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+    </script>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
          PANNEAU STATISTIQUES (Sidebar gauche / Drawer mobile)
@@ -206,9 +219,22 @@
     <header>
         <div class="header-inner">
             <!-- MOBILE: Avatar profil cliquable -->
-            <div class="mobile-profile-btn" id="mobileProfileBtn" onclick="openMobileDrawer()" role="button" tabindex="0">
-                <div class="mobile-profile-avatar" id="mobileAvatar" onclick="openMobileDrawer()">👤</div>
-            </div>
+            <button type="button" class="mobile-profile-btn" id="mobileProfileBtn">
+                <span class="mobile-profile-avatar" id="mobileAvatar">👤</span>
+            </button>
+            <script>
+                // Attacher l'événement immédiatement
+                document.getElementById('mobileProfileBtn').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var drawer = document.querySelector('.stats-panel');
+                    var overlay = document.getElementById('mobileDrawerOverlay');
+                    if (drawer) {
+                        drawer.classList.add('open');
+                        if (overlay) overlay.classList.add('open');
+                        document.body.style.overflow = 'hidden';
+                    }
+                });
+            </script>
             
             <!-- MOBILE: Logo compact -->
             <span class="mobile-logo">📜</span>

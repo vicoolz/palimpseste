@@ -273,23 +273,53 @@
 
 /* ====== DESKTOP MEDIA QUERY (> 900px) ====== */
 @media screen and (min-width: 901px) {
-    /* Assurer que le header desktop affiche tout */
+    /* Header desktop sur une seule ligne */
+    header {
+        left: 260px !important;
+        right: 0 !important;
+    }
+    
+    .header-inner {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.75rem !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+    }
+    
+    .header-title {
+        display: block !important;
+        flex-shrink: 0 !important;
+        max-width: 200px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    
+    .search-container {
+        flex: 1 !important;
+        min-width: 150px !important;
+        max-width: 300px !important;
+    }
+    
     .header-actions {
         display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 0.5rem !important;
-        overflow: visible !important;
+        flex-wrap: nowrap !important;
+        gap: 0.35rem !important;
+        flex-shrink: 0 !important;
     }
     
     .header-btn {
         display: inline-flex !important;
+        padding: 0.3rem 0.5rem !important;
+        font-size: 0.65rem !important;
+        white-space: nowrap !important;
     }
     
     .notif-btn,
     .user-menu,
-    .lang-selector,
-    .favorites-btn {
+    .lang-selector {
         display: flex !important;
+        flex-shrink: 0 !important;
     }
     
     /* Masquer éléments mobile sur desktop */
