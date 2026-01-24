@@ -1,4 +1,8 @@
-﻿:root {
+﻿/* 📦 Import des variables centralisées */
+@import 'variables.css';
+
+/* Variables legacy (pour rétrocompatibilité, seront supprimées progressivement) */
+:root {
 --bg: #0d0d0d;
 --bg-card: #161618;
 --bg-elevated: #1e1e21;
