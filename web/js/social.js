@@ -247,9 +247,11 @@ async function renderSocialFeed() {
                         </button>
                     ` : ''}
                 </div>
-                <div class="extrait-text">${escapeHtml(extrait.texte)}</div>
+                <div class="extrait-text" id="extraitText-${extrait.id}">${escapeHtml(extrait.texte)}</div>
+                ${extrait.source_url ? `<button class="btn-voir-plus" onclick="loadFullTextFromSource('${extrait.id}', '${escapeHtml(extrait.source_url)}', '${escapeHtml(extrait.source_title)}')" id="voirPlus-${extrait.id}">📖 Voir le texte complet</button>` : ''}
                 <div class="extrait-source">
                     <strong>${escapeHtml(extrait.source_author)}</strong> — ${escapeHtml(extrait.source_title)}
+                    ${extrait.source_url ? `<a href="${extrait.source_url}" target="_blank" class="source-link">↗</a>` : ''}
                 </div>
                 ${extrait.commentary ? `<div class="extrait-commentary">${escapeHtml(extrait.commentary)}</div>` : ''}
                 <div class="extrait-actions">
@@ -329,6 +331,86 @@ function copyExtrait(extraitId) {
     toast('📋 Extrait copié !');
 }
 
+// Charger le texte complet depuis Wikisource (évite de stocker en base)
+async function loadFullTextFromSource(extraitId, sourceUrl, sourceTitle) {
+    const textEl = document.getElementById(`extraitText-${extraitId}`);
+    const btnEl = document.getElementById(`voirPlus-${extraitId}`);
+    
+    if (!textEl || !sourceUrl) return;
+    
+    // Afficher le chargement
+    if (btnEl) btnEl.innerHTML = '⏳ Chargement depuis Wikisource...';
+    
+    try {
+        // Extraire la langue et le titre de l'URL Wikisource
+        const urlMatch = sourceUrl.match(/https?:\/\/(\w+)\.wikisource\.org\/wiki\/(.+)/);
+        if (!urlMatch) {
+            // Si pas une URL Wikisource valide, ouvrir dans un nouvel onglet
+            window.open(sourceUrl, '_blank');
+            if (btnEl) btnEl.innerHTML = '📖 Voir le texte complet';
+            return;
+        }
+        
+        const lang = urlMatch[1];
+        const pageTitle = decodeURIComponent(urlMatch[2]);
+        
+        // Appeler l'API Wikisource
+        const apiUrl = `https://${lang}.wikisource.org/w/api.php?` + new URLSearchParams({
+            action: 'parse',
+            page: pageTitle,
+            prop: 'text',
+            format: 'json',
+            origin: '*'
+        });
+        
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        
+        if (data.parse?.text?.['*']) {
+            // Parser le HTML et extraire le texte
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = data.parse.text['*'];
+            
+            // Supprimer les éléments indésirables
+            tempDiv.querySelectorAll('table, .mw-editsection, script, style, .noprint, .reference, sup.reference').forEach(el => el.remove());
+            
+            // Récupérer le texte des paragraphes
+            const paragraphs = tempDiv.querySelectorAll('p, .poem, .verse, blockquote, div.text');
+            let fullText = '';
+            paragraphs.forEach(p => {
+                const text = p.textContent.trim();
+                if (text.length > 20) fullText += text + '\n\n';
+            });
+            
+            if (fullText.length < 100) {
+                fullText = tempDiv.textContent.trim();
+            }
+            
+            // Limiter à 2000 caractères pour l'affichage
+            if (fullText.length > 2000) {
+                fullText = fullText.substring(0, 2000) + '…';
+            }
+            
+            // Afficher le texte complet
+            textEl.innerHTML = `<div class="full-text-loaded">${escapeHtml(fullText)}</div>`;
+            if (btnEl) btnEl.remove();
+            
+            toast('✨ Texte chargé depuis Wikisource');
+        } else {
+            throw new Error('Texte non trouvé');
+        }
+        
+    } catch (err) {
+        console.error('Erreur chargement Wikisource:', err);
+        // En cas d'erreur, proposer d'ouvrir la source
+        if (btnEl) {
+            btnEl.innerHTML = '↗ Ouvrir sur Wikisource';
+            btnEl.onclick = () => window.open(sourceUrl, '_blank');
+        }
+        toast('📖 Ouverture de la source...');
+    }
+}
+
 // Rendre les fonctions accessibles globalement
 window.openSocialFeed = openSocialFeed;
 window.closeSocialFeed = closeSocialFeed;
@@ -337,4 +419,5 @@ window.switchSocialTab = switchSocialTab;
 window.loadSocialFeed = loadSocialFeed;
 window.renderSocialFeed = renderSocialFeed;
 window.toggleLikeExtrait = toggleLikeExtrait;
+window.loadFullTextFromSource = loadFullTextFromSource;
 window.copyExtrait = copyExtrait;

@@ -23,14 +23,18 @@ CREATE TABLE profiles (
 );
 
 -- Table des extraits partagés
+-- NOTE: texte contient maintenant un APERÇU (~150 chars), pas le texte complet
+-- Le texte complet est chargé à la volée depuis source_url (Wikisource)
 CREATE TABLE extraits (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) NOT NULL,
-    texte TEXT NOT NULL,
+    texte TEXT NOT NULL, -- Aperçu seulement (~150 chars)
     source_title TEXT NOT NULL,
     source_author TEXT NOT NULL,
-    source_url TEXT,
+    source_url TEXT, -- URL Wikisource pour charger le texte complet
     commentary TEXT,
+    text_hash TEXT, -- Hash pour identifier le passage exact (optionnel)
+    text_length INTEGER, -- Longueur du texte original (optionnel)
     likes_count INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

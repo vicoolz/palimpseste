@@ -111,16 +111,24 @@ async function publishExtrait() {
     if (btn) btn.disabled = true;
     
     const commentary = document.getElementById('shareCommentary').value.trim();
-    const textToPublish = pendingShare.text.substring(0, 1000);
+    
+    // Ne stocker qu'un APERÇU (150 chars) + métadonnées pour récupérer depuis Wikisource
+    const fullText = pendingShare.text || '';
+    const preview = fullText.substring(0, 150) + (fullText.length > 150 ? '…' : '');
+    
+    // Calculer un hash simple du texte pour le retrouver
+    const textHash = simpleHash(fullText.substring(0, 200));
     
     try {
         const { data, error } = await supabaseClient.from('extraits').insert({
             user_id: currentUser.id,
-            texte: textToPublish,
+            texte: preview, // Seulement l'aperçu !
             source_title: pendingShare.title,
             source_author: pendingShare.author,
             source_url: pendingShare.sourceUrl || '',
             commentary: commentary || null,
+            text_hash: textHash, // Pour retrouver le texte exact
+            text_length: fullText.length,
             likes_count: 0,
             created_at: new Date().toISOString()
         });
@@ -136,6 +144,17 @@ async function publishExtrait() {
     } finally {
         if (btn) btn.disabled = false;
     }
+}
+
+// Hash simple pour identifier un passage de texte
+function simpleHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    return hash.toString(16);
 }
 
 // ═══════════════════════════════════════════════════════════
