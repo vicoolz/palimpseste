@@ -929,6 +929,9 @@ async function searchByTerm(term, wikisource) {
         state.textPool = state.textPool.sort(() => Math.random() - 0.5);
         
         if (state.textPool.length > 0) {
+            // IMPORTANT: Remettre loading à false AVANT d'appeler loadMore
+            // sinon loadMore() retourne immédiatement car state.loading est true
+            state.loading = false;
             loadMore();
         } else {
             document.getElementById('feed').innerHTML = `<div class="empty-state">Aucun texte trouvé pour "${term}".<br>Essayez un autre terme.</div>`;
