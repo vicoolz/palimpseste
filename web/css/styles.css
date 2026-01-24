@@ -2,23 +2,26 @@
 @import 'variables.css';
 @import 'base.css';
 
-/* Variables legacy (pour rétrocompatibilité, seront supprimées progressivement) */
+/* ═══ CABINET DE CURIOSITÉS ═══ Palette moderne & étrange */
 :root {
---bg: #0d0d0d;
---bg-card: #161618;
---bg-elevated: #1e1e21;
---text: #e8e6e3;
---text-secondary: #9d9a95;
---muted: #5c5a56;
---accent: #e63946;
---accent-secondary: #f4a261;
---accent-tertiary: #2a9d8f;
---accent-purple: #9b5de5;
---border: #2a2a2d;
---glow: 0 0 60px rgba(230,57,70,0.1);
-/* Pixel Art Colors */
---pixel-shadow: #0a0a0a;
---pixel-highlight: #3a3a3d;
+/* Fonds - ivoire sombre, comme un vieux parchemin dans l'obscurité */
+--bg: #0e0d0b;
+--bg-card: #17160f;
+--bg-elevated: #201e16;
+/* Textes - ivoire et patine */
+--text: #e4dfd3;
+--text-secondary: #a09882;
+--muted: #635d4e;
+/* Accents - vert-de-gris, cuivre, bordeaux */
+--accent: #7d8471;          /* Vert-de-gris - l'étrange */
+--accent-secondary: #a67c52; /* Cuivre oxydé - le temps */
+--accent-tertiary: #6b3a3a;  /* Bordeaux profond - le mystère */
+--accent-purple: #5c5470;    /* Prune grisé - le crépusculaire */
+--border: #2a2821;
+--glow: 0 0 40px rgba(125,132,113,0.08);
+/* Ombres - encre et vieux bois */
+--pixel-shadow: #08080a;
+--pixel-highlight: #3d3a30;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

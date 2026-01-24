@@ -26,107 +26,107 @@
 const AMBIANCES = {
     libre: {
         name: 'Dérive libre',
-        icon: '🌊',
-        description: 'Laissez-vous porter par le hasard des textes',
+        icon: '๏',
+        description: 'Le hasard est une méthode. Les textes arrivent.',
         authors: [],
         keywords: [],
-        color: '#64b5f6'
+        color: '#7d8471'
     },
     gothique: {
         name: 'Gothique',
-        icon: '🦇',
-        description: 'Châteaux hantés, spectres et terreurs nocturnes',
+        icon: '⛧',
+        description: 'Les murs se souviennent. Quelque chose attend.',
         authors: ['Edgar Allan Poe', 'Ann Radcliffe', 'Matthew Lewis', 'Horace Walpole', 'Mary Shelley', 'Bram Stoker', 'Charles Maturin', 'Sheridan Le Fanu', 'Théophile Gautier', 'Villiers de l\'Isle-Adam'],
         keywords: ['fantôme', 'spectre', 'château', 'terreur', 'nuit', 'vampire', 'mort', 'tombe', 'ténèbres', 'effroi'],
-        color: '#6a1b9a'
+        color: '#5c5470'
     },
     surrealiste: {
         name: 'Surréaliste',
-        icon: '🎭',
-        description: 'L\'inconscient libéré, les rêves éveillés',
+        icon: '◬',
+        description: 'Le poisson soluble nage dans l\'encrier.',
         authors: ['André Breton', 'Paul Éluard', 'Robert Desnos', 'Philippe Soupault', 'Louis Aragon', 'Benjamin Péret', 'René Crevel', 'Antonin Artaud', 'Lautréamont', 'Alfred Jarry'],
         keywords: ['rêve', 'automatique', 'hasard', 'inconscient', 'merveilleux', 'étrange', 'absurde'],
-        color: '#ff6f00'
+        color: '#a67c52'
     },
     romantique: {
         name: 'Romantique',
-        icon: '🌹',
-        description: 'Passions intenses et âmes tourmentées',
+        icon: '❧',
+        description: 'Les âmes se reconnaissent à leurs blessures.',
         authors: ['Victor Hugo', 'Alphonse de Lamartine', 'Alfred de Musset', 'Alfred de Vigny', 'Gérard de Nerval', 'François-René de Chateaubriand', 'George Sand', 'Lord Byron', 'Percy Shelley', 'John Keats'],
         keywords: ['amour', 'passion', 'coeur', 'âme', 'sentiment', 'larmes', 'désespoir', 'nature'],
-        color: '#e91e63'
+        color: '#6b3a3a'
     },
     melancolie: {
         name: 'Mélancolie',
-        icon: '🌧️',
-        description: 'Spleen, tristesse douce et contemplation',
+        icon: '☁︎',
+        description: 'L\'ennui est une forme de courage.',
         authors: ['Charles Baudelaire', 'Paul Verlaine', 'Jules Laforgue', 'Maurice Rollinat', 'Sully Prudhomme', 'Albert Samain', 'Francis Jammes', 'Giacomo Leopardi'],
         keywords: ['spleen', 'ennui', 'tristesse', 'automne', 'pluie', 'brume', 'solitude', 'regret', 'nostalgie'],
-        color: '#546e7a'
+        color: '#635d4e'
     },
     mystique: {
         name: 'Mystique',
-        icon: '🔮',
-        description: 'Quêtes spirituelles et visions ésotériques',
+        icon: '⍟',
+        description: 'Ce qui ne peut être dit. Ce qui ne peut être tu.',
         authors: ['William Blake', 'Emanuel Swedenborg', 'Jakob Böhme', 'Angelus Silesius', 'San Juan de la Cruz', 'Sainte Thérèse d\'Avila', 'Maître Eckhart', 'Hildegarde de Bingen', 'Rûmî'],
         keywords: ['âme', 'divin', 'extase', 'vision', 'lumière', 'éternel', 'sacré', 'céleste', 'spirituel'],
-        color: '#7e57c2'
+        color: '#5c5470'
     },
     epique: {
         name: 'Épique',
-        icon: '⚔️',
-        description: 'Héros, batailles et destinées grandioses',
+        icon: '☬',
+        description: 'Les héros meurent debout. Parfois.',
         authors: ['Homère', 'Virgile', 'Le Tasse', 'L\'Arioste', 'Milton', 'Camoens', 'Dante Alighieri', 'Victor Hugo'],
         keywords: ['héros', 'bataille', 'gloire', 'honneur', 'guerre', 'victoire', 'destin', 'épée', 'conquête'],
-        color: '#d32f2f'
+        color: '#6b3a3a'
     },
     pastoral: {
         name: 'Pastoral',
-        icon: '🌾',
-        description: 'Campagnes idylliques et nature apaisante',
+        icon: '⚘',
+        description: 'Les moutons n\'ont rien à déclarer.',
         authors: ['Théocrite', 'Virgile', 'Pierre de Ronsard', 'Joachim du Bellay', 'Maurice Scève', 'Francis Jammes', 'Jean Giono', 'Colette'],
         keywords: ['berger', 'prairie', 'champ', 'fleur', 'ruisseau', 'oiseau', 'printemps', 'nature', 'campagne'],
-        color: '#66bb6a'
+        color: '#7d8471'
     },
     decadent: {
         name: 'Décadent',
-        icon: '💀',
-        description: 'Fin de siècle, artifice et beauté morbide',
+        icon: '♱',
+        description: 'La beauté est un poison lent.',
         authors: ['Joris-Karl Huysmans', 'Jean Lorrain', 'Rachilde', 'Villiers de l\'Isle-Adam', 'Jules Barbey d\'Aurevilly', 'Oscar Wilde', 'Gabriele D\'Annunzio', 'Maurice Rollinat'],
         keywords: ['artifice', 'opium', 'décadence', 'luxe', 'pervers', 'morbide', 'exquis', 'raffiné', 'poison'],
-        color: '#4a148c'
+        color: '#5c5470'
     },
     nocturne: {
         name: 'Nocturne',
-        icon: '🌙',
-        description: 'Nuits blanches, insomnies et rêveries lunaires',
+        icon: '☾',
+        description: 'La nuit a des yeux. Pas de paupières.',
         authors: ['Gérard de Nerval', 'Novalis', 'Charles Baudelaire', 'Paul Verlaine', 'Rainer Maria Rilke', 'Federico García Lorca', 'E.T.A. Hoffmann', 'Aloysius Bertrand'],
         keywords: ['nuit', 'lune', 'étoiles', 'ténèbres', 'rêve', 'insomnie', 'ombre', 'silence', 'minuit'],
-        color: '#1a237e'
+        color: '#201e16'
     },
     antique: {
         name: 'Antique',
-        icon: '🏛️',
-        description: 'Sagesse grecque et grandeur romaine',
+        icon: '☤',
+        description: 'Les dieux sont fatigables. Les textes non.',
         authors: ['Homère', 'Sophocle', 'Euripide', 'Platon', 'Aristote', 'Virgile', 'Ovide', 'Horace', 'Sénèque', 'Marc Aurèle', 'Cicéron'],
         keywords: ['Olympe', 'dieux', 'muse', 'oracle', 'temple', 'philosophe', 'vertu', 'sagesse'],
-        color: '#8d6e63'
+        color: '#a67c52'
     },
     voyage: {
         name: 'Voyage',
-        icon: '🚢',
-        description: 'Horizons lointains et découvertes',
+        icon: '⚓︎',
+        description: 'Partir est toujours trahir. Revenir aussi.',
         authors: ['Jules Verne', 'Pierre Loti', 'Joseph Conrad', 'Herman Melville', 'Robert Louis Stevenson', 'Jack London', 'Marco Polo', 'Ibn Battûta'],
         keywords: ['voyage', 'mer', 'île', 'horizon', 'aventure', 'découverte', 'navire', 'explorateur', 'orient'],
-        color: '#0288d1'
+        color: '#7d8471'
     },
     philosophie: {
         name: 'Philosophie',
-        icon: '🧠',
-        description: 'Méditations sur l\'existence et la pensée',
+        icon: '◎',
+        description: 'Penser n\'est pas un sport de contact.',
         authors: ['Platon', 'Aristote', 'Montaigne', 'Blaise Pascal', 'René Descartes', 'Jean-Jacques Rousseau', 'Voltaire', 'Friedrich Nietzsche', 'Arthur Schopenhauer', 'Sénèque'],
         keywords: ['pensée', 'raison', 'vérité', 'existence', 'mort', 'liberté', 'sagesse', 'doute', 'être'],
-        color: '#455a64'
+        color: '#635d4e'
     }
 };
 
@@ -141,75 +141,75 @@ const AMBIANCES = {
 const EPOQUES = {
     antiquite: {
         name: 'Antiquité',
-        icon: '🏺',
+        icon: '☤',
         period: 'VIIIᵉ s. av. J.-C. – Vᵉ s.',
-        description: 'L\'aube de la littérature : épopées, tragédies et sagesse des anciens',
+        description: 'Les ruines parlent couramment.',
         authors: ['Homère', 'Sophocle', 'Euripide', 'Eschyle', 'Aristophane', 'Platon', 'Aristote', 'Virgile', 'Ovide', 'Horace', 'Sénèque', 'Marc Aurèle', 'Cicéron', 'Lucrèce', 'Apulée', 'Pétrone'],
         keywords: ['mythologie', 'olympe', 'tragédie', 'héros', 'oracle', 'destin'],
-        color: '#8d6e63'
+        color: '#a67c52'
     },
     medieval: {
         name: 'Moyen Âge',
-        icon: '⚔️',
+        icon: '✠',
         period: 'Vᵉ – XVᵉ siècle',
-        description: 'Chevaliers, troubadours et enluminures',
+        description: 'Mille ans. Quelques lumières.',
         authors: ['Chrétien de Troyes', 'François Villon', 'Dante Alighieri', 'Boccace', 'Pétrarque', 'Guillaume de Machaut', 'Marie de France', 'Jean de Meung', 'Rutebeuf', 'Christine de Pizan'],
         keywords: ['chevalier', 'amour courtois', 'quête', 'graal', 'troubadour', 'roman'],
-        color: '#5d4037'
+        color: '#635d4e'
     },
     renaissance: {
         name: 'Renaissance',
-        icon: '🎨',
+        icon: '✡',
         period: 'XVIᵉ siècle',
-        description: 'Humanisme, redécouverte antique et soif de savoir',
+        description: 'L\'homme découvre qu\'il est le centre. Temporairement.',
         authors: ['François Rabelais', 'Michel de Montaigne', 'Pierre de Ronsard', 'Joachim du Bellay', 'Louise Labé', 'Clément Marot', 'Agrippa d\'Aubigné', 'Étienne de La Boétie', 'Maurice Scève', 'Shakespeare'],
         keywords: ['humanisme', 'éducation', 'sonnet', 'pléiade', 'amour', 'nature'],
-        color: '#ff8f00'
+        color: '#a67c52'
     },
     classique: {
         name: 'Grand Siècle',
-        icon: '👑',
+        icon: '✧',
         period: 'XVIIᵉ siècle',
-        description: 'L\'âge d\'or français : raison, mesure et passions tragiques',
+        description: 'La raison triomphe. Provisoirement.',
         authors: ['Molière', 'Jean Racine', 'Pierre Corneille', 'Jean de La Fontaine', 'Blaise Pascal', 'Madame de La Fayette', 'Nicolas Boileau', 'Jean de La Bruyère', 'François de La Rochefoucauld', 'Madame de Sévigné', 'Bossuet'],
         keywords: ['honnête homme', 'bienséance', 'tragédie', 'comédie', 'fable', 'moraliste'],
-        color: '#ffd700'
+        color: '#a67c52'
     },
     lumieres: {
         name: 'Lumières',
-        icon: '💡',
+        icon: '✶',
         period: 'XVIIIᵉ siècle',
-        description: 'Raison critique, esprit philosophique et émancipation',
+        description: 'Éclairer. Puis éteindre. Puis recommencer.',
         authors: ['Voltaire', 'Jean-Jacques Rousseau', 'Denis Diderot', 'Montesquieu', 'Beaumarchais', 'Marivaux', 'L\'Abbé Prévost', 'Choderlos de Laclos', 'Bernardin de Saint-Pierre', 'Marquis de Sade', 'Condorcet'],
         keywords: ['raison', 'progrès', 'philosophie', 'encyclopédie', 'liberté', 'tolérance'],
-        color: '#ffeb3b'
+        color: '#a67c52'
     },
     xixe: {
         name: 'XIXᵉ siècle',
-        icon: '🏭',
+        icon: '⚗',
         period: '1800 – 1900',
-        description: 'Le siècle des révolutions : romantisme, réalisme, décadence',
+        description: 'Cent ans de solitude. Plusieurs types.',
         authors: ['Victor Hugo', 'Honoré de Balzac', 'Gustave Flaubert', 'Émile Zola', 'Stendhal', 'Charles Baudelaire', 'Arthur Rimbaud', 'Paul Verlaine', 'Gérard de Nerval', 'Alexandre Dumas', 'Guy de Maupassant', 'Théophile Gautier'],
         keywords: ['révolution', 'passion', 'société', 'naturalisme', 'symbolisme', 'spleen'],
-        color: '#795548'
+        color: '#635d4e'
     },
     belleepoque: {
         name: 'Belle Époque',
-        icon: '🎭',
+        icon: '❦',
         period: '1880 – 1914',
-        description: 'Fêtes galantes, décadence et avant-gardes naissantes',
+        description: 'La fête avant la fête. Avant.',
         authors: ['Marcel Proust', 'Colette', 'Guillaume Apollinaire', 'Paul Valéry', 'André Gide', 'Oscar Wilde', 'Rainer Maria Rilke', 'Joris-Karl Huysmans', 'Jean Lorrain', 'Maurice Maeterlinck'],
         keywords: ['salon', 'mondain', 'décadence', 'symbolisme', 'impressionnisme', 'art nouveau'],
-        color: '#e91e63'
+        color: '#5c5470'
     },
     xxe: {
         name: 'XXᵉ siècle',
-        icon: '💣',
+        icon: '☢',
         period: '1900 – 2000',
-        description: 'Guerres, existentialisme et révolutions littéraires',
+        description: 'Siècle court. Longs dégâts.',
         authors: ['Albert Camus', 'Jean-Paul Sartre', 'Simone de Beauvoir', 'André Breton', 'Louis-Ferdinand Céline', 'Samuel Beckett', 'Marguerite Duras', 'Boris Vian', 'Marguerite Yourcenar', 'Antoine de Saint-Exupéry', 'Jean Genet'],
         keywords: ['absurde', 'existentialisme', 'surréalisme', 'engagement', 'modernité', 'guerre'],
-        color: '#f44336'
+        color: '#6b3a3a'
     }
 };
 
@@ -224,90 +224,90 @@ const EPOQUES = {
 const COURANTS = {
     humanisme: {
         name: 'Humanisme',
-        icon: '📚',
+        icon: '❁',
         period: 'XVIᵉ siècle',
-        description: 'Foi en l\'homme, éducation et sagesse antique retrouvée',
+        description: 'L\'homme mesure tout. Se trompe souvent.',
         authors: ['Michel de Montaigne', 'François Rabelais', 'Érasme', 'Thomas More', 'Étienne de La Boétie', 'Guillaume Budé'],
         keywords: ['homme', 'éducation', 'sagesse', 'vertu', 'raison', 'antiquité'],
-        color: '#4caf50'
+        color: '#7d8471'
     },
     baroque: {
         name: 'Baroque',
-        icon: '🎭',
+        icon: '❀',
         period: 'Fin XVIᵉ – début XVIIᵉ',
-        description: 'Mouvement, illusion et vanité du monde',
+        description: 'Tout bouge. Rien ne reste. Même pas soi.',
         authors: ['Agrippa d\'Aubigné', 'Théophile de Viau', 'Saint-Amant', 'Tristan L\'Hermite', 'Góngora', 'Shakespeare'],
         keywords: ['inconstance', 'métamorphose', 'illusion', 'mort', 'vanité', 'spectacle'],
-        color: '#9c27b0'
+        color: '#5c5470'
     },
     classicisme: {
         name: 'Classicisme',
-        icon: '⚖️',
+        icon: '⚖︎',
         period: 'XVIIᵉ siècle',
-        description: 'Raison, équilibre et imitation des Anciens',
+        description: 'Des règles. Des règles. Des règles.',
         authors: ['Molière', 'Jean Racine', 'Pierre Corneille', 'Jean de La Fontaine', 'Nicolas Boileau', 'Madame de La Fayette'],
         keywords: ['raison', 'règle', 'vraisemblance', 'bienséance', 'nature', 'universel'],
-        color: '#607d8b'
+        color: '#635d4e'
     },
     romantisme: {
         name: 'Romantisme',
-        icon: '🌹',
+        icon: '❧',
         period: '1820 – 1850',
-        description: 'Exaltation du moi, passion et communion avec la nature',
+        description: 'Moi. La nature. L\'infini. Moi.',
         authors: ['Victor Hugo', 'Alphonse de Lamartine', 'Alfred de Musset', 'Alfred de Vigny', 'Gérard de Nerval', 'François-René de Chateaubriand', 'George Sand', 'Novalis', 'Lord Byron', 'John Keats'],
         keywords: ['moi', 'passion', 'nature', 'mélancolie', 'liberté', 'génie', 'sublime'],
-        color: '#e91e63'
+        color: '#6b3a3a'
     },
     realisme: {
         name: 'Réalisme',
-        icon: '🔬',
+        icon: '◉',
         period: '1850 – 1880',
-        description: 'Peinture fidèle de la société et des moeurs',
+        description: 'Observer. Noter. Ne rien changer.',
         authors: ['Honoré de Balzac', 'Gustave Flaubert', 'Stendhal', 'Guy de Maupassant', 'Prosper Mérimée', 'Champfleury', 'Fiodor Dostoïevski', 'Léon Tolstoï'],
         keywords: ['société', 'observation', 'objectivité', 'bourgeoisie', 'argent', 'ambition'],
-        color: '#795548'
+        color: '#635d4e'
     },
     naturalisme: {
         name: 'Naturalisme',
-        icon: '🏭',
+        icon: '⚗',
         period: '1870 – 1890',
-        description: 'Roman expérimental et déterminisme social',
+        description: 'L\'hérédité gagne toujours. Toujours.',
         authors: ['Émile Zola', 'Guy de Maupassant', 'Alphonse Daudet', 'Edmond et Jules de Goncourt', 'Joris-Karl Huysmans'],
         keywords: ['hérédité', 'milieu', 'expérimental', 'ouvrier', 'misère', 'déterminisme'],
-        color: '#3e2723'
+        color: '#3d3d3d'
     },
     symbolisme: {
         name: 'Symbolisme',
-        icon: '🌸',
+        icon: '✶',
         period: '1880 – 1900',
-        description: 'Musique des mots, symboles et correspondances secrètes',
+        description: 'Ne rien dire. Suggérer. S’enfuir.',
         authors: ['Charles Baudelaire', 'Stéphane Mallarmé', 'Paul Verlaine', 'Arthur Rimbaud', 'Jean Moréas', 'Gustave Kahn', 'Maurice Maeterlinck', 'Émile Verhaeren'],
         keywords: ['symbole', 'suggestion', 'musique', 'synesthésie', 'idéal', 'mystère'],
-        color: '#7b1fa2'
+        color: '#5c5470'
     },
     surrealisme: {
         name: 'Surréalisme',
-        icon: '👁️',
+        icon: '◬',
         period: '1920 – 1960',
-        description: 'Libération de l\'inconscient et automatisme psychique',
+        description: 'L\'inconscient a toujours raison. Hélas.',
         authors: ['André Breton', 'Paul Éluard', 'Louis Aragon', 'Robert Desnos', 'Philippe Soupault', 'Benjamin Péret', 'René Crevel', 'Antonin Artaud'],
         keywords: ['rêve', 'inconscient', 'automatisme', 'hasard', 'merveilleux', 'révolution'],
-        color: '#ff5722'
+        color: '#a67c52'
     },
     existentialisme: {
         name: 'Existentialisme',
-        icon: '🚬',
+        icon: '⦿',
         period: '1940 – 1960',
-        description: 'L\'existence précède l\'essence, liberté et engagement',
+        description: 'Vous êtes libre. Bonne chance.',
         authors: ['Jean-Paul Sartre', 'Albert Camus', 'Simone de Beauvoir', 'Jean Genet', 'Maurice Merleau-Ponty', 'Gabriel Marcel'],
         keywords: ['existence', 'liberté', 'absurde', 'engagement', 'angoisse', 'autrui'],
         color: '#212121'
     },
     absurde: {
         name: 'Absurde',
-        icon: '🎪',
+        icon: '⧖',
         period: '1950 – 1970',
-        description: 'Théâtre de l\'incommunicabilité et du non-sens',
+        description: 'Attendre. Parler. Attendre encore.',
         authors: ['Samuel Beckett', 'Eugène Ionesco', 'Jean Genet', 'Arthur Adamov', 'Harold Pinter', 'Fernando Arrabal'],
         keywords: ['absurde', 'attente', 'langage', 'vide', 'dérision', 'tragique'],
         color: '#424242'
