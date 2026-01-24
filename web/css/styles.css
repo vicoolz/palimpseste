@@ -395,36 +395,6 @@
             12px 0 0 var(--border) !important;
     }
     
-    /* Réinitialiser les règles de masquage */
-    .stats-panel *,
-    .stats-section,
-    .profile-section,
-    .favorites-section {
-        display: revert !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        width: auto !important;
-        height: auto !important;
-        max-width: none !important;
-        max-height: none !important;
-        min-width: 0 !important;
-        min-height: 0 !important;
-        padding: revert !important;
-        margin: revert !important;
-        border: revert !important;
-        overflow: visible !important;
-        position: static !important;
-        left: auto !important;
-        top: auto !important;
-        pointer-events: auto !important;
-        z-index: auto !important;
-        font-size: revert !important;
-        line-height: revert !important;
-        clip: auto !important;
-        -webkit-clip-path: none !important;
-        clip-path: none !important;
-    }
-    
     /* Re-appliquer les styles normaux de la sidebar */
     .stats-panel {
         padding: 1.25rem 1rem !important;
@@ -5773,4 +5743,155 @@ transition: all 0.2s;
 
 .extrait-source .source-link:hover {
     text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   👤 PROFIL SIDEBAR - Styles desktop
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Header profil avec avatar */
+.profile-header-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--bg-elevated);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin-bottom: 0.75rem;
+}
+
+.profile-avatar-large {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-purple, #9b5de5));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+    border: 2px solid var(--border);
+}
+
+.profile-name-large {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* Stats row */
+.profile-stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.profile-stat-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 0.5rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.profile-stat-btn:hover {
+    background: var(--bg-lighter);
+    border-color: var(--accent);
+}
+
+.profile-stat-btn .stat-number {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.profile-stat-btn .stat-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+}
+
+/* Bouton déconnexion */
+.drawer-logout-btn {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.drawer-logout-btn:hover {
+    background: rgba(230, 57, 70, 0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Section stats avec titre stylé */
+.stats-section h3 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Grand nombre stats */
+.stats-section .big-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.stats-section .big-number-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Mini stats grid */
+.stats-section .mini-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.stats-section .mini-stat {
+    background: var(--bg-elevated);
+    padding: 0.6rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    text-align: center;
+}
+
+.stats-section .mini-stat-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.stats-section .mini-stat-label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: 0.15rem;
 }
