@@ -264,6 +264,7 @@ async function init() {
 function loadState() {
     try {
         const d = JSON.parse(localStorage.getItem('palimpseste') || '{}');
+        console.log('📦 loadState - favoris chargés:', d.favorites?.length || 0, d.favorites);
         state.likes = new Set(d.likes || []);
         state.readCount = d.readCount || 0;
         state.authorStats = d.authorStats || {};
@@ -285,7 +286,9 @@ function loadState() {
         };
         // Vérifier et mettre à jour le streak au chargement
         checkAndUpdateStreak();
-    } catch(e) {}
+    } catch(e) {
+        console.error('❌ loadState error:', e);
+    }
 }
 
 function saveState() {
