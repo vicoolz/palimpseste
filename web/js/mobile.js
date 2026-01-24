@@ -113,13 +113,25 @@ function initMobile() {
     // Ajouter l'écouteur pour le bouton profil mobile
     const profileBtn = document.getElementById('mobileProfileBtn');
     if (profileBtn) {
-        // Un seul listener avec pointerup pour compatibilité touch + mouse
-        profileBtn.addEventListener('pointerup', function(e) {
+        // Supprimer les anciens listeners en clonant
+        const newBtn = profileBtn.cloneNode(true);
+        profileBtn.parentNode.replaceChild(newBtn, profileBtn);
+        
+        // Utiliser click pour meilleure compatibilité
+        newBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             console.log('📱 Profile button clicked');
             openMobileDrawer();
         });
+        
+        // Fallback touchend pour iOS
+        newBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('📱 Profile button touched');
+            openMobileDrawer();
+        }, { passive: false });
     }
     
     // Ajouter les écouteurs pour le drawer overlay
