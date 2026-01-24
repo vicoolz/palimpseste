@@ -408,6 +408,9 @@ async function logoutUser() {
     toast('👋 Déconnecté');
 }
 
+// Alias pour compatibilité avec le HTML
+window.logout = logoutUser;
+
 async function createUserProfile(userId, username) {
     if (!supabaseClient) return;
     
