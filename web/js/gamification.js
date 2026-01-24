@@ -273,21 +273,20 @@ function updateFunStat() {
     const sessionMinutes = Math.floor((Date.now() - (state.sessionStart || Date.now())) / 60000);
     
     // Calculs dérivés
-    const echoRatio = authorCount > 0 ? Math.round((likeCount / Math.max(1, readCount)) * 100) : 0;
-    const wanderIndex = Math.floor(Math.sqrt(readCount * authorCount));
-    const silenceGap = Math.max(0, 7 - (readCount % 7));
+    const echoRatio = readCount > 0 ? Math.round((likeCount / readCount) * 100) : 0;
+    const avgPerAuthor = authorCount > 0 ? (readCount / authorCount).toFixed(1) : 0;
     
     const funStats = [
-        `☽ Encre consommée : ${(readCount * 0.3).toFixed(1)} ml`,
-        `◎ Orbite littéraire : ${authorCount} astres visités`,
-        `❧ Résonances : ${likeCount} textes vous ont reconnu`,
-        `⧖ Indice d'errance : ${wanderIndex}`,
-        `☾ Prochaine éclipse : dans ${silenceGap} textes`,
-        `✧ Ratio d'écho : ${echoRatio}% des textes résonnent`,
-        `⚗ Distillation : ${Math.floor(readCount / 3)} essences extraites`,
-        `༄ Temps de dérive : ${sessionMinutes || '∞'} minutes`,
-        `◬ Fragments collectés : ${readCount} sur ∞`,
-        `⛧ Connexions secrètes : ${Math.floor(authorCount * 1.7)}`,
+        `☽ ${readCount} textes traversés`,
+        `◎ ${authorCount} auteurs découverts`,
+        `❧ ${likeCount} coups de cœur`,
+        `✧ ${echoRatio}% des textes vous ont marqué`,
+        `⧖ ${avgPerAuthor} textes par auteur en moyenne`,
+        `༄ ${sessionMinutes || '<1'} min de lecture`,
+        `⚗ ${Math.floor(readCount / 3)} séries de 3 textes`,
+        `◬ Diversité : ${authorCount} voix différentes`,
+        `☾ Fidélité : ${echoRatio > 30 ? 'sélective' : echoRatio > 10 ? 'curieuse' : 'exploratoire'}`,
+        `⛧ Vous avez lu ${readCount} textes de ${authorCount} auteurs`,
     ];
     
     el.textContent = funStats[Math.floor(Math.random() * funStats.length)];
