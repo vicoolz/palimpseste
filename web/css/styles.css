@@ -5062,39 +5062,13 @@ transition: all 0.2s;
 /* ═══════════════════════════════════════════════════════════
    📱 MOBILE RESPONSIVE - SAFARI iOS & ANDROID
    Version complète et robuste
+   Note: Le drawer mobile est géré dans mobile.css
    ═══════════════════════════════════════════════════════════ */
-
-/* Reset des transitions pour éviter les bugs Safari */
-@media screen and (max-width: 900px) {
-    * {
-        -webkit-transition: none !important;
-        transition: none !important;
-    }
-}
 
 /* ====== TABLETTES ET MOBILE (< 900px) ====== */
 @media screen and (max-width: 900px) {
-    /* SIDEBAR - Masquage total et définitif */
-    .stats-panel {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        width: 0 !important;
-        height: 0 !important;
-        max-width: 0 !important;
-        max-height: 0 !important;
-        overflow: hidden !important;
-        position: absolute !important;
-        left: -99999px !important;
-        top: -99999px !important;
-        pointer-events: none !important;
-        z-index: -9999 !important;
-        clip: rect(0, 0, 0, 0) !important;
-        -webkit-clip-path: inset(100%) !important;
-        clip-path: inset(100%) !important;
-        transform: scale(0) !important;
-        -webkit-transform: scale(0) !important;
-    }
+    /* SIDEBAR devient DRAWER - géré dans mobile.css, ne pas masquer ici */
+    /* On laisse mobile.css gérer le drawer */
     
     /* Body - empêcher le scroll horizontal */
     html, body {

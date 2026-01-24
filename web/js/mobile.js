@@ -122,35 +122,66 @@ function handleSwipe() {
 
 // Initialiser les éléments mobile
 function initMobile() {
-    // Ajouter l'écouteur pour le bouton profil mobile
+    // Bouton profil dans le header
     const profileBtn = document.getElementById('mobileProfileBtn');
     if (profileBtn) {
-        // Simplifier: un seul event click suffit
-        profileBtn.onclick = function(e) {
+        // Supprimer tous les anciens handlers
+        profileBtn.replaceWith(profileBtn.cloneNode(true));
+        const newBtn = document.getElementById('mobileProfileBtn');
+        
+        // Ajouter les handlers touch ET click
+        newBtn.addEventListener('touchstart', function(e) {
             e.preventDefault();
             e.stopPropagation();
             openMobileDrawer();
-        };
-        console.log('📱 Mobile profile button initialized');
-    } else {
-        console.warn('📱 Mobile profile button NOT FOUND');
+        }, { passive: false });
+        
+        newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openMobileDrawer();
+        });
+        
+        console.log('📱 Mobile profile button READY');
     }
     
-    // Ajouter les écouteurs pour le drawer overlay
+    // Bouton menu dans la nav bottom
+    const menuBtn = document.getElementById('mobileMenuBtn');
+    if (menuBtn) {
+        menuBtn.replaceWith(menuBtn.cloneNode(true));
+        const newMenuBtn = document.getElementById('mobileMenuBtn');
+        
+        newMenuBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openMobileDrawer();
+        }, { passive: false });
+        
+        newMenuBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openMobileDrawer();
+        });
+        
+        console.log('📱 Mobile menu button READY');
+    }
+    
+    // Overlay
     const overlay = document.getElementById('mobileDrawerOverlay');
     if (overlay) {
         overlay.addEventListener('click', closeMobileDrawer);
+        overlay.addEventListener('touchstart', closeMobileDrawer, { passive: true });
     }
     
-    // Synchroniser le sélecteur de langue du drawer avec celui du header
+    // Synchroniser langue
     const drawerLangSelect = document.getElementById('drawerLangSelect');
     const headerLangSelect = document.getElementById('langSelect');
     if (drawerLangSelect && headerLangSelect) {
         drawerLangSelect.value = headerLangSelect.value;
     }
     
-    // Mettre à jour l'avatar si connecté
-    if (currentUser) {
+    // Avatar
+    if (typeof currentUser !== 'undefined' && currentUser) {
         updateMobileAvatar();
     }
     
@@ -158,9 +189,14 @@ function initMobile() {
 }
 
 // Appeler l'init mobile après le chargement
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(initMobile, 100);
-});
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(initMobile, 50);
+    });
+} else {
+    // DOM déjà chargé
+    setTimeout(initMobile, 50);
+}
 
 // Rendre les fonctions accessibles globalement
 window.openMobileDrawer = openMobileDrawer;

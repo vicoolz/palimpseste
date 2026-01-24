@@ -74,10 +74,10 @@
             <span class="mobile-nav-icon">💬</span>
             <span class="mobile-nav-label">Messages</span>
         </button>
-        <a href="#menu" class="mobile-nav-item" id="mobileMenuBtn" data-nav="menu" ontouchend="openDrawer()" onclick="openDrawer(); return false;">
+        <div class="mobile-nav-item" id="mobileMenuBtn" data-nav="menu" role="button" tabindex="0">
             <span class="mobile-nav-icon">☰</span>
             <span class="mobile-nav-label">Menu</span>
-        </a>
+        </div>
     </nav>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
@@ -232,9 +232,9 @@
     <header>
         <div class="header-inner">
             <!-- MOBILE: Avatar profil cliquable -->
-            <a href="#menu" class="mobile-profile-btn" id="mobileProfileBtn" ontouchend="openDrawer()" onclick="openDrawer(); return false;">
+            <div class="mobile-profile-btn" id="mobileProfileBtn" role="button" tabindex="0">
                 <span class="mobile-profile-avatar" id="mobileAvatar">👤</span>
-            </a>
+            </div>
             
             <!-- MOBILE: Logo compact -->
             <span class="mobile-logo">📜</span>

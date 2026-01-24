@@ -824,6 +824,13 @@ async function fillPool() {
 // ═══════════════════════════════════════════════════════════
 
 async function exploreCategory(genreOrCategoryName, isSubCat = false) {
+    // Protection contre les clics multiples
+    if (state.loading) {
+        console.log('🛑 Chargement en cours, ignoré');
+        return;
+    }
+    state.loading = true;
+    
     const wikisource = currentWikisource;
     const lang = wikisource.lang;
     const genreLower = genreOrCategoryName.toLowerCase();
@@ -840,6 +847,7 @@ async function exploreCategory(genreOrCategoryName, isSubCat = false) {
         currentBrowseMode = 'branches';
         renderBreadcrumbs();
         renderEnrichedBranches(genreLower);
+        state.loading = false;
         return;
     }
     
@@ -857,7 +865,11 @@ async function exploreCategory(genreOrCategoryName, isSubCat = false) {
     currentBrowseMode = 'search';
     
     // Rechercher sur Wikisource
-    await searchByTerm(genreOrCategoryName, wikisource);
+    try {
+        await searchByTerm(genreOrCategoryName, wikisource);
+    } finally {
+        state.loading = false;
+    }
 }
 
 // Affiche les branches enrichies pour un genre
@@ -886,6 +898,7 @@ function renderEnrichedBranches(genre) {
 
 // Recherche par terme (auteur, courant, etc.)
 async function searchByTerm(term, wikisource) {
+    // Ne pas re-vérifier loading car déjà fait dans exploreCategory
     document.getElementById('catSubcategories').innerHTML = `<div style="color:var(--muted)">🔍 Recherche "${term}"...</div>`;
     
     try {
