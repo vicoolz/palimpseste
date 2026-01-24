@@ -258,6 +258,12 @@ async function init() {
     // Créer le bouton scroll to top
     createScrollTopButton();
     
+    // Headroom: cacher le header quand on scrolle vers le bas, afficher vers le haut
+    let lastScrollY = 0;
+    let headerHidden = false;
+    const header = document.querySelector('header');
+    const explorationContainer = document.getElementById('explorationContainer');
+    
     window.onscroll = () => {
         document.getElementById('progress').style.width = 
             (scrollY / (document.body.scrollHeight - innerHeight) * 100) + '%';
@@ -265,6 +271,31 @@ async function init() {
         
         // Afficher/masquer le bouton scroll to top
         updateScrollTopButton();
+        
+        // Headroom behavior - seulement sur desktop et après un peu de scroll
+        if (window.innerWidth > 900 && scrollY > 150) {
+            const scrollingDown = scrollY > lastScrollY && scrollY > 100;
+            const scrollingUp = scrollY < lastScrollY;
+            
+            if (scrollingDown && !headerHidden) {
+                // Cacher le header et la barre d'exploration
+                header.style.transform = 'translateY(-100%)';
+                if (explorationContainer) explorationContainer.style.transform = 'translateY(-150px)';
+                headerHidden = true;
+            } else if (scrollingUp && headerHidden) {
+                // Afficher le header
+                header.style.transform = 'translateY(0)';
+                if (explorationContainer) explorationContainer.style.transform = 'translateY(0)';
+                headerHidden = false;
+            }
+        } else if (headerHidden) {
+            // Toujours afficher en haut de page
+            header.style.transform = 'translateY(0)';
+            if (explorationContainer) explorationContainer.style.transform = 'translateY(0)';
+            headerHidden = false;
+        }
+        
+        lastScrollY = scrollY;
     };
 }
 
@@ -1108,8 +1139,7 @@ function showMore(cardId) {
     btnEl.classList.add('exhausted');
     btnEl.onclick = null;
     
-    // Scroll doux vers le nouveau contenu
-    setTimeout(() => chunkEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    // NE PAS scroller - garder l'écran stable pour ne pas gêner la lecture
 }
 
 function toggleLike(id, btn) {

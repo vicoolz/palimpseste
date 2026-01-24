@@ -1215,6 +1215,8 @@ border-bottom: 2px solid var(--border);
 /* Pixel shadow */
 box-shadow: 0 4px 0 var(--pixel-shadow);
 overflow: visible;
+/* Headroom transition */
+transition: transform 0.3s ease;
 }
 .header-inner {
 padding: 0.75rem 1.5rem;
@@ -1604,6 +1606,8 @@ background: var(--bg);
 border-bottom: 2px solid var(--border);
 box-shadow: 0 4px 0 var(--pixel-shadow);
 padding-top: 4px; /* Petit espace en haut */
+/* Headroom transition */
+transition: transform 0.3s ease;
 }
 
 .exploration-tabs {
