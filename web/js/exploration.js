@@ -357,7 +357,10 @@ function switchExplorationMode(mode) {
     
     // Cacher l'intro
     const introEl = document.getElementById('ambianceIntro');
-    if (introEl) introEl.style.display = 'none';
+    if (introEl) {
+        introEl.style.display = 'none';
+        document.body.classList.remove('has-ambiance-intro');
+    }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -391,6 +394,7 @@ async function setEpoque(epoqueId) {
             </div>
         `;
         introEl.style.display = 'block';
+        document.body.classList.add('has-ambiance-intro');
     }
     
     // Effacer et recharger
@@ -438,6 +442,7 @@ async function setCourant(courantId) {
             </div>
         `;
         introEl.style.display = 'block';
+        document.body.classList.add('has-ambiance-intro');
     }
     
     // Effacer et recharger
@@ -475,6 +480,7 @@ async function setAmbiance(ambianceId) {
     
     // Afficher l'intro si ce n'est pas "libre"
     const introEl = document.getElementById('ambianceIntro');
+    const mainEl = document.getElementById('feed');
     if (introEl) {
         if (ambianceId !== 'libre') {
             introEl.innerHTML = `
@@ -487,9 +493,11 @@ async function setAmbiance(ambianceId) {
                 </div>
             `;
             introEl.style.display = 'block';
-            introEl.style.position = 'relative';
+            // Ajuster le padding du main pour l'intro visible
+            document.body.classList.add('has-ambiance-intro');
         } else {
             introEl.style.display = 'none';
+            document.body.classList.remove('has-ambiance-intro');
         }
     }
     
@@ -514,7 +522,10 @@ async function setAmbiance(ambianceId) {
  */
 function closeAmbianceIntro() {
     const introEl = document.getElementById('ambianceIntro');
-    if (introEl) introEl.style.display = 'none';
+    if (introEl) {
+        introEl.style.display = 'none';
+        document.body.classList.remove('has-ambiance-intro');
+    }
 }
 
 /**

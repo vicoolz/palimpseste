@@ -441,7 +441,7 @@
         margin-right: 0 !important;
         padding-left: 0.75rem !important;
         padding-right: 0.75rem !important;
-        padding-top: 7rem !important;
+        padding-top: 150px !important; /* Espace pour header (56px) + exploration (~94px) */
         padding-bottom: 5rem !important;
         width: 100% !important;
         max-width: 100% !important;
@@ -449,9 +449,10 @@
     
     /* Exploration container */
     .exploration-container {
-        margin-left: 0 !important;
-        position: sticky !important;
+        position: fixed !important;
         top: 56px !important;
+        left: 0 !important;
+        right: 0 !important;
         z-index: 90 !important;
         /* Pixel border */
         border-bottom: 2px solid var(--border) !important;
@@ -596,8 +597,10 @@
     
     /* Ambiance intro */
     .ambiance-intro {
-        margin-left: 0 !important;
-        top: 92px !important;
+        position: fixed !important;
+        top: 145px !important;
+        left: 0 !important;
+        right: 0 !important;
         padding: 0.75rem 1rem !important;
     }
     
@@ -1320,7 +1323,7 @@ margin-left: 260px;
 max-width: 720px;
 margin-right: auto;
 margin-left: calc(260px + (100% - 260px - 720px) / 2);
-padding: 1rem 2rem 4rem; /* Juste un petit padding-top */
+padding: 160px 2rem 4rem 2rem; /* Espace pour header + exploration-container */
 }
 @media (max-width: 1100px) {
 main { margin-left: 260px; margin-right: 1rem; }
@@ -1549,10 +1552,11 @@ box-shadow: 3px 3px 0 var(--pixel-shadow);
    EXPLORATION - Container avec onglets
    ═══════════════════════════════════════════════════════════ */
 .exploration-container {
-position: sticky;
-top: 0; /* Colle au haut de la zone visible après body padding-top */
+position: fixed;
+top: 52px; /* Colle juste sous le header fixe */
+left: 260px;
+right: 0;
 z-index: 90;
-margin-left: 260px;
 background: var(--bg);
 border-bottom: 2px solid var(--border);
 box-shadow: 0 4px 0 var(--pixel-shadow);
@@ -1636,8 +1640,10 @@ font-size: 1rem;
 font-weight: 500;
 }
 .ambiance-intro {
-position: sticky;
-top: 92px; /* Sous header + barre ambiance */
+position: fixed;
+top: 145px; /* Sous header (52px) + exploration-container (~93px) */
+left: 260px;
+right: 0;
 z-index: 85;
 padding: 1rem 1.5rem;
 text-align: center;
@@ -1646,7 +1652,6 @@ backdrop-filter: blur(10px);
 -webkit-backdrop-filter: blur(10px);
 border-bottom: 1px solid var(--border);
 animation: fadeIn 0.5s ease;
-margin-left: 260px;
 }
 .ambiance-intro .close-intro {
 position: absolute;
@@ -1720,6 +1725,16 @@ background: var(--bg-card);
 color: var(--muted);
 border-color: var(--border);
 transform: none;
+}
+
+/* Ajustement du main quand l'intro d'ambiance est visible */
+body.has-ambiance-intro main {
+padding-top: 240px; /* Espace pour header + exploration + ambiance-intro */
+}
+@media screen and (max-width: 900px) {
+    body.has-ambiance-intro main {
+        padding-top: 230px !important; /* Mobile: header + exploration + intro */
+    }
 }
 
 /* Language badge */
