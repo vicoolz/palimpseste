@@ -2,6 +2,7 @@
 // 📱 MOBILE - Drawer et Navigation (style Twitter)
 // ═══════════════════════════════════════════════════════════
 
+// === DRAWER MENU (Stats, badges, favoris) ===
 function openMobileDrawer() {
     const drawer = document.querySelector('.stats-panel');
     const overlay = document.getElementById('mobileDrawerOverlay');
@@ -22,33 +23,37 @@ function closeMobileDrawer() {
     }
 }
 
-// Ouvrir le menu OU la connexion selon l'état
-function handleAvatarClick() {
-    if (typeof currentUser !== 'undefined' && currentUser) {
-        // Utilisateur connecté → ouvrir le drawer
-        openMobileDrawer();
-    } else {
-        // Pas connecté → ouvrir la modal de connexion
-        if (typeof openAuthModal === 'function') {
-            openAuthModal('login');
-        }
+// === PANNEAU PROFIL (Connexion/Déconnexion) ===
+function openProfilePanel() {
+    const panel = document.getElementById('mobileProfilePanel');
+    const overlay = document.getElementById('mobileDrawerOverlay');
+    if (panel) {
+        panel.classList.add('open');
+        overlay?.classList.add('open');
+        document.body.style.overflow = 'hidden';
     }
 }
 
-// Fermer le drawer en cliquant sur le bouton "Fermer" (pseudo-element)
-document.addEventListener('click', (e) => {
-    if (window.innerWidth <= 900) {
-        const drawer = document.querySelector('.stats-panel');
-        if (drawer && drawer.classList.contains('open')) {
-            // Vérifier si on clique sur la zone du bouton fermer (haut du drawer)
-            const rect = drawer.getBoundingClientRect();
-            const clickY = e.clientY - rect.top;
-            if (clickY < 40 && e.target === drawer) {
-                closeMobileDrawer();
-            }
-        }
+function closeProfilePanel() {
+    const panel = document.getElementById('mobileProfilePanel');
+    const overlay = document.getElementById('mobileDrawerOverlay');
+    if (panel) {
+        panel.classList.remove('open');
+        overlay?.classList.remove('open');
+        document.body.style.overflow = '';
     }
-});
+}
+
+// Fermer tous les drawers
+function closeAllDrawers() {
+    closeMobileDrawer();
+    closeProfilePanel();
+}
+
+// Avatar = Ouvrir panneau profil
+function handleAvatarClick() {
+    openProfilePanel();
+}
 
 // Navigation mobile
 let lastFeedTap = 0;
@@ -173,7 +178,7 @@ function initMobile() {
         console.log('📱 Mobile profile button READY');
     }
     
-    // Bouton menu dans la nav bottom - toujours ouvrir le drawer
+    // Bouton menu dans la nav bottom - ouvrir le drawer complet
     const menuBtn = document.getElementById('mobileMenuBtn');
     if (menuBtn) {
         menuBtn.style.cssText = 'cursor:pointer !important; pointer-events:auto !important; touch-action:manipulation !important;';
@@ -194,11 +199,11 @@ function initMobile() {
         console.log('📱 Mobile menu button READY');
     }
     
-    // Overlay
+    // Overlay - ferme tous les drawers
     const overlay = document.getElementById('mobileDrawerOverlay');
     if (overlay) {
-        overlay.addEventListener('click', closeMobileDrawer);
-        overlay.addEventListener('touchstart', closeMobileDrawer, { passive: true });
+        overlay.addEventListener('click', closeAllDrawers);
+        overlay.addEventListener('touchstart', closeAllDrawers, { passive: true });
     }
     
     // Synchroniser langue
@@ -211,9 +216,32 @@ function initMobile() {
     // Avatar
     if (typeof currentUser !== 'undefined' && currentUser) {
         updateMobileAvatar();
+        updateMobileProfilePanel();
     }
     
     console.log('📱 Mobile initialisé');
+}
+
+// Mettre à jour le panneau profil mobile
+function updateMobileProfilePanel() {
+    const loggedOut = document.getElementById('mobileProfileLoggedOut');
+    const loggedIn = document.getElementById('mobileProfileLoggedIn');
+    
+    if (typeof currentUser !== 'undefined' && currentUser) {
+        if (loggedOut) loggedOut.style.display = 'none';
+        if (loggedIn) loggedIn.style.display = 'block';
+        
+        const username = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || 'Utilisateur';
+        const initial = username.charAt(0).toUpperCase();
+        
+        const avatarEl = document.getElementById('mobileProfileAvatar');
+        const nameEl = document.getElementById('mobileProfileName');
+        if (avatarEl) avatarEl.textContent = initial;
+        if (nameEl) nameEl.textContent = username;
+    } else {
+        if (loggedOut) loggedOut.style.display = 'block';
+        if (loggedIn) loggedIn.style.display = 'none';
+    }
 }
 
 // Appeler l'init mobile après le chargement
@@ -229,7 +257,11 @@ if (document.readyState === 'loading') {
 // Rendre les fonctions accessibles globalement
 window.openMobileDrawer = openMobileDrawer;
 window.closeMobileDrawer = closeMobileDrawer;
+window.openProfilePanel = openProfilePanel;
+window.closeProfilePanel = closeProfilePanel;
+window.closeAllDrawers = closeAllDrawers;
 window.handleAvatarClick = handleAvatarClick;
 window.mobileNavTo = mobileNavTo;
 window.updateMobileAvatar = updateMobileAvatar;
 window.updateMobileNotifBadge = updateMobileNotifBadge;
+window.updateMobileProfilePanel = updateMobileProfilePanel;

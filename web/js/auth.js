@@ -493,6 +493,9 @@ async function onUserLoggedIn() {
     // Mettre à jour le badge de notifications et s'abonner
     if (typeof updateNotifBadge === 'function') updateNotifBadge();
     if (typeof subscribeToNotifications === 'function') subscribeToNotifications();
+    
+    // Mettre à jour le panneau profil mobile
+    if (typeof updateMobileProfilePanel === 'function') updateMobileProfilePanel();
 }
 
 function onUserLoggedOut() {
@@ -511,6 +514,9 @@ function onUserLoggedOut() {
     if (mobileAvatar) {
         mobileAvatar.textContent = '👤';
     }
+    
+    // Mettre à jour le panneau profil mobile
+    if (typeof updateMobileProfilePanel === 'function') updateMobileProfilePanel();
 }
 
 function toggleUserDropdown() {

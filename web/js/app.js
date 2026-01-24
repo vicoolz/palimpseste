@@ -66,8 +66,15 @@ async function loadUserStats() {
         totalLikes = likesCount || 0;
     }
     
+    // Sidebar desktop
     document.getElementById('myExtraitsCount').textContent = extraitCount || 0;
     document.getElementById('myLikesCount').textContent = totalLikes;
+    
+    // Panneau profil mobile
+    const mobileExtraits = document.getElementById('mobileProfileExtraits');
+    const mobileLikes = document.getElementById('mobileProfileLikes');
+    if (mobileExtraits) mobileExtraits.textContent = extraitCount || 0;
+    if (mobileLikes) mobileLikes.textContent = totalLikes;
     
     // Aussi afficher le nombre d'abonnés
     const { count: followersCount } = await supabaseClient

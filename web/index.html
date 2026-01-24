@@ -50,9 +50,48 @@
     <div class="progress" id="progress"></div>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
-         MOBILE: Overlay pour fermer le drawer
+         MOBILE: Overlay pour fermer les drawers
          ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="mobile-drawer-overlay" id="mobileDrawerOverlay" onclick="closeDrawer()"></div>
+    <div class="mobile-drawer-overlay" id="mobileDrawerOverlay" onclick="closeAllDrawers()"></div>
+    
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         MOBILE: Panneau PROFIL (Avatar) - Connexion/Déconnexion
+         ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="mobile-profile-panel" id="mobileProfilePanel">
+        <button class="drawer-close-btn" onclick="closeProfilePanel()">✕</button>
+        
+        <!-- Non connecté -->
+        <div id="mobileProfileLoggedOut" class="mobile-profile-content">
+            <div class="mobile-profile-avatar-big">👤</div>
+            <div class="mobile-profile-title">Bienvenue</div>
+            <div class="mobile-profile-subtitle">Connectez-vous pour participer</div>
+            <button class="mobile-profile-btn-primary" onclick="openAuthModal('login'); closeProfilePanel();">
+                Se connecter
+            </button>
+            <button class="mobile-profile-btn-secondary" onclick="openAuthModal('register'); closeProfilePanel();">
+                Créer un compte
+            </button>
+        </div>
+        
+        <!-- Connecté -->
+        <div id="mobileProfileLoggedIn" class="mobile-profile-content" style="display:none;">
+            <div class="mobile-profile-avatar-big" id="mobileProfileAvatar">👤</div>
+            <div class="mobile-profile-name" id="mobileProfileName">Utilisateur</div>
+            <div class="mobile-profile-stats">
+                <div class="mobile-profile-stat" onclick="showMyExtraits(); closeProfilePanel();">
+                    <span class="mobile-profile-stat-num" id="mobileProfileExtraits">0</span>
+                    <span class="mobile-profile-stat-label">extraits</span>
+                </div>
+                <div class="mobile-profile-stat" onclick="showMyLikes(); closeProfilePanel();">
+                    <span class="mobile-profile-stat-num" id="mobileProfileLikes">0</span>
+                    <span class="mobile-profile-stat-label">❤️ reçus</span>
+                </div>
+            </div>
+            <button class="mobile-profile-btn-logout" onclick="logout(); closeProfilePanel();">
+                🚪 Déconnexion
+            </button>
+        </div>
+    </div>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
          MOBILE: Navigation bottom bar (style Twitter)
