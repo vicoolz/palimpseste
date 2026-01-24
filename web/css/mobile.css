@@ -865,9 +865,42 @@
         left: 0 !important;
         right: 0 !important;
         z-index: 90 !important;
+        margin-top: 0 !important; /* Pas de margin sur mobile car fixed */
         background: var(--bg-card) !important;
         border-bottom: 2px solid var(--border) !important;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* Bandeau ambiance (quand on clique sur Romantique, Mélancolie, etc.) */
+    .ambiance-intro {
+        position: fixed !important;
+        top: 145px !important; /* Header 56px + exploration ~89px */
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 85 !important;
+        margin-left: 0 !important;
+        padding: 0.75rem 1rem !important;
+        text-align: center !important;
+    }
+    
+    .ambiance-intro h2 {
+        font-size: 1rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .ambiance-intro p {
+        font-size: 0.75rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .ambiance-intro .ambiance-tags {
+        gap: 0.25rem !important;
+        margin-top: 0.4rem !important;
+    }
+    
+    .ambiance-intro .ambiance-tag {
+        font-size: 0.6rem !important;
+        padding: 0.15rem 0.4rem !important;
     }
     
     .exploration-tabs {

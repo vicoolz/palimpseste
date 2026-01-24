@@ -1553,6 +1553,7 @@ position: sticky;
 top: 56px;
 z-index: 90;
 margin-left: 260px;
+margin-top: 56px; /* Compense le header fixed */
 background: var(--bg);
 border-bottom: 2px solid var(--border);
 box-shadow: 0 4px 0 var(--pixel-shadow);
@@ -1663,12 +1664,6 @@ transition: opacity 0.2s;
 }
 .ambiance-intro .close-intro:hover {
 opacity: 1;
-}
-@media (max-width: 900px) {
-.ambiance-intro {
-    margin-left: 0;
-    top: 88px;
-}
 }
 .ambiance-intro h2 {
 font-family: 'Playfair Display', serif;
