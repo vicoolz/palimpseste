@@ -38,6 +38,53 @@ let readingTimer = null;
 let sessionStartTime = null;
 
 // ═══════════════════════════════════════════════════════════
+// 🎨 GESTION DU THÈME (CLAIR/SOMBRE)
+// ═══════════════════════════════════════════════════════════
+
+function initTheme() {
+    // Charger la préférence depuis localStorage
+    const savedTheme = localStorage.getItem('palimpseste-theme');
+    if (savedTheme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+    }
+    updateThemeIcons();
+}
+
+function toggleTheme() {
+    const root = document.documentElement;
+    const isLight = root.getAttribute('data-theme') === 'light';
+    
+    if (isLight) {
+        // Passer en mode sombre
+        root.removeAttribute('data-theme');
+        localStorage.setItem('palimpseste-theme', 'dark');
+    } else {
+        // Passer en mode clair
+        root.setAttribute('data-theme', 'light');
+        localStorage.setItem('palimpseste-theme', 'light');
+    }
+    
+    updateThemeIcons();
+}
+
+function updateThemeIcons() {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    
+    // Bouton header desktop
+    const headerBtn = document.getElementById('themeToggle');
+    if (headerBtn) {
+        headerBtn.innerHTML = isLight ? '☾' : '☀︎';
+        headerBtn.title = isLight ? 'Mode sombre' : 'Mode clair';
+    }
+    
+    // Bouton drawer mobile
+    const drawerIcon = document.getElementById('drawerThemeIcon');
+    const drawerText = document.getElementById('drawerThemeText');
+    if (drawerIcon) drawerIcon.textContent = isLight ? '☾' : '☀︎';
+    if (drawerText) drawerText.textContent = isLight ? 'Mode sombre' : 'Mode clair';
+}
+
+// ═══════════════════════════════════════════════════════════
 // 👤 STATISTIQUES UTILISATEUR
 // ═══════════════════════════════════════════════════════════
 
@@ -194,6 +241,9 @@ async function quickShareAndComment(cardId) {
 
 
 async function init() {
+    // Initialiser le thème (clair/sombre) AVANT tout rendu
+    initTheme();
+    
     // Initialiser Supabase (social features)
     initSupabase();
     

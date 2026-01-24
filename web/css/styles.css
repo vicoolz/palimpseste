@@ -24,6 +24,28 @@
 --pixel-highlight: #3d3a30;
 }
 
+/* ═══ MODE CLAIR - Parchemin éclairé ═══ */
+[data-theme="light"] {
+/* Fonds - parchemin et papier ancien */
+--bg: #f5f2eb;
+--bg-card: #fffdf7;
+--bg-elevated: #e8e4da;
+/* Textes - encre et sépia */
+--text: #1a1814;
+--text-secondary: #4a453a;
+--muted: #8a8478;
+/* Accents - vert-de-gris, cuivre, bordeaux (légèrement ajustés) */
+--accent: #5a6352;          /* Vert-de-gris plus profond */
+--accent-secondary: #8b6239; /* Cuivre plus riche */
+--accent-tertiary: #7d2e2e;  /* Bordeaux plus vif */
+--accent-purple: #4a4260;    /* Prune plus dense */
+--border: #d4d0c4;
+--glow: 0 0 40px rgba(90,99,82,0.12);
+/* Ombres douces */
+--pixel-shadow: #c5c0b5;
+--pixel-highlight: #ffffff;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    🎮 PIXEL ART DESIGN SYSTEM
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -602,68 +624,73 @@
     /* Ambiance intro - FIXED sous les headers */
     .ambiance-intro {
         position: fixed !important;
-        top: 140px !important; /* Juste sous header (58px) + exploration (~80px) */
+        top: 125px !important; /* Juste sous header + exploration */
         left: 0 !important;
         right: 0 !important;
         margin: 0 !important;
-        padding: 2.5rem 0.75rem 0.75rem 0.75rem !important; /* Plus de padding en haut pour le bouton fermer */
-        max-height: 40vh !important; /* Un peu plus de place */
+        padding: 0.75rem !important;
+        padding-top: 2.8rem !important; /* Espace pour le bouton fermer */
+        max-height: 45vh !important;
         overflow-y: auto !important;
         z-index: 85 !important;
-        background: linear-gradient(135deg, rgba(14,13,11,0.98), rgba(28,26,23,0.98)) !important;
-        border-bottom: 1px solid var(--accent-secondary) !important;
+        background: var(--bg-card) !important;
+        border-bottom: 2px solid var(--accent-secondary) !important;
         box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
     }
     
     /* Quand l'intro est visible, le main doit être décalé sous elle */
     body.has-ambiance-intro main {
-        padding-top: 320px !important; /* header + exploration + intro */
+        padding-top: 340px !important; /* header + exploration + intro */
     }
     
     .ambiance-intro h2 {
-        font-size: 1rem !important;
-        margin-bottom: 0.3rem !important;
+        font-size: 1.1rem !important;
+        margin-bottom: 0.4rem !important;
         margin-top: 0 !important;
+        text-align: center !important;
     }
     
     .ambiance-intro p {
-        font-size: 0.75rem !important;
-        margin-bottom: 0.4rem !important;
+        font-size: 0.8rem !important;
+        margin-bottom: 0.5rem !important;
+        text-align: center !important;
     }
     
     .ambiance-intro .period-badge {
-        font-size: 0.6rem !important;
-        padding: 0.15rem 0.4rem !important;
-        margin-bottom: 0.3rem !important;
+        font-size: 0.65rem !important;
+        padding: 0.2rem 0.5rem !important;
+        margin-bottom: 0.4rem !important;
     }
     
     .ambiance-intro .ambiance-tags {
-        gap: 0.3rem !important;
-        margin-top: 0.4rem !important;
+        gap: 0.4rem !important;
+        margin-top: 0.5rem !important;
         flex-wrap: wrap !important;
+        justify-content: center !important;
     }
     
     .ambiance-intro .ambiance-tag {
-        font-size: 0.6rem !important;
-        padding: 0.2rem 0.5rem !important;
+        font-size: 0.65rem !important;
+        padding: 0.25rem 0.6rem !important;
     }
     
     .ambiance-intro .close-intro {
-        position: absolute !important;
-        top: 0.5rem !important;
-        right: 0.5rem !important;
-        font-size: 1.5rem !important;
-        width: 2rem !important;
-        height: 2rem !important;
+        position: fixed !important;
+        top: 130px !important; /* Juste en dessous du bord haut de l'encart */
+        right: 0.75rem !important;
+        font-size: 1.2rem !important;
+        width: 2.2rem !important;
+        height: 2.2rem !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        background: var(--bg-card) !important;
-        border: 1px solid var(--accent-secondary) !important;
+        background: var(--accent-tertiary) !important;
+        border: 2px solid var(--text) !important;
         border-radius: 50% !important;
         color: var(--text) !important;
         transform: none !important;
-        z-index: 10 !important;
+        z-index: 100 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
     }
     
     /* Progress bar */
