@@ -690,12 +690,14 @@
     <div class="share-modal" id="shareModal">
         <div class="share-box">
             <div class="share-header">
-                <div class="share-title">🐦 Partager cet extrait</div>
+                <div class="share-title">� Partager cet extrait</div>
                 <button class="auth-close" onclick="closeShareModal()">✕</button>
             </div>
             <div class="share-preview">
+                <p style="font-size:0.75rem;color:var(--muted);margin-bottom:0.5rem;">💡 Sélectionnez une partie du texte pour n'en partager qu'un extrait</p>
                 <div class="share-preview-text" id="sharePreviewText"></div>
                 <div class="share-preview-source" id="sharePreviewSource"></div>
+                <button class="btn-reset-share" onclick="resetShareToFull()">↻ Texte complet</button>
             </div>
             <textarea class="share-commentary" id="shareCommentary" placeholder="Ajoutez un commentaire... (optionnel)"></textarea>
             <div class="share-actions">

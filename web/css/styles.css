@@ -5572,3 +5572,185 @@ transition: all 0.2s;
         perspective: 1000 !important;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   💬 COMMENTAIRES INLINE - Directement sous les cartes
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.inline-comment-box {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+    background: var(--bg-elevated);
+    border-top: 1px solid var(--border);
+    margin-top: -1px;
+}
+
+.inline-comment-box.open {
+    max-height: 300px;
+    opacity: 1;
+    padding: 0.75rem 1rem;
+}
+
+.inline-comments-list {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-bottom: 0.5rem;
+}
+
+.inline-comment-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px dotted var(--border);
+    animation: fadeInUp 0.2s ease;
+}
+
+.inline-comment-item:last-child {
+    border-bottom: none;
+}
+
+.inline-comment-item.new {
+    background: rgba(230, 57, 70, 0.1);
+    border-radius: 4px;
+    padding-left: 0.5rem;
+    margin-left: -0.5rem;
+}
+
+.inline-comment-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.inline-comment-content {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.inline-comment-content strong {
+    color: var(--text);
+    font-weight: 600;
+    margin-right: 0.3rem;
+}
+
+.inline-comment-input-wrapper {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.inline-comment-input {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.inline-comment-input:focus {
+    border-color: var(--accent);
+}
+
+.inline-comment-input::placeholder {
+    color: var(--muted);
+}
+
+.inline-comment-send {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.inline-comment-send:hover {
+    transform: scale(1.1);
+    background: var(--accent-secondary);
+}
+
+.inline-comment-send:active {
+    transform: scale(0.95);
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   📤 SHARE MODAL AMÉLIORÉ
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.share-text-selectable {
+    user-select: text;
+    -webkit-user-select: text;
+    cursor: text;
+    line-height: 1.7;
+}
+
+.share-text-selectable::selection {
+    background: var(--accent);
+    color: white;
+}
+
+.share-char-count {
+    font-size: 0.75rem;
+    text-align: right;
+    margin-top: 0.5rem;
+    color: var(--muted);
+}
+
+#sharePreviewText {
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 1rem;
+    background: var(--bg-card);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.share-preview {
+    position: relative;
+}
+
+.btn-reset-share {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--accent-tertiary);
+    color: white;
+    border: none;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.btn-reset-share:hover {
+    opacity: 1;
+}

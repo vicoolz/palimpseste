@@ -94,19 +94,19 @@ function shareCardExtrait(cardId) {
     const card = document.getElementById(cardId);
     if (!card) return;
     
-    const text = card.dataset.text || '';
+    const fullText = card.dataset.text || '';
     const author = card.dataset.author || 'Inconnu';
     const title = card.dataset.title || 'Sans titre';
     
-    // Récupérer la sélection si elle existe, sinon utiliser le teaser
+    // Priorité : sélection utilisateur > texte complet
     const selection = window.getSelection().toString().trim();
-    const textToShare = selection.length >= 20 ? selection : text.substring(0, 500);
+    const textToShare = selection.length >= 20 ? selection : fullText;
     
     // Construire l'URL Wikisource
     const lang = card.dataset.lang || 'fr';
     const sourceUrl = `https://${lang}.wikisource.org/wiki/${encodeURIComponent(title)}`;
     
-    openShareModal(textToShare, author, title, sourceUrl);
+    openShareModal(textToShare, author, title, sourceUrl, cardId);
 }
 
 // Partager rapidement et ouvrir les commentaires
@@ -913,7 +913,7 @@ function createCardElement(result, origTitle, wikisource = getCurrentWikisource(
             <div class="actions">
                 <button class="btn btn-like" onclick="toggleLike('${cardId}',this)" title="Ajouter aux favoris">♥ <span class="btn-text">J'aime</span></button>
                 <button class="btn btn-share" onclick="shareCardExtrait('${cardId}')" title="Partager">📤 <span class="btn-text">Partager</span></button>
-                <button class="btn btn-comment" onclick="quickShareAndComment('${cardId}')" title="Commenter">💬 <span class="btn-text">Commenter</span></button>
+                <button class="btn btn-comment" onclick="showInlineComment('${cardId}')" title="Commenter">💬 <span class="btn-text">Commenter</span></button>
                 <button class="btn btn-explore" onclick="showRelatedAuthors('${cardId}')" title="Découvrir">🔗 <span class="btn-text">Explorer</span></button>
                 <a class="btn btn-source" href="${url}" target="_blank" title="Source">↗ <span class="btn-text">Source</span></a>
             </div>
@@ -1023,7 +1023,7 @@ function renderCard(result, origTitle, wikisource = getCurrentWikisource()) {
             <div class="actions">
                 <button class="btn btn-like" onclick="toggleLike('${cardId}',this)" title="Ajouter aux favoris">♥ <span class="btn-text">J'aime</span></button>
                 <button class="btn btn-share" onclick="shareCardExtrait('${cardId}')" title="Partager">📤 <span class="btn-text">Partager</span></button>
-                <button class="btn btn-comment" onclick="quickShareAndComment('${cardId}')" title="Commenter">💬 <span class="btn-text">Commenter</span></button>
+                <button class="btn btn-comment" onclick="showInlineComment('${cardId}')" title="Commenter">💬 <span class="btn-text">Commenter</span></button>
                 <button class="btn btn-explore" onclick="showRelatedAuthors('${cardId}')" title="Découvrir">🔗 <span class="btn-text">Explorer</span></button>
                 <a class="btn btn-source" href="${url}" target="_blank" title="Source">↗ <span class="btn-text">Source</span></a>
             </div>

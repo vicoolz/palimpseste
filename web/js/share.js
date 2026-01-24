@@ -1,30 +1,104 @@
 // ═══════════════════════════════════════════════════════════
-// 📤 PARTAGE D'EXTRAITS
+// 📤 PARTAGE D'EXTRAITS - Version améliorée
+// - Texte intégral par défaut
+// - Sélection possible pour réduire
+// - Commentaires inline ergonomiques
 // ═══════════════════════════════════════════════════════════
 
 var pendingShare = null;
 var shareTooltip = null;
+var originalShareText = '';
 
-function openShareModal(text, author, title, sourceUrl) {
+/**
+ * Ouvrir le modal de partage avec le texte COMPLET
+ * L'utilisateur peut ensuite sélectionner une partie s'il le souhaite
+ */
+function openShareModal(text, author, title, sourceUrl, cardId = null) {
     if (!currentUser) {
         if (typeof openAuthModal === 'function') openAuthModal('login');
         toast('📝 Connectez-vous pour partager');
         return;
     }
     
-    pendingShare = { text, author, title, sourceUrl };
+    originalShareText = text;
+    pendingShare = { text, author, title, sourceUrl, cardId };
     
-    document.getElementById('sharePreviewText').textContent = text.length > 300 
-        ? text.substring(0, 300) + '...' 
-        : text;
-    document.getElementById('sharePreviewSource').textContent = `— ${author}, ${title}`;
+    const previewEl = document.getElementById('sharePreviewText');
+    const sourceEl = document.getElementById('sharePreviewSource');
+    
+    // Afficher le texte complet (scrollable si long)
+    if (previewEl) {
+        previewEl.innerHTML = `<div class="share-text-selectable" style="user-select:text;-webkit-user-select:text;">${escapeHtmlShare(text)}</div>`;
+        previewEl.style.maxHeight = '250px';
+        previewEl.style.overflowY = 'auto';
+        previewEl.style.cursor = 'text';
+    }
+    
+    if (sourceEl) {
+        sourceEl.textContent = `— ${author}, ${title}`;
+    }
+    
+    // Compteur de caractères
+    updateShareCharCount(text.length);
+    
     document.getElementById('shareCommentary').value = '';
     document.getElementById('shareModal').classList.add('open');
+    
+    // Listeners pour la sélection
+    setTimeout(setupShareTextSelection, 100);
+}
+
+function setupShareTextSelection() {
+    const previewEl = document.getElementById('sharePreviewText');
+    if (!previewEl) return;
+    
+    const handler = () => {
+        const selection = window.getSelection().toString().trim();
+        if (selection.length >= 20 && pendingShare) {
+            pendingShare.text = selection;
+            updateShareCharCount(selection.length);
+            toast(`✂️ ${selection.length} caractères sélectionnés`);
+        }
+    };
+    
+    previewEl.onmouseup = handler;
+    previewEl.ontouchend = handler;
+}
+
+function updateShareCharCount(count) {
+    let el = document.getElementById('shareCharCount');
+    if (!el) {
+        // Créer l'élément s'il n'existe pas
+        const preview = document.querySelector('.share-preview');
+        if (preview) {
+            el = document.createElement('div');
+            el.id = 'shareCharCount';
+            el.className = 'share-char-count';
+            preview.appendChild(el);
+        }
+    }
+    if (el) {
+        const limit = 1000;
+        el.textContent = `${count}/${limit} caractères`;
+        el.style.color = count > limit ? 'var(--accent)' : 'var(--muted)';
+        el.style.fontSize = '0.75rem';
+        el.style.textAlign = 'right';
+        el.style.marginTop = '0.5rem';
+    }
+}
+
+function resetShareToFull() {
+    if (pendingShare && originalShareText) {
+        pendingShare.text = originalShareText;
+        updateShareCharCount(originalShareText.length);
+        toast('📄 Texte complet restauré');
+    }
 }
 
 function closeShareModal() {
     document.getElementById('shareModal').classList.remove('open');
     pendingShare = null;
+    originalShareText = '';
 }
 
 async function publishExtrait() {
@@ -33,98 +107,249 @@ async function publishExtrait() {
         return;
     }
     
-    document.getElementById('publishBtn').disabled = true;
+    const btn = document.getElementById('publishBtn');
+    if (btn) btn.disabled = true;
     
     const commentary = document.getElementById('shareCommentary').value.trim();
+    const textToPublish = pendingShare.text.substring(0, 1000);
     
-    const { data, error } = await supabaseClient.from('extraits').insert({
-        user_id: currentUser.id,
-        texte: pendingShare.text.substring(0, 1000), // Limite 1000 chars
-        source_title: pendingShare.title,
-        source_author: pendingShare.author,
-        source_url: pendingShare.sourceUrl || '',
-        commentary: commentary || null,
-        likes_count: 0,
-        created_at: new Date().toISOString()
-    });
-    
-    document.getElementById('publishBtn').disabled = false;
-    
-    if (error) {
-        toast('❌ Erreur: ' + error.message);
-    } else {
+    try {
+        const { data, error } = await supabaseClient.from('extraits').insert({
+            user_id: currentUser.id,
+            texte: textToPublish,
+            source_title: pendingShare.title,
+            source_author: pendingShare.author,
+            source_url: pendingShare.sourceUrl || '',
+            commentary: commentary || null,
+            likes_count: 0,
+            created_at: new Date().toISOString()
+        });
+        
+        if (error) throw error;
+        
         closeShareModal();
         toast('🐦 Extrait publié !');
         if (typeof loadUserStats === 'function') loadUserStats();
+        
+    } catch (err) {
+        toast('❌ Erreur: ' + (err.message || err));
+    } finally {
+        if (btn) btn.disabled = false;
     }
 }
 
-// Fonction pour ajouter un bouton de partage sur la sélection
-function setupTextSelection(cardElement, author, title, sourceUrl) {
-    const textElement = cardElement.querySelector('.card-body');
-    if (!textElement) return;
+// ═══════════════════════════════════════════════════════════
+// 💬 COMMENTAIRES INLINE - Directement sous les cartes
+// ═══════════════════════════════════════════════════════════
+
+function showInlineComment(cardId) {
+    if (!currentUser) {
+        if (typeof openAuthModal === 'function') openAuthModal('login');
+        toast('📝 Connectez-vous pour commenter');
+        return;
+    }
     
-    textElement.classList.add('text-selectable');
+    const card = document.getElementById(cardId);
+    if (!card) return;
     
-    textElement.addEventListener('mouseup', () => {
-        const selection = window.getSelection();
-        const selectedText = selection.toString().trim();
-        
-        if (selectedText.length >= 20 && selectedText.length <= 1000) {
-            // Montrer un tooltip ou bouton flottant
-            showShareTooltip(selectedText, author, title, sourceUrl);
+    // Toggle si déjà existant
+    let box = card.querySelector('.inline-comment-box');
+    if (box) {
+        box.classList.toggle('open');
+        if (box.classList.contains('open')) {
+            box.querySelector('input')?.focus();
         }
-    });
+        return;
+    }
+    
+    // Créer le champ inline
+    box = document.createElement('div');
+    box.className = 'inline-comment-box open';
+    box.innerHTML = `
+        <div class="inline-comments-list"></div>
+        <div class="inline-comment-input-wrapper">
+            <input type="text" class="inline-comment-input" 
+                   placeholder="Votre commentaire..." maxlength="500"
+                   onkeydown="if(event.key==='Enter')sendInlineComment('${cardId}',this)">
+            <button class="inline-comment-send" onclick="sendInlineComment('${cardId}',this.previousElementSibling)">➤</button>
+        </div>
+    `;
+    
+    const foot = card.querySelector('.card-foot');
+    if (foot) foot.after(box);
+    else card.appendChild(box);
+    
+    setTimeout(() => box.querySelector('input')?.focus(), 50);
+    
+    // Charger les commentaires existants si extrait connu
+    loadInlineComments(cardId);
+}
+
+async function loadInlineComments(cardId) {
+    const card = document.getElementById(cardId);
+    if (!card || !supabaseClient) return;
+    
+    const title = card.dataset.title;
+    const author = card.dataset.author;
+    const listEl = card.querySelector('.inline-comments-list');
+    if (!listEl) return;
+    
+    try {
+        // Chercher l'extrait
+        const { data: extraits } = await supabaseClient
+            .from('extraits')
+            .select('id')
+            .eq('source_title', title)
+            .eq('source_author', author)
+            .limit(1);
+        
+        if (!extraits || extraits.length === 0) return;
+        
+        const extraitId = extraits[0].id;
+        card.dataset.extraitId = extraitId;
+        
+        // Charger les commentaires
+        const { data: comments } = await supabaseClient
+            .from('comments')
+            .select('*, profiles:user_id(username)')
+            .eq('extrait_id', extraitId)
+            .order('created_at', { ascending: false })
+            .limit(5);
+        
+        if (comments && comments.length > 0) {
+            listEl.innerHTML = comments.map(c => {
+                const username = c.profiles?.username || 'Anonyme';
+                const initial = username.charAt(0).toUpperCase();
+                return `
+                    <div class="inline-comment-item">
+                        <span class="inline-comment-avatar">${initial}</span>
+                        <span class="inline-comment-content">
+                            <strong>${escapeHtmlShare(username)}</strong> ${escapeHtmlShare(c.content)}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+    } catch (e) {
+        console.log('Pas de commentaires:', e);
+    }
+}
+
+async function sendInlineComment(cardId, inputEl) {
+    if (!currentUser || !supabaseClient) {
+        toast('📝 Connectez-vous');
+        return;
+    }
+    
+    const comment = inputEl.value.trim();
+    if (!comment) return;
+    
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    
+    inputEl.disabled = true;
+    
+    try {
+        let extraitId = card.dataset.extraitId;
+        
+        // Créer l'extrait si nécessaire
+        if (!extraitId) {
+            const text = card.dataset.text || '';
+            const author = card.dataset.author || 'Inconnu';
+            const title = card.dataset.title || 'Sans titre';
+            const lang = card.dataset.lang || 'fr';
+            
+            const { data: newExtrait, error } = await supabaseClient
+                .from('extraits')
+                .insert({
+                    user_id: currentUser.id,
+                    texte: text.substring(0, 500),
+                    source_title: title,
+                    source_author: author,
+                    source_url: `https://${lang}.wikisource.org/wiki/${encodeURIComponent(title)}`,
+                    likes_count: 0
+                })
+                .select()
+                .single();
+            
+            if (error) throw error;
+            extraitId = newExtrait.id;
+            card.dataset.extraitId = extraitId;
+        }
+        
+        // Ajouter le commentaire
+        await supabaseClient.from('comments').insert({
+            extrait_id: extraitId,
+            user_id: currentUser.id,
+            content: comment
+        });
+        
+        inputEl.value = '';
+        toast('💬 Commentaire ajouté !');
+        
+        // Afficher localement
+        const username = currentUser?.user_metadata?.username || 'Moi';
+        const listEl = card.querySelector('.inline-comments-list');
+        if (listEl) {
+            const el = document.createElement('div');
+            el.className = 'inline-comment-item new';
+            el.innerHTML = `
+                <span class="inline-comment-avatar">${username.charAt(0).toUpperCase()}</span>
+                <span class="inline-comment-content"><strong>${escapeHtmlShare(username)}</strong> ${escapeHtmlShare(comment)}</span>
+            `;
+            listEl.prepend(el);
+            setTimeout(() => el.classList.remove('new'), 300);
+        }
+        
+    } catch (err) {
+        toast('❌ ' + (err.message || 'Erreur'));
+    } finally {
+        inputEl.disabled = false;
+        inputEl.focus();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════
+
+function escapeHtmlShare(text) {
+    if (!text) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
 }
 
 function showShareTooltip(text, author, title, sourceUrl) {
     hideShareTooltip();
-    
     const selection = window.getSelection();
     if (!selection.rangeCount) return;
     
-    const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-    
+    const rect = selection.getRangeAt(0).getBoundingClientRect();
     shareTooltip = document.createElement('div');
     shareTooltip.className = 'share-tooltip';
-    shareTooltip.innerHTML = `<button onclick="openShareModal('${text.replace(/'/g, "\\'")}', '${author}', '${title}', '${sourceUrl}')">🐦 Partager</button>`;
-    shareTooltip.style.cssText = `
-        position: fixed;
-        top: ${rect.top - 40}px;
-        left: ${rect.left + rect.width/2 - 50}px;
-        background: var(--accent-tertiary);
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        z-index: 1000;
-        cursor: pointer;
-        font-size: 0.85rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    `;
+    shareTooltip.innerHTML = `<button onclick="openShareModal(\`${text.replace(/`/g, '')}\`, '${author}', '${title}', '${sourceUrl}')">📤 Partager</button>`;
+    shareTooltip.style.cssText = `position:fixed;top:${rect.top-45}px;left:${Math.max(10,rect.left+rect.width/2-50)}px;background:var(--accent);color:white;padding:0.5rem 1rem;border-radius:8px;z-index:10000;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.4);`;
     document.body.appendChild(shareTooltip);
-    
-    // Auto-hide après 5s
     setTimeout(hideShareTooltip, 5000);
 }
 
 function hideShareTooltip() {
-    if (shareTooltip) {
-        shareTooltip.remove();
-        shareTooltip = null;
-    }
+    if (shareTooltip) { shareTooltip.remove(); shareTooltip = null; }
 }
 
 document.addEventListener('mousedown', (e) => {
-    if (!e.target.closest('.share-tooltip')) {
-        hideShareTooltip();
-    }
+    if (!e.target.closest('.share-tooltip')) hideShareTooltip();
 });
 
-// Rendre les fonctions accessibles globalement
+// Exports
 window.openShareModal = openShareModal;
 window.closeShareModal = closeShareModal;
 window.publishExtrait = publishExtrait;
-window.setupTextSelection = setupTextSelection;
+window.resetShareToFull = resetShareToFull;
 window.showShareTooltip = showShareTooltip;
 window.hideShareTooltip = hideShareTooltip;
+window.showInlineComment = showInlineComment;
+window.sendInlineComment = sendInlineComment;
