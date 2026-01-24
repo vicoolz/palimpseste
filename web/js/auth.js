@@ -462,10 +462,10 @@ async function onUserLoggedIn() {
     await ensureProfileExists();
     
     const username = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || 'Utilisateur';
-    const initial = username.charAt(0).toUpperCase();
+    const avatarSymbol = getAvatarSymbol(username);
     
     // Update header
-    document.getElementById('headerAvatar').innerHTML = initial;
+    document.getElementById('headerAvatar').innerHTML = avatarSymbol;
     document.getElementById('loginMenuItem').style.display = 'none';
     document.getElementById('registerMenuItem').style.display = 'none';
     document.getElementById('profileMenuItem').style.display = 'block';
@@ -475,13 +475,13 @@ async function onUserLoggedIn() {
     // Update sidebar
     document.getElementById('profileLoggedOut').style.display = 'none';
     document.getElementById('profileLoggedIn').style.display = 'block';
-    document.getElementById('sidebarAvatar').innerHTML = initial;
+    document.getElementById('sidebarAvatar').innerHTML = avatarSymbol;
     document.getElementById('sidebarUsername').textContent = username;
     
     // Update mobile avatar
     const mobileAvatar = document.getElementById('mobileAvatar');
     if (mobileAvatar) {
-        mobileAvatar.textContent = initial;
+        mobileAvatar.textContent = avatarSymbol;
     }
     
     // Load user stats (défini dans app.js)

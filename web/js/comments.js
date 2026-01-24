@@ -105,7 +105,7 @@ async function loadComments(extraitId) {
 function renderCommentItem(comment, profileMap, likesCountMap, userLikedMap, extraitId) {
     const profile = profileMap.get(comment.user_id);
     const username = profile?.username || 'Anonyme';
-    const initial = username.charAt(0).toUpperCase();
+    const avatarSymbol = getAvatarSymbol(username);
     const timeAgo = formatTimeAgo(new Date(comment.created_at));
     const canDelete = currentUser && comment.user_id === currentUser.id;
     const likeCount = likesCountMap.get(comment.id) || 0;
@@ -113,7 +113,7 @@ function renderCommentItem(comment, profileMap, likesCountMap, userLikedMap, ext
     
     return `
         <div class="comment-item" data-id="${comment.id}">
-            <div class="comment-avatar" onclick="openUserProfile('${comment.user_id}', '${escapeHtml(username)}')" style="cursor:pointer">${initial}</div>
+            <div class="comment-avatar" onclick="openUserProfile('${comment.user_id}', '${escapeHtml(username)}')" style="cursor:pointer">${avatarSymbol}</div>
             <div class="comment-content">
                 <div class="comment-header">
                     <span class="comment-username" onclick="openUserProfile('${comment.user_id}', '${escapeHtml(username)}')">${escapeHtml(username)}</span>

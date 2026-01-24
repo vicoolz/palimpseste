@@ -6,6 +6,31 @@
  */
 
 // ═══════════════════════════════════════════════════════════════════════════
+// 🎭 AVATAR - Symboles typographiques anciens
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Collection de symboles typographiques anciens pour les avatars */
+const AVATAR_SYMBOLS = ['❧', '☙', '✦', '✧', '❦', '⚜', '۞', '✾', '❀', '✿', '☽', '☾', '⚘', '✺', '❈', '✵', '❋', '✤', '✥', '❊'];
+
+/**
+ * Génère un symbole d'avatar déterministe basé sur le username
+ * Le même username donnera toujours le même symbole
+ * @param {string} username - Nom d'utilisateur
+ * @returns {string} Symbole typographique ancien
+ */
+function getAvatarSymbol(username) {
+    if (!username) return '✦';
+    // Hash simple du username pour un index déterministe
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+        hash = ((hash << 5) - hash) + username.charCodeAt(i);
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    const index = Math.abs(hash) % AVATAR_SYMBOLS.length;
+    return AVATAR_SYMBOLS[index];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // 📅 FORMATAGE DE DATES ET TEMPS
 // ═══════════════════════════════════════════════════════════════════════════
 

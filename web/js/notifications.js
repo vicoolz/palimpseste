@@ -162,7 +162,7 @@ async function loadNotifications(containerId = 'notifList') {
         container.innerHTML = notifs.map(notif => {
             const fromUser = profileMap.get(notif.from_user_id);
             const fromName = fromUser?.username || 'Quelqu\'un';
-            const initial = fromName.charAt(0).toUpperCase();
+            const avatarSymbol = getAvatarSymbol(fromName);
             const timeAgo = formatTimeAgo(new Date(notif.created_at));
             const isUnread = !notif.read_at;
             
@@ -182,7 +182,7 @@ async function loadNotifications(containerId = 'notifList') {
             
             return `
                 <div class="notif-item ${isUnread ? 'unread' : ''}" onclick="handleNotifClick('${notif.id}', '${notif.type}', '${notif.extrait_id || ''}', '${notif.from_user_id}', '${escapeHtml(fromName)}')">
-                    <div class="notif-avatar">${initial}</div>
+                    <div class="notif-avatar">${avatarSymbol}</div>
                     <div class="notif-content">
                         <div class="notif-text">${text}</div>
                         <div class="notif-time">${timeAgo}</div>

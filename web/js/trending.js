@@ -59,7 +59,7 @@ async function loadTrendingFeed() {
         
         container.innerHTML = extraits.map((extrait, index) => {
             const username = extrait.profiles?.username || 'Anonyme';
-            const avatar = extrait.profiles?.avatar_url || username[0].toUpperCase();
+            const avatar = extrait.profiles?.avatar_url || getAvatarSymbol(username);
             const isLiked = userLikes.has(extrait.id);
             const likesCount = extrait.likes_count || 0;
             const commentsCount = extrait.comments_count || 0;

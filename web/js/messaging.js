@@ -134,7 +134,7 @@ async function loadConversations() {
         container.innerHTML = '';
         for (const [userId, conv] of conversations) {
             const profile = profileMap.get(userId) || { username: 'Utilisateur' };
-            const initial = profile.username.charAt(0).toUpperCase();
+            const avatarSymbol = getAvatarSymbol(profile.username);
             const preview = conv.lastMessage.content.substring(0, 40) + (conv.lastMessage.content.length > 40 ? '...' : '');
             const time = formatMessageTime(conv.lastMessage.created_at);
             
@@ -143,7 +143,7 @@ async function loadConversations() {
             if (currentConversationUserId === userId) item.classList.add('active');
             item.onclick = () => openConversation(userId, profile.username);
             item.innerHTML = `
-                <div class="conversation-avatar">${initial}</div>
+                <div class="conversation-avatar">${avatarSymbol}</div>
                 <div class="conversation-info">
                     <div class="conversation-name">${profile.username}</div>
                     <div class="conversation-preview">${conv.lastMessage.sender_id === currentUser.id ? 'Vous: ' : ''}${preview}</div>
@@ -179,7 +179,7 @@ async function openConversation(userId, username) {
     document.getElementById('messagesModal').classList.add('chat-open');
     
     // Header
-    document.getElementById('chatAvatar').textContent = username.charAt(0).toUpperCase();
+    document.getElementById('chatAvatar').textContent = getAvatarSymbol(username);
     document.getElementById('chatUsername').textContent = username;
     
     // Charger les messages

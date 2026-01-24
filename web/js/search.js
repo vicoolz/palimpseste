@@ -430,7 +430,7 @@ function renderSearchResults(tab) {
                     if (isMe) {
                         return `
                             <div class="discover-card">
-                                <div class="discover-avatar" onclick="openUserProfile('${u.id}', '${u.username}')">${(u.username || '?').charAt(0).toUpperCase()}</div>
+                                <div class="discover-avatar" onclick="openUserProfile('${u.id}', '${u.username}')">${getAvatarSymbol(u.username || '?')}</div>
                                 <div class="discover-info" onclick="openUserProfile('${u.id}', '${u.username}')">
                                     <div class="discover-name">${escapeHtml(u.username || 'Anonyme')}</div>
                                     <div class="discover-stats">${u.extraitCount} extrait${u.extraitCount > 1 ? 's' : ''}</div>

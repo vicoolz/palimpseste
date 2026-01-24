@@ -101,7 +101,7 @@ function updateMobileAvatar() {
         if (profile?.avatar_url) {
             mobileAvatar.innerHTML = `<img src="${profile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
         } else if (profile?.username) {
-            mobileAvatar.textContent = profile.username[0].toUpperCase();
+            mobileAvatar.textContent = getAvatarSymbol(profile.username);
         }
     }
 }
@@ -232,11 +232,11 @@ function updateMobileProfilePanel() {
         if (loggedIn) loggedIn.style.display = 'block';
         
         const username = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || 'Utilisateur';
-        const initial = username.charAt(0).toUpperCase();
+        const avatarSymbol = getAvatarSymbol(username);
         
         const avatarEl = document.getElementById('mobileProfileAvatar');
         const nameEl = document.getElementById('mobileProfileName');
-        if (avatarEl) avatarEl.textContent = initial;
+        if (avatarEl) avatarEl.textContent = avatarSymbol;
         if (nameEl) nameEl.textContent = username;
     } else {
         if (loggedOut) loggedOut.style.display = 'block';

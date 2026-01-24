@@ -174,12 +174,12 @@ async function loadDiscoverUsers() {
  * Helper: Générer une carte utilisateur
  */
 function renderUserCard(userId, username, subtitle, showFollowButton = true, toggleFn = 'toggleFollow') {
-    const initial = (username || 'A').charAt(0).toUpperCase();
+    const avatarSymbol = getAvatarSymbol(username || 'A');
     const safeName = escapeHtml(username || 'Anonyme');
     const isFollowing = userFollowing.has(userId);
     return `
         <div class="discover-card">
-            <div class="discover-avatar" onclick="openUserProfile('${userId}', '${safeName}')">${initial}</div>
+            <div class="discover-avatar" onclick="openUserProfile('${userId}', '${safeName}')">${avatarSymbol}</div>
             <div class="discover-info" onclick="openUserProfile('${userId}', '${safeName}')">
                 <div class="discover-name">${safeName}</div>
                 <div class="discover-stats">${subtitle}</div>
@@ -484,7 +484,7 @@ async function loadActivityFeed() {
 function renderActivityItem(activity, userMap, extraitMap, authorMap) {
     const actor = userMap.get(activity.user_id);
     const actorName = actor?.username || 'Quelqu\'un';
-    const actorInitial = actorName.charAt(0).toUpperCase();
+    const actorSymbol = getAvatarSymbol(actorName);
     const timeAgo = formatTimeAgo(new Date(activity.created_at));
     const highlight = activity.is_on_mine ? 'highlight' : '';
     
@@ -496,7 +496,7 @@ function renderActivityItem(activity, userMap, extraitMap, authorMap) {
         
         return `
             <div class="activity-item ${highlight}" onclick="viewExtraitById('${activity.extrait_id}')">
-                <div class="activity-avatar" onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeHtml(actorName)}')">${actorInitial}</div>
+                <div class="activity-avatar" onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeHtml(actorName)}')">${actorSymbol}</div>
                 <div class="activity-content">
                     <div class="activity-text">
                         <strong onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeHtml(actorName)}')">${escapeHtml(actorName)}</strong> 
@@ -685,7 +685,7 @@ async function openUserProfile(userId, username) {
     
     // Mettre à jour l'UI
     const displayName = profile?.username || username || 'Anonyme';
-    document.getElementById('profileAvatar').textContent = displayName.charAt(0).toUpperCase();
+    document.getElementById('profileAvatar').textContent = getAvatarSymbol(displayName);
     document.getElementById('profileUsername').textContent = displayName;
     document.getElementById('profileFollowers').textContent = followersCount || 0;
     document.getElementById('profileFollowing').textContent = followingCount || 0;
@@ -888,7 +888,7 @@ async function loadProfileFollowersList(userId) {
                 const name = f.profiles?.username || 'Anonyme';
                 return `
                     <div class="friend-item" onclick="openUserProfile('${f.follower_id}', '${esc(name)}')">
-                        <div class="friend-avatar">${name.charAt(0).toUpperCase()}</div>
+                        <div class="friend-avatar">${getAvatarSymbol(name)}</div>
                         <span>${esc(name)}</span>
                         <span style="margin-left:auto; font-size:0.7rem; color:var(--muted)">depuis ${formatTimeAgo(new Date(f.created_at))}</span>
                     </div>
@@ -927,7 +927,7 @@ async function loadProfileFollowingList(userId) {
                 const name = f.profiles?.username || 'Anonyme';
                 return `
                     <div class="friend-item" onclick="openUserProfile('${f.following_id}', '${esc(name)}')">
-                        <div class="friend-avatar">${name.charAt(0).toUpperCase()}</div>
+                        <div class="friend-avatar">${getAvatarSymbol(name)}</div>
                         <span>${esc(name)}</span>
                         <span style="margin-left:auto; font-size:0.7rem; color:var(--muted)">depuis ${formatTimeAgo(new Date(f.created_at))}</span>
                     </div>

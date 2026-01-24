@@ -227,7 +227,7 @@ async function renderSocialFeed() {
     
     container.innerHTML = socialExtraits.map(extrait => {
         const username = extrait.profiles?.username || 'Anonyme';
-        const initial = username.charAt(0).toUpperCase();
+        const avatarSymbol = getAvatarSymbol(username);
         const timeAgo = formatTimeAgo(new Date(extrait.created_at));
         const isLiked = userLikes.has(extrait.id);
         const realLikeCount = likeCounts[extrait.id] || 0;
@@ -236,7 +236,7 @@ async function renderSocialFeed() {
         return `
             <div class="extrait-card" data-id="${extrait.id}">
                 <div class="extrait-header">
-                    <div class="extrait-avatar" onclick="openUserProfile('${extrait.user_id}', '${username}')" style="cursor:pointer">${initial}</div>
+                    <div class="extrait-avatar" onclick="openUserProfile('${extrait.user_id}', '${username}')" style="cursor:pointer">${avatarSymbol}</div>
                     <div class="extrait-user-info" onclick="openUserProfile('${extrait.user_id}', '${username}')" style="cursor:pointer">
                         <div class="extrait-username">${username}</div>
                         <div class="extrait-time">${timeAgo}</div>

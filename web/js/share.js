@@ -222,10 +222,10 @@ async function loadInlineComments(cardId) {
         if (comments && comments.length > 0) {
             listEl.innerHTML = comments.map(c => {
                 const username = c.profiles?.username || 'Anonyme';
-                const initial = username.charAt(0).toUpperCase();
+                const avatarSymbol = getAvatarSymbol(username);
                 return `
                     <div class="inline-comment-item">
-                        <span class="inline-comment-avatar">${initial}</span>
+                        <span class="inline-comment-avatar">${avatarSymbol}</span>
                         <span class="inline-comment-content">
                             <strong>${escapeHtmlShare(username)}</strong> ${escapeHtmlShare(c.content)}
                         </span>
@@ -297,7 +297,7 @@ async function sendInlineComment(cardId, inputEl) {
             const el = document.createElement('div');
             el.className = 'inline-comment-item new';
             el.innerHTML = `
-                <span class="inline-comment-avatar">${username.charAt(0).toUpperCase()}</span>
+                <span class="inline-comment-avatar">${getAvatarSymbol(username)}</span>
                 <span class="inline-comment-content"><strong>${escapeHtmlShare(username)}</strong> ${escapeHtmlShare(comment)}</span>
             `;
             listEl.prepend(el);
