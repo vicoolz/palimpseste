@@ -23,7 +23,39 @@
     <div class="progress" id="progress"></div>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
-         PANNEAU STATISTIQUES (Sidebar gauche)
+         MOBILE: Overlay pour fermer le drawer
+         ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="mobile-drawer-overlay" id="mobileDrawerOverlay" onclick="closeMobileDrawer()"></div>
+    
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         MOBILE: Navigation bottom bar (style Twitter)
+         ═══════════════════════════════════════════════════════════════════════ -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <button class="mobile-nav-item active" onclick="mobileNavTo('feed')" data-nav="feed">
+            <span class="mobile-nav-icon">🏠</span>
+            <span class="mobile-nav-label">Feed</span>
+        </button>
+        <button class="mobile-nav-item" onclick="mobileNavTo('search')" data-nav="search">
+            <span class="mobile-nav-icon">🔍</span>
+            <span class="mobile-nav-label">Explorer</span>
+        </button>
+        <button class="mobile-nav-item" onclick="pureRandomJump()" data-nav="random">
+            <span class="mobile-nav-icon">🎲</span>
+            <span class="mobile-nav-label">Hasard</span>
+        </button>
+        <button class="mobile-nav-item" onclick="mobileNavTo('social')" data-nav="social">
+            <span class="mobile-nav-icon">🐦</span>
+            <span class="mobile-nav-label">Social</span>
+        </button>
+        <button class="mobile-nav-item" onclick="mobileNavTo('notifs')" data-nav="notifs">
+            <span class="mobile-nav-icon">🔔</span>
+            <span class="mobile-nav-label">Notifs</span>
+            <span class="mobile-nav-badge" id="mobileNotifBadge"></span>
+        </button>
+    </nav>
+    
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         PANNEAU STATISTIQUES (Sidebar gauche / Drawer mobile)
          ═══════════════════════════════════════════════════════════════════════ -->
     <div class="stats-panel">
         <div class="stats-logo">PALIMPSESTE</div>
@@ -143,6 +175,14 @@
          ═══════════════════════════════════════════════════════════════════════ -->
     <header>
         <div class="header-inner">
+            <!-- MOBILE: Avatar profil cliquable -->
+            <button class="mobile-profile-btn" id="mobileProfileBtn" onclick="openMobileDrawer()">
+                <span class="mobile-profile-avatar" id="mobileAvatar">👤</span>
+            </button>
+            
+            <!-- MOBILE: Logo compact -->
+            <span class="mobile-logo">📜</span>
+            
             <div class="header-title" id="headerTitle">Laissez-vous dériver...</div>
             
             <!-- Barre de recherche -->
