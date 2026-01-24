@@ -139,9 +139,12 @@
     display: none;
     background: none;
     border: none;
-    padding: 0;
+    padding: 4px;
     cursor: pointer;
     flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    z-index: 10;
 }
 
 /* Mobile logo */
@@ -152,14 +155,15 @@
 }
 
 .mobile-profile-avatar {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--accent), var(--accent-purple));
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
+    font-size: 1.1rem;
+    color: white;
     /* Pixel border effect */
     border: 2px solid var(--border);
     box-shadow: 2px 2px 0 var(--pixel-shadow);
@@ -167,8 +171,32 @@
 }
 
 .mobile-profile-btn:active .mobile-profile-avatar {
-    transform: scale(0.95);
+    transform: scale(0.92);
     box-shadow: 1px 1px 0 var(--pixel-shadow);
+}
+
+/* ====== DRAWER CLOSE BUTTON ====== */
+.drawer-close-btn {
+    display: none;
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 36px;
+    height: 36px;
+    background: var(--bg-elevated);
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    color: var(--text);
+    font-size: 1rem;
+    cursor: pointer;
+    z-index: 20;
+    box-shadow: 2px 2px 0 var(--pixel-shadow);
+    transition: all 0.15s;
+}
+
+.drawer-close-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 var(--pixel-shadow);
 }
 
 /* ====== MOBILE MEDIA QUERIES ====== */
@@ -176,6 +204,13 @@
     /* Afficher les éléments mobile */
     .mobile-bottom-nav {
         display: flex !important;
+    }
+    
+    /* Bouton fermer le drawer visible sur mobile */
+    .drawer-close-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
     }
     
     .mobile-profile-btn {
@@ -281,23 +316,6 @@
         overflow-y: auto !important;
     }
     
-    /* Bouton fermer le drawer */
-    .stats-panel::before {
-        content: '✕ Fermer';
-        display: block;
-        position: sticky;
-        top: 0;
-        background: var(--bg-card);
-        padding: 0.75rem;
-        margin: -1.25rem -1rem 1rem -1rem;
-        text-align: right;
-        font-size: 0.75rem;
-        color: var(--muted);
-        border-bottom: 1px solid var(--border);
-        cursor: pointer;
-        z-index: 10;
-    }
-    
     /* HEADER - Style Twitter mobile */
     header {
         left: 0 !important;
@@ -316,6 +334,7 @@
         flex-wrap: nowrap !important;
         align-items: center !important;
         gap: 0.5rem !important;
+        justify-content: flex-start !important;
     }
     
     /* Titre header devient logo compact sur mobile */
@@ -323,13 +342,12 @@
         display: none !important;
     }
     
-    /* Barre de recherche flexible */
+    /* Barre de recherche - taille limitée sur mobile */
     .search-container {
         flex: 1 1 auto !important;
-        min-width: 100px !important;
-        max-width: none !important;
+        min-width: 0 !important;
+        max-width: calc(100% - 100px) !important;
         margin: 0 !important;
-        order: 0;
     }
     
     .search-input {
@@ -346,9 +364,23 @@
         box-shadow: 2px 2px 0 var(--accent) !important;
     }
     
-    /* Cacher certains boutons header sur mobile */
+    /* Cacher certains boutons header sur mobile - SAUF hasard */
     .header-actions {
+        display: flex !important;
+        flex-shrink: 0 !important;
+        gap: 0.25rem !important;
+    }
+    
+    /* Garder uniquement le bouton Hasard visible */
+    .header-actions .header-btn {
         display: none !important;
+    }
+    
+    .header-actions .header-btn:first-child {
+        display: flex !important;
+        padding: 0.35rem 0.5rem !important;
+        font-size: 0.65rem !important;
+        min-width: auto !important;
     }
     
     .lang-selector {
@@ -632,6 +664,32 @@
         max-width: 100% !important;
         height: 100% !important;
         border-radius: 0 !important;
+    }
+    
+    /* Feed loading centré sur mobile */
+    .feed-loading {
+        padding: 3rem 1rem !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+        text-align: center !important;
+    }
+    
+    .feed-loading span {
+        display: block !important;
+        word-wrap: break-word !important;
+    }
+    
+    /* Toast sur mobile */
+    .toast {
+        left: 1rem !important;
+        right: 1rem !important;
+        bottom: 80px !important;
+        transform: translateX(0) translateY(100px) !important;
+        max-width: none !important;
+    }
+    
+    .toast.show {
+        transform: translateX(0) translateY(0) !important;
     }
 }
 
@@ -1761,16 +1819,19 @@ color: var(--bg);
 
 .feed-loading {
 text-align: center;
-padding: 4rem;
+padding: 4rem 1rem;
 color: var(--muted);
 font-size: 0.75rem;
 letter-spacing: 0.1em;
 text-transform: uppercase;
+width: 100%;
+max-width: 100%;
+box-sizing: border-box;
 }
 .spinner {
 width: 24px;
 height: 24px;
-border: 1px solid var(--border);
+border: 2px solid var(--border);
 border-top-color: var(--accent);
 border-radius: 50%;
 margin: 0 auto 1rem;
