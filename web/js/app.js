@@ -470,16 +470,25 @@ function saveState() {
 function updateStats() {
     // Mettre à jour les stats du panneau
     document.getElementById('totalRead').textContent = state.readCount;
-    
-    // Favoris locaux - utiliser state.favorites comme source de vérité
-    const favCount = (state.favorites || []).length;
-    document.getElementById('likeCountPanel').textContent = favCount;
-    
-    // Header desktop - bouton favoris
-    const favCountHeader = document.getElementById('favCount');
-    if (favCountHeader) favCountHeader.textContent = favCount;
-    
     document.getElementById('authorCount').textContent = Object.keys(state.authorStats).length;
+    
+    // Gérer l'affichage selon connexion
+    const drawerFavBtn = document.getElementById('drawerFavBtn');
+    const favoritesSection = document.getElementById('favoritesSection');
+    
+    if (currentUser) {
+        // Connecté: afficher bouton likés (sera rempli par loadUserStats)
+        if (drawerFavBtn) drawerFavBtn.style.display = '';
+        if (favoritesSection) favoritesSection.style.display = 'none'; // Section locale cachée
+    } else {
+        // Non connecté: masquer car ne peut pas liker
+        if (drawerFavBtn) drawerFavBtn.style.display = 'none';
+        if (favoritesSection) favoritesSection.style.display = 'none';
+        // Compteurs à 0
+        document.getElementById('likeCountPanel').textContent = 0;
+        const favCountHeader = document.getElementById('favCount');
+        if (favCountHeader) favCountHeader.textContent = 0;
+    }
     
     // Titre dynamique selon le contexte
     updateDynamicHeader();
@@ -1189,6 +1198,13 @@ function showMore(cardId) {
 }
 
 function toggleLike(id, btn) {
+    // Exiger connexion pour liker
+    if (!currentUser) {
+        if (typeof openAuthModal === 'function') openAuthModal('login');
+        toast('🔐 Connectez-vous pour aimer des extraits');
+        return;
+    }
+    
     const card = document.getElementById(id);
     const author = card?.dataset?.author;
     const title = card?.dataset?.title;
@@ -1219,7 +1235,7 @@ function toggleLike(id, btn) {
             timestamp: Date.now()
         });
         btn?.classList?.add('active'); 
-        toast('💎 Ajouté aux favoris');
+        toast('❤️ Liké !');
         // Ajouter l'auteur aux likedAuthors
         if (author && author !== 'Anonyme') {
             state.likedAuthors.add(author);
@@ -1250,7 +1266,7 @@ function doubleTapLike(id, event) {
         toggleLike(id, likeBtn);
     } else {
         // Déjà liké, juste montrer le coeur (feedback visuel)
-        toast('❤️ Déjà dans tes favoris !');
+        toast('❤️ Déjà liké !');
     }
 }
 
@@ -1309,45 +1325,9 @@ async function openFavoritesView() {
         return;
     }
     
-    // Sinon, afficher les favoris locaux
-    const overlay = document.getElementById('favoritesOverlay');
-    const grid = document.getElementById('favoritesGrid');
-    if (!overlay || !grid) return;
-    
-    const favorites = state.favorites || [];
-    
-    if (favorites.length === 0) {
-        grid.innerHTML = `
-            <div class="fav-empty">
-                <div class="fav-empty-icon">♥</div>
-                <div class="fav-empty-text">Aucun favori pour l'instant</div>
-                <p style="margin-top: 1rem; color: var(--muted); font-size: 0.9rem;">
-                    Cliquez sur le cœur ♥ d'un texte pour le sauvegarder ici
-                </p>
-            </div>
-        `;
-    } else {
-        const sorted = [...favorites].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        
-        grid.innerHTML = sorted.map(fav => `
-            <div class="fav-card">
-                <div class="fav-card-head">
-                    <div>
-                        <div class="fav-card-author">${esc(fav.author || 'Anonyme')}</div>
-                        <div class="fav-card-title">${esc(fav.title?.split('/').pop() || fav.title || 'Sans titre')}</div>
-                    </div>
-                </div>
-                <div class="fav-card-text">${esc(fav.text || '').substring(0, 500)}${(fav.text?.length || 0) > 500 ? '...' : ''}</div>
-                <div class="fav-card-actions">
-                    <button class="btn" onclick="openFavInReader('${fav.id}')">Lire</button>
-                    <button class="btn" onclick="removeFavoriteFromView('${fav.id}')">Retirer</button>
-                </div>
-            </div>
-        `).join('');
-    }
-    
-    overlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    // Non connecté: proposer de se connecter
+    if (typeof openAuthModal === 'function') openAuthModal('login');
+    toast('🔐 Connectez-vous pour voir vos likés');
 }
 
 function closeFavoritesView() {
