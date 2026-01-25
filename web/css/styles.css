@@ -3158,27 +3158,28 @@ margin-top: 0.2rem;
 }
 .badge-category-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+    gap: 0.35rem;
 }
 .badge-category-grid .achievement {
     flex-direction: column;
     text-align: center;
-    padding: 0.75rem 0.5rem;
-    gap: 0.4rem;
+    padding: 0.4rem;
+    gap: 0;
+    border-radius: 8px;
 }
 .badge-category-grid .badge-icon {
-    width: 36px;
-    height: 36px;
-    font-size: 1.4rem;
+    width: 28px;
+    height: 28px;
+    font-size: 1.1rem;
     margin: 0 auto;
+    background: transparent;
 }
 .badge-category-grid .badge-info {
-    width: 100%;
+    display: none;
 }
 .badge-category-grid .badge-name {
-    font-size: 0.75rem;
-    justify-content: center;
+    display: none;
 }
 
 /* Mini progress bar for badges */
