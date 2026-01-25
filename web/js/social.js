@@ -8,8 +8,77 @@ var feedSubscription = null;
 var likesSubscription = null;
 var lastFeedUpdate = null;
 
+// ═══════════════════════════════════════════════════════════
+// ❤️ SYSTÈME DE LIKES - Cache et état global
+// ═══════════════════════════════════════════════════════════
+var userLikesCache = new Set(); // Cache des IDs d'extraits likés par l'utilisateur
+var likesCountCache = {};       // Cache des compteurs de likes par extrait
+var likesLoaded = false;        // Flag pour savoir si les likes ont été chargés
+var pendingLikeOperations = {}; // Opérations de like en cours (évite les doubles clics)
+
+// Charger tous les likes de l'utilisateur connecté
+async function loadUserLikesCache() {
+    if (!supabaseClient || !currentUser) {
+        userLikesCache = new Set();
+        likesLoaded = false;
+        return;
+    }
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('likes')
+            .select('extrait_id')
+            .eq('user_id', currentUser.id);
+        
+        if (!error && data) {
+            userLikesCache = new Set(data.map(l => l.extrait_id));
+            likesLoaded = true;
+            console.log(`✅ Likes cache chargé: ${userLikesCache.size} likes`);
+        }
+    } catch (err) {
+        console.error('Erreur chargement cache likes:', err);
+    }
+}
+
+// Charger les compteurs de likes pour une liste d'extraits
+async function loadLikesCountForExtraits(extraitIds) {
+    if (!supabaseClient || !extraitIds || extraitIds.length === 0) return;
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('likes')
+            .select('extrait_id')
+            .in('extrait_id', extraitIds);
+        
+        if (!error && data) {
+            // Reset les compteurs pour ces extraits
+            extraitIds.forEach(id => likesCountCache[id] = 0);
+            // Compter les likes
+            data.forEach(like => {
+                likesCountCache[like.extrait_id] = (likesCountCache[like.extrait_id] || 0) + 1;
+            });
+        }
+    } catch (err) {
+        console.error('Erreur chargement compteurs likes:', err);
+    }
+}
+
+// Vérifier si l'utilisateur a liké un extrait (depuis le cache)
+function isExtraitLiked(extraitId) {
+    return userLikesCache.has(extraitId);
+}
+
+// Obtenir le nombre de likes d'un extrait (depuis le cache)
+function getLikeCount(extraitId) {
+    return likesCountCache[extraitId] || 0;
+}
+
 function openSocialFeed() {
     document.getElementById('socialOverlay').classList.add('open');
+    // Charger le cache des likes si pas encore fait
+    if (!likesLoaded && currentUser) {
+        loadUserLikesCache();
+    }
     loadSocialFeed();
     setupRealtimeSubscriptions();
 }
@@ -194,43 +263,26 @@ async function renderSocialFeed() {
     const container = document.getElementById('socialFeed');
     if (!container) return;
     
-    // Charger les likes et follows de l'utilisateur
-    let userLikes = new Set();
-    let likeCounts = {};
+    // Charger les compteurs de likes pour ces extraits
+    const extraitIds = socialExtraits.map(e => e.id);
+    await loadLikesCountForExtraits(extraitIds);
     
-    if (supabaseClient) {
-        // Compter les vrais likes pour chaque extrait depuis la table likes
-        const extraitIds = socialExtraits.map(e => e.id);
-        const { data: allLikes } = await supabaseClient
-            .from('likes')
-            .select('extrait_id')
-            .in('extrait_id', extraitIds);
-        
-        // Compter les likes par extrait
-        if (allLikes) {
-            allLikes.forEach(like => {
-                likeCounts[like.extrait_id] = (likeCounts[like.extrait_id] || 0) + 1;
-            });
-        }
-        
-        if (currentUser) {
-            const { data } = await supabaseClient
-                .from('likes')
-                .select('extrait_id')
-                .eq('user_id', currentUser.id);
-            userLikes = new Set(data?.map(l => l.extrait_id) || []);
-            
-            // Charger les follows si pas déjà fait
-            if (typeof loadUserFollowing === 'function') await loadUserFollowing();
-        }
+    // S'assurer que le cache utilisateur est chargé
+    if (currentUser && !likesLoaded) {
+        await loadUserLikesCache();
+    }
+    
+    // Charger les follows si pas déjà fait
+    if (currentUser && typeof loadUserFollowing === 'function') {
+        await loadUserFollowing();
     }
     
     container.innerHTML = socialExtraits.map(extrait => {
         const username = extrait.profiles?.username || 'Anonyme';
         const avatarSymbol = getAvatarSymbol(username);
         const timeAgo = formatTimeAgo(new Date(extrait.created_at));
-        const isLiked = userLikes.has(extrait.id);
-        const realLikeCount = likeCounts[extrait.id] || 0;
+        const isLiked = isExtraitLiked(extrait.id);
+        const likeCount = getLikeCount(extrait.id);
         const isFollowing = typeof userFollowing !== 'undefined' && userFollowing.has(extrait.user_id);
         
         return `
@@ -255,9 +307,9 @@ async function renderSocialFeed() {
                 </div>
                 ${extrait.commentary ? `<div class="extrait-commentary">${escapeHtml(extrait.commentary)}</div>` : ''}
                 <div class="extrait-actions">
-                    <button class="extrait-action ${isLiked ? 'liked' : ''}" onclick="toggleLikeExtrait('${extrait.id}')">
-                        <span class="icon">${isLiked ? '❤️' : '🤍'}</span>
-                        <span>${realLikeCount}</span>
+                    <button class="extrait-action like-btn ${isLiked ? 'liked' : ''}" id="likeBtn-${extrait.id}" onclick="toggleLikeExtrait('${extrait.id}')" data-extrait-id="${extrait.id}">
+                        <span class="like-icon">${isLiked ? '❤️' : '🤍'}</span>
+                        <span class="like-count" id="likeCount-${extrait.id}">${likeCount}</span>
                     </button>
                     <button class="extrait-action" onclick="copyExtrait('${extrait.id}')">
                         <span class="icon">📋</span>
@@ -291,26 +343,76 @@ async function toggleLikeExtrait(extraitId) {
     }
     if (!supabaseClient) return;
     
+    // Éviter les doubles clics
+    if (pendingLikeOperations[extraitId]) {
+        return;
+    }
+    pendingLikeOperations[extraitId] = true;
+    
+    // État actuel
+    const wasLiked = isExtraitLiked(extraitId);
+    const currentCount = getLikeCount(extraitId);
+    
+    // ═══════════════════════════════════════════════════════════
+    // MISE À JOUR OPTIMISTE DE L'UI (instantanée)
+    // ═══════════════════════════════════════════════════════════
+    const likeBtn = document.getElementById(`likeBtn-${extraitId}`);
+    const likeIcon = likeBtn?.querySelector('.like-icon');
+    const likeCountEl = document.getElementById(`likeCount-${extraitId}`);
+    
+    // Mettre à jour le cache immédiatement
+    if (wasLiked) {
+        userLikesCache.delete(extraitId);
+        likesCountCache[extraitId] = Math.max(0, currentCount - 1);
+    } else {
+        userLikesCache.add(extraitId);
+        likesCountCache[extraitId] = currentCount + 1;
+    }
+    
+    // Mettre à jour l'UI immédiatement
+    if (likeBtn) {
+        likeBtn.classList.toggle('liked', !wasLiked);
+        // Animation du bouton
+        likeBtn.classList.add('like-animating');
+        setTimeout(() => likeBtn.classList.remove('like-animating'), 300);
+    }
+    if (likeIcon) {
+        likeIcon.textContent = wasLiked ? '🤍' : '❤️';
+    }
+    if (likeCountEl) {
+        likeCountEl.textContent = getLikeCount(extraitId);
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // SYNCHRONISATION AVEC LA BASE DE DONNÉES
+    // ═══════════════════════════════════════════════════════════
     try {
-        const { data: existing } = await supabaseClient
-            .from('likes')
-            .select('id')
-            .eq('user_id', currentUser.id)
-            .eq('extrait_id', extraitId)
-            .single();
-        
-        if (existing) {
-            await supabaseClient.from('likes').delete().eq('id', existing.id);
-            toast('💔 Like retiré');
-            // Mettre à jour les compteurs
-            if (typeof loadUserStats === 'function') loadUserStats();
+        if (wasLiked) {
+            // Supprimer le like
+            const { error } = await supabaseClient
+                .from('likes')
+                .delete()
+                .eq('user_id', currentUser.id)
+                .eq('extrait_id', extraitId);
+            
+            if (error) throw error;
+            
+            // Décrémenter le compteur likes_count dans la table extraits
+            await supabaseClient.rpc('decrement_likes', { extrait_id: extraitId });
+            
         } else {
-            await supabaseClient.from('likes').insert({
-                user_id: currentUser.id,
-                extrait_id: extraitId,
-                created_at: new Date().toISOString()
-            });
-            toast('❤️ Liké !');
+            // Ajouter le like
+            const { error } = await supabaseClient
+                .from('likes')
+                .insert({
+                    user_id: currentUser.id,
+                    extrait_id: extraitId
+                });
+            
+            if (error) throw error;
+            
+            // Incrémenter le compteur likes_count dans la table extraits
+            await supabaseClient.rpc('increment_likes', { extrait_id: extraitId });
             
             // Notifier l'auteur de l'extrait
             const extrait = socialExtraits.find(e => e.id === extraitId);
@@ -318,11 +420,40 @@ async function toggleLikeExtrait(extraitId) {
                 createNotification(extrait.user_id, 'like', extraitId);
             }
         }
-        loadSocialFeed();
-        // Mettre à jour les compteurs de likes dans la sidebar
-        if (typeof loadUserStats === 'function') loadUserStats();
+        
+        // Mettre à jour les stats utilisateur en arrière-plan
+        if (typeof loadUserStats === 'function') {
+            loadUserStats();
+        }
+        
     } catch (err) {
-        toast('❌ Erreur');
+        console.error('Erreur like:', err);
+        
+        // ═══════════════════════════════════════════════════════════
+        // ROLLBACK EN CAS D'ERREUR
+        // ═══════════════════════════════════════════════════════════
+        if (wasLiked) {
+            userLikesCache.add(extraitId);
+            likesCountCache[extraitId] = currentCount;
+        } else {
+            userLikesCache.delete(extraitId);
+            likesCountCache[extraitId] = currentCount;
+        }
+        
+        // Restaurer l'UI
+        if (likeBtn) {
+            likeBtn.classList.toggle('liked', wasLiked);
+        }
+        if (likeIcon) {
+            likeIcon.textContent = wasLiked ? '❤️' : '🤍';
+        }
+        if (likeCountEl) {
+            likeCountEl.textContent = currentCount;
+        }
+        
+        toast('❌ Erreur de synchronisation');
+    } finally {
+        delete pendingLikeOperations[extraitId];
     }
 }
 
@@ -437,24 +568,23 @@ async function showMyLikes() {
     container.innerHTML = '<div class="loading-spinner">⏳ Chargement des likes...</div>';
     
     try {
-        // Récupérer mes likes
-        const { data: myLikes } = await supabaseClient
-            .from('likes')
-            .select('extrait_id')
-            .eq('user_id', currentUser.id);
+        // Utiliser le cache si disponible, sinon charger
+        if (!likesLoaded) {
+            await loadUserLikesCache();
+        }
         
-        if (!myLikes || myLikes.length === 0) {
+        const likedIds = Array.from(userLikesCache);
+        
+        if (likedIds.length === 0) {
             container.innerHTML = '<div class="social-empty"><div class="social-empty-icon">💔</div><div class="social-empty-title">Aucun like</div><div class="social-empty-text">Vous n\'avez pas encore liké d\'extraits</div></div>';
             return;
         }
-        
-        const extraitIds = myLikes.map(l => l.extrait_id);
         
         // Récupérer les extraits likés
         const { data: extraits } = await supabaseClient
             .from('extraits')
             .select('*, profiles(username)')
-            .in('id', extraitIds)
+            .in('id', likedIds)
             .order('created_at', { ascending: false });
         
         if (!extraits || extraits.length === 0) {
@@ -474,6 +604,15 @@ async function showMyLikes() {
     }
 }
 
+// Réinitialiser le cache des likes (appelé à la déconnexion)
+function resetLikesCache() {
+    userLikesCache = new Set();
+    likesCountCache = {};
+    likesLoaded = false;
+    pendingLikeOperations = {};
+    console.log('🔄 Cache des likes réinitialisé');
+}
+
 // Rendre les fonctions accessibles globalement
 window.openSocialFeed = openSocialFeed;
 window.closeSocialFeed = closeSocialFeed;
@@ -486,3 +625,10 @@ window.loadFullTextFromSource = loadFullTextFromSource;
 window.copyExtrait = copyExtrait;
 window.showMyExtraits = showMyExtraits;
 window.showMyLikes = showMyLikes;
+
+// Fonctions du système de likes
+window.loadUserLikesCache = loadUserLikesCache;
+window.loadLikesCountForExtraits = loadLikesCountForExtraits;
+window.isExtraitLiked = isExtraitLiked;
+window.getLikeCount = getLikeCount;
+window.resetLikesCache = resetLikesCache;

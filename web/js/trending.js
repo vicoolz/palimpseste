@@ -46,15 +46,21 @@ async function loadTrendingFeed() {
             return;
         }
         
-        // Vérifier les likes de l'utilisateur actuel
+        // Vérifier les likes de l'utilisateur actuel (utiliser le cache global)
         const userId = currentUser?.id;
         let userLikes = new Set();
         if (userId) {
-            const { data: likes } = await supabaseClient
-                .from('likes')
-                .select('extrait_id')
-                .eq('user_id', userId);
-            userLikes = new Set((likes || []).map(l => l.extrait_id));
+            // Utiliser le cache global s'il est chargé
+            if (typeof likesLoaded !== 'undefined' && likesLoaded && typeof userLikesCache !== 'undefined') {
+                userLikes = userLikesCache;
+            } else {
+                // Sinon charger depuis la DB
+                const { data: likes } = await supabaseClient
+                    .from('likes')
+                    .select('extrait_id')
+                    .eq('user_id', userId);
+                userLikes = new Set((likes || []).map(l => l.extrait_id));
+            }
         }
         
         container.innerHTML = extraits.map((extrait, index) => {
@@ -124,35 +130,79 @@ async function toggleLikeTrending(extraitId, btn) {
         return;
     }
     
-    const isLiked = btn.classList.contains('liked');
+    // Utiliser le cache global si disponible
+    const wasLiked = typeof isExtraitLiked === 'function' ? isExtraitLiked(extraitId) : btn.classList.contains('liked');
+    
+    // Mise à jour optimiste de l'UI
+    const card = btn.closest('.trending-card');
+    const statEl = card?.querySelector('.trending-stat');
+    const countEl = statEl?.querySelector('span:last-child');
+    const currentCount = parseInt(countEl?.textContent) || 0;
+    
+    // Mettre à jour l'UI immédiatement
+    if (wasLiked) {
+        btn.classList.remove('liked');
+        btn.innerHTML = '🤍 Like';
+        if (countEl) countEl.textContent = Math.max(0, currentCount - 1);
+    } else {
+        btn.classList.add('liked');
+        btn.innerHTML = '❤️ Like';
+        if (countEl) countEl.textContent = currentCount + 1;
+    }
+    
+    // Animation
+    btn.style.transform = 'scale(1.2)';
+    setTimeout(() => btn.style.transform = 'scale(1)', 150);
+    
+    // Mettre à jour le cache global
+    if (typeof userLikesCache !== 'undefined') {
+        if (wasLiked) {
+            userLikesCache.delete(extraitId);
+        } else {
+            userLikesCache.add(extraitId);
+        }
+    }
+    if (typeof likesCountCache !== 'undefined') {
+        likesCountCache[extraitId] = wasLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
+    }
     
     try {
-        if (isLiked) {
+        if (wasLiked) {
             await supabaseClient
                 .from('likes')
                 .delete()
                 .eq('extrait_id', extraitId)
                 .eq('user_id', currentUser.id);
-            btn.classList.remove('liked');
-            btn.innerHTML = '🤍 Like';
+            
+            // Décrémenter le compteur likes_count
+            await supabaseClient.rpc('decrement_likes', { extrait_id: extraitId });
         } else {
             await supabaseClient
                 .from('likes')
                 .insert({ extrait_id: extraitId, user_id: currentUser.id });
-            btn.classList.add('liked');
-            btn.innerHTML = '❤️ Like';
-            toast('❤️ Aimé !');
+            
+            // Incrémenter le compteur likes_count
+            await supabaseClient.rpc('increment_likes', { extrait_id: extraitId });
         }
         
-        // Update count
-        const card = btn.closest('.trending-card');
-        const statEl = card.querySelector('.trending-stat');
-        const countEl = statEl.querySelector('span:last-child');
-        const currentCount = parseInt(countEl.textContent) || 0;
-        countEl.textContent = isLiked ? currentCount - 1 : currentCount + 1;
+        // Mettre à jour les stats utilisateur
+        if (typeof loadUserStats === 'function') loadUserStats();
         
     } catch (err) {
         console.error('Erreur like trending:', err);
+        // Rollback en cas d'erreur
+        if (wasLiked) {
+            btn.classList.add('liked');
+            btn.innerHTML = '❤️ Like';
+            if (countEl) countEl.textContent = currentCount;
+            if (typeof userLikesCache !== 'undefined') userLikesCache.add(extraitId);
+        } else {
+            btn.classList.remove('liked');
+            btn.innerHTML = '🤍 Like';
+            if (countEl) countEl.textContent = currentCount;
+            if (typeof userLikesCache !== 'undefined') userLikesCache.delete(extraitId);
+        }
+        if (typeof likesCountCache !== 'undefined') likesCountCache[extraitId] = currentCount;
         toast('❌ Erreur');
     }
 }

@@ -484,6 +484,9 @@ async function onUserLoggedIn() {
         mobileAvatar.textContent = avatarSymbol;
     }
     
+    // Charger le cache des likes de l'utilisateur
+    if (typeof loadUserLikesCache === 'function') loadUserLikesCache();
+    
     // Load user stats (défini dans app.js)
     if (typeof loadUserStats === 'function') loadUserStats();
     
@@ -514,6 +517,9 @@ function onUserLoggedOut() {
     if (mobileAvatar) {
         mobileAvatar.textContent = '👤';
     }
+    
+    // Réinitialiser le cache des likes
+    if (typeof resetLikesCache === 'function') resetLikesCache();
     
     // Mettre à jour le panneau profil mobile
     if (typeof updateMobileProfilePanel === 'function') updateMobileProfilePanel();
