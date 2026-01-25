@@ -430,6 +430,7 @@ function loadState() {
             bestStreak: 0,
             dailyWords: {}
         };
+        console.log('📦 Stats de lecture chargées:', state.readingStats);
         // Vérifier et mettre à jour le streak au chargement
         checkAndUpdateStreak();
     } catch(e) {
@@ -498,6 +499,8 @@ function checkAndUpdateStreak() {
     const today = getTodayKey();
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     
+    console.log('🔥 checkAndUpdateStreak:', { today, yesterday, lastReadDate: stats.lastReadDate, streak: stats.streak });
+    
     if (!stats.lastReadDate) {
         stats.streak = 0;
     } else if (stats.lastReadDate === today) {
@@ -505,8 +508,14 @@ function checkAndUpdateStreak() {
     } else if (stats.lastReadDate === yesterday) {
         // A lu hier, streak continue (sera incrémenté quand il lit aujourd'hui)
     } else {
-        // Streak cassé
-        stats.streak = 0;
+        // Streak cassé - vérifier si c'est un bug ou vraiment cassé
+        const lastDate = new Date(stats.lastReadDate);
+        const todayDate = new Date(today);
+        const daysDiff = Math.floor((todayDate - lastDate) / 86400000);
+        console.log('⚠️ Streak potentiellement cassé, écart:', daysDiff, 'jours');
+        if (daysDiff > 1) {
+            stats.streak = 0;
+        }
     }
 }
 
@@ -514,6 +523,8 @@ function recordReading(wordCount) {
     const stats = state.readingStats;
     const today = getTodayKey();
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    
+    console.log('📖 recordReading avant:', { wordCount, today, yesterday, lastReadDate: stats.lastReadDate, streak: stats.streak, totalWords: stats.totalWordsRead });
     
     // Ajouter les mots lus
     stats.totalWordsRead = (stats.totalWordsRead || 0) + wordCount;
