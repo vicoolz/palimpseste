@@ -171,14 +171,12 @@
     }
     
     .mobile-nav-icon {
-        font-size: 1.4rem !important;
+        font-size: 1.6rem !important;
         line-height: 1 !important;
     }
     
     .mobile-nav-label {
-        font-size: 0.65rem !important;
-        margin-top: 2px !important;
-        font-weight: 500 !important;
+        display: none !important;
     }
     
     .mobile-nav-badge {

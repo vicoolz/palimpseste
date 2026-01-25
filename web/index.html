@@ -93,7 +93,7 @@
                 </div>
                 <div class="mobile-profile-stat" onclick="showMyLikes(); closeProfilePanel();">
                     <span class="mobile-profile-stat-num" id="mobileProfileLikes">0</span>
-                    <span class="mobile-profile-stat-label">❤️ reçus</span>
+                    <span class="mobile-profile-stat-label">favoris</span>
                 </div>
             </div>
             <button class="mobile-profile-btn-logout" onclick="logout(); closeProfilePanel();">
@@ -106,25 +106,20 @@
          MOBILE: Navigation bottom bar (style Twitter)
          ═══════════════════════════════════════════════════════════════════════ -->
     <nav class="mobile-bottom-nav" id="mobileBottomNav">
-        <button class="mobile-nav-item active" onclick="mobileNavTo('feed')" data-nav="feed">
-            <span class="mobile-nav-icon">⌂</span>
-            <span class="mobile-nav-label">Flux</span>
+        <button class="mobile-nav-item active" onclick="mobileNavTo('feed')" data-nav="feed" title="Accueil">
+            <span class="mobile-nav-icon">🏠</span>
         </button>
-        <button class="mobile-nav-item" onclick="pureRandomJump()" data-nav="random">
-            <span class="mobile-nav-icon">⚄</span>
-            <span class="mobile-nav-label">Aléa</span>
+        <button class="mobile-nav-item" onclick="pureRandomJump()" data-nav="random" title="Hasard">
+            <span class="mobile-nav-icon">🎲</span>
         </button>
-        <button class="mobile-nav-item" onclick="openTrendingFeed()" data-nav="trending">
-            <span class="mobile-nav-icon">◈</span>
-            <span class="mobile-nav-label">Élus</span>
+        <button class="mobile-nav-item" onclick="openTrendingFeed()" data-nav="trending" title="Tendances">
+            <span class="mobile-nav-icon">🔥</span>
         </button>
-        <button class="mobile-nav-item" onclick="openMessaging()" data-nav="messages">
-            <span class="mobile-nav-icon">⌘</span>
-            <span class="mobile-nav-label">Mots</span>
+        <button class="mobile-nav-item" onclick="openMessaging()" data-nav="messages" title="Messages">
+            <span class="mobile-nav-icon">✉️</span>
         </button>
-        <button class="mobile-nav-item" id="mobileMenuBtn" data-nav="menu" onclick="openMobileDrawer()">
-            <span class="mobile-nav-icon">≡</span>
-            <span class="mobile-nav-label">Index</span>
+        <button class="mobile-nav-item" id="mobileMenuBtn" data-nav="menu" onclick="openMobileDrawer()" title="Menu">
+            <span class="mobile-nav-icon">☰</span>
         </button>
     </nav>
     
@@ -187,7 +182,7 @@
                     </button>
                     <button class="profile-stat-btn" onclick="showMyLikes(); closeMobileDrawer();">
                         <span class="stat-number" id="myLikesCount">0</span>
-                        <span class="stat-label">❤️ reçus</span>
+                        <span class="stat-label">favoris</span>
                     </button>
                 </div>
                 <button class="drawer-logout-btn" onclick="logout(); closeMobileDrawer();">🚨 Déconnexion</button>
@@ -649,7 +644,7 @@
             </div>
             <div class="profile-tabs">
                 <button class="profile-tab active" id="tabProfileExtraits" onclick="switchProfileTab('extraits')">📝 Extraits</button>
-                <button class="profile-tab" id="tabProfileLikes" onclick="switchProfileTab('likes')">❤️ Likes</button>
+                <button class="profile-tab" id="tabProfileLikes" onclick="switchProfileTab('likes')">⭐ Favoris</button>
                 <button class="profile-tab" id="tabProfileFollowers" onclick="switchProfileTab('followers')">👥 Abonnés</button>
                 <button class="profile-tab" id="tabProfileFollowing" onclick="switchProfileTab('following')">📤 Abonnements</button>
             </div>

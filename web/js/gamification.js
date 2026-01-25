@@ -246,13 +246,10 @@ async function randomJump() {
     
     const chosen = pool[Math.floor(Math.random() * pool.length)];
     
-    toast(FUN_MESSAGES[Math.floor(Math.random() * FUN_MESSAGES.length)]);
-    
-    setTimeout(async () => {
-        await exploreAuthor(chosen);
-        checkAchievements();
-        updateFunStat();
-    }, 1500);
+    // Exploration directe sans message mystérieux
+    await exploreAuthor(chosen);
+    checkAchievements();
+    updateFunStat();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -270,28 +267,9 @@ function updateFunStat() {
     const authorCount = Object.keys(state.authorStats).length;
     const readCount = state.readCount || 0;
     const likeCount = state.likes?.size || 0;
-    const sessionMinutes = Math.floor((Date.now() - (state.sessionStart || Date.now())) / 60000);
     
-    // Calculs dérivés
-    const echoRatio = readCount > 0 ? Math.round((likeCount / readCount) * 100) : 0;
-    const avgPerAuthor = authorCount > 0 ? (readCount / authorCount).toFixed(1) : 0;
-    
-    const funStats = [
-        `☽ ${readCount} textes traversés`,
-        `◎ ${authorCount} auteurs découverts`,
-        `❧ ${likeCount} coups de cœur`,
-        `✧ ${echoRatio}% des textes vous ont marqué`,
-        `⧖ ${avgPerAuthor} textes par auteur en moyenne`,
-        `༄ ${sessionMinutes || '<1'} min de lecture`,
-        `⚗ ${Math.floor(readCount / 3)} séries de 3 textes`,
-        `◬ Diversité : ${authorCount} voix différentes`,
-        `☾ Fidélité : ${echoRatio > 30 ? 'sélective' : echoRatio > 10 ? 'curieuse' : 'exploratoire'}`,
-        `⛧ Vous avez lu ${readCount} textes de ${authorCount} auteurs`,
-    ];
-    
-    el.textContent = funStats[Math.floor(Math.random() * funStats.length)];
-    el.style.opacity = '0';
-    setTimeout(() => el.style.opacity = '1', 100);
+    // Affichage simple et clair
+    el.textContent = `${readCount} textes · ${authorCount} auteurs · ${likeCount} favoris`;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -344,24 +322,20 @@ function unlockAchievement(id) {
     state.achievements.push(id);
     saveState();
     
-    // Notification spéciale animée
+    // Notification discrète style toast
     const notif = document.createElement('div');
-    notif.className = 'achievement-popup';
+    notif.className = 'achievement-popup subtle';
     notif.innerHTML = `
-        <div class="achievement-icon">${ach.icon}</div>
-        <div class="achievement-info">
-            <div class="achievement-title">🏆 Badge débloqué !</div>
-            <div class="achievement-name">${ach.name}</div>
-            <div class="achievement-desc">${ach.desc}</div>
-        </div>
+        <span class="achievement-icon">${ach.icon}</span>
+        <span class="achievement-name">${ach.name}</span>
     `;
     document.body.appendChild(notif);
     
     setTimeout(() => notif.classList.add('show'), 100);
     setTimeout(() => {
         notif.classList.remove('show');
-        setTimeout(() => notif.remove(), 500);
-    }, 4000);
+        setTimeout(() => notif.remove(), 300);
+    }, 2000);
     
     renderAchievements();
 }

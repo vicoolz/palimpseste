@@ -91,37 +91,27 @@ function updateThemeIcons() {
 async function loadUserStats() {
     if (!supabaseClient || !currentUser) return;
     
-    // Compter les extraits
+    // Compter les extraits partagés
     const { count: extraitCount } = await supabaseClient
         .from('extraits')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', currentUser.id);
     
-    // Compter les vrais likes reçus (depuis la table likes)
-    const { data: myExtraits } = await supabaseClient
-        .from('extraits')
-        .select('id')
+    // Compter mes favoris (extraits que j'ai likés)
+    const { count: myLikesCount } = await supabaseClient
+        .from('likes')
+        .select('*', { count: 'exact', head: true })
         .eq('user_id', currentUser.id);
-    
-    let totalLikes = 0;
-    if (myExtraits && myExtraits.length > 0) {
-        const extraitIds = myExtraits.map(e => e.id);
-        const { count: likesCount } = await supabaseClient
-            .from('likes')
-            .select('*', { count: 'exact', head: true })
-            .in('extrait_id', extraitIds);
-        totalLikes = likesCount || 0;
-    }
     
     // Sidebar desktop
     document.getElementById('myExtraitsCount').textContent = extraitCount || 0;
-    document.getElementById('myLikesCount').textContent = totalLikes;
+    document.getElementById('myLikesCount').textContent = myLikesCount || 0;
     
     // Panneau profil mobile
     const mobileExtraits = document.getElementById('mobileProfileExtraits');
     const mobileLikes = document.getElementById('mobileProfileLikes');
     if (mobileExtraits) mobileExtraits.textContent = extraitCount || 0;
-    if (mobileLikes) mobileLikes.textContent = totalLikes;
+    if (mobileLikes) mobileLikes.textContent = myLikesCount || 0;
     
     // Aussi afficher le nombre d'abonnés
     const { count: followersCount } = await supabaseClient
@@ -286,24 +276,6 @@ async function init() {
     
     // Mise à jour périodique du fun stat
     setInterval(updateFunStat, 15000);
-    
-    // Suggérer périodiquement de nouveaux textes (style Twitter)
-    // Après 2 minutes d'inactivité sur la page, afficher le bandeau
-    let inactivityTimer = null;
-    const resetInactivityTimer = () => {
-        if (inactivityTimer) clearTimeout(inactivityTimer);
-        inactivityTimer = setTimeout(() => {
-            // Ne suggérer que si l'utilisateur a scrollé et n'est pas en haut
-            if (window.scrollY > 300 && !newTextsBannerVisible && !state.loading) {
-                showNewTextsBanner();
-            }
-        }, 120000); // 2 minutes
-    };
-    
-    // Démarrer le timer d'inactivité
-    resetInactivityTimer();
-    window.addEventListener('scroll', resetInactivityTimer, { passive: true });
-    window.addEventListener('click', resetInactivityTimer, { passive: true });
     
     // Créer le bouton scroll to top
     createScrollTopButton();
@@ -884,48 +856,18 @@ async function loadNewTextsOnTop() {
             newCards.forEach(card => card.classList.remove('card-highlight', 'card-new'));
         }, 3000);
         
-        // PAS de scroll automatique - l'utilisateur reste où il est
-        toast(`✨ ${newCards.length} nouveau${newCards.length > 1 ? 'x' : ''} texte${newCards.length > 1 ? 's' : ''} en haut !`);
+        // PAS de scroll automatique ni de toast - l'utilisateur reste où il est sans être dérangé
     }
     
     hideNewTextsBanner();
     state.loading = false;
 }
 
-// Afficher le bandeau "Nouveaux textes disponibles"
-function showNewTextsBanner() {
-    if (newTextsBannerVisible) return;
-    newTextsBannerVisible = true;
-    
-    let banner = document.getElementById('newTextsBanner');
-    if (!banner) {
-        banner = document.createElement('div');
-        banner.id = 'newTextsBanner';
-        banner.className = 'new-texts-banner';
-        banner.innerHTML = '<span>✨ Nouveaux textes disponibles</span>';
-        banner.onclick = () => loadNewTextsOnTop();
-        document.body.appendChild(banner);
-    }
-    setTimeout(() => banner.classList.add('visible'), 10);
-}
-
-function hideNewTextsBanner() {
-    newTextsBannerVisible = false;
-    pendingNewTexts = 0;
-    const banner = document.getElementById('newTextsBanner');
-    if (banner) {
-        banner.classList.remove('visible');
-    }
-    // Aussi retirer l'indicateur du bouton scroll
-    const scrollBtn = document.getElementById('scrollTopBtn');
-    if (scrollBtn) {
-        scrollBtn.classList.remove('has-new');
-    }
-}
+// Bandeau nouveaux textes supprimé - ne pas déranger le lecteur
 
 // Rafraîchir le feed en gardant les cartes actuelles et en ajoutant en haut
 async function refreshFeed() {
-    showNewTextsBanner();
+    await loadNewTextsOnTop();
 }
 
 // Créer le bouton "scroll to top"
@@ -955,15 +897,6 @@ function updateScrollTopButton() {
     
     if (window.scrollY > 500) {
         btn.classList.add('visible');
-        if (newTextsBannerVisible) {
-            btn.classList.add('has-new');
-            btn.innerHTML = '✨';
-            btn.title = 'Voir les nouveaux textes';
-        } else {
-            btn.classList.remove('has-new');
-            btn.innerHTML = '↑';
-            btn.title = 'Revenir en haut';
-        }
     } else {
         btn.classList.remove('visible');
     }
