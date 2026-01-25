@@ -275,14 +275,17 @@
             
             <!-- Actions header -->
             <div class="header-actions">
-                <button class="header-btn" onclick="pureRandomJump()" title="Découvrir un texte au hasard (ignore l'ambiance)"><i data-lucide="shuffle" class="header-icon"></i> Hasard</button>
-                <button class="header-btn" onclick="openTrendingFeed()" title="Textes populaires du moment"><i data-lucide="flame" class="header-icon"></i> Tendances</button>
+                <!-- Groupe principal -->
+                <button class="header-btn btn-with-text" onclick="pureRandomJump()" title="Découvrir un texte au hasard"><i data-lucide="shuffle" class="header-icon"></i><span>Hasard</span></button>
+                <button class="header-btn btn-with-text accent" onclick="openTrendingFeed()" title="Textes populaires"><i data-lucide="flame" class="header-icon"></i><span>Tendances</span></button>
+                
+                <span class="header-separator"></span>
                 
                 <!-- Sélecteur de langue -->
                 <div class="lang-selector">
                     <i data-lucide="globe" class="header-icon lang-icon"></i>
                     <select class="lang-select" id="langSelect" onchange="changeLanguage(this.value)" title="Choisir les langues">
-                        <option value="all">Toutes langues</option>
+                        <option value="all">Toutes</option>
                         <option value="fr">🇫🇷 Français</option>
                         <option value="en">🇬🇧 English</option>
                         <option value="de">🇩🇪 Deutsch</option>
@@ -298,21 +301,30 @@
                     </select>
                 </div>
                 
-                <button class="header-btn favorites-btn" onclick="openFavoritesView()" title="Voir mes likés"><i data-lucide="heart" class="header-icon"></i> <span id="favCount">0</span></button>
-                <button class="header-btn" onclick="openSocialFeed()" title="Voir le feed communautaire"><i data-lucide="users" class="header-icon"></i> Social</button>
-                <button class="header-btn" onclick="openMessaging()" title="Messages privés" style="position: relative;">
-                    <i data-lucide="mail" class="header-icon"></i><span id="unreadBadge" class="messages-badge" style="display: none;">0</span>
+                <span class="header-separator"></span>
+                
+                <!-- Groupe icônes -->
+                <button class="header-btn btn-icon favorites-btn" onclick="openFavoritesView()" title="Mes likés">
+                    <i data-lucide="heart" class="header-icon"></i>
+                    <span class="btn-badge" id="favCount">0</span>
+                </button>
+                <button class="header-btn btn-icon" onclick="openSocialFeed()" title="Communauté"><i data-lucide="users" class="header-icon"></i></button>
+                <button class="header-btn btn-icon" onclick="openMessaging()" title="Messages">
+                    <i data-lucide="mail" class="header-icon"></i>
+                    <span id="unreadBadge" class="btn-badge messages-badge" style="display: none;">0</span>
                 </button>
                 
-                <!-- Toggle thème -->
-                <button class="header-btn theme-toggle" onclick="toggleTheme()" title="Changer de thème" id="themeToggle">
+                <span class="header-separator"></span>
+                
+                <!-- Utilitaires -->
+                <button class="header-btn btn-icon" onclick="toggleTheme()" title="Changer de thème" id="themeToggle">
                     <i data-lucide="sun" class="header-icon" id="themeIcon"></i>
                 </button>
                 
-                <!-- Notifications -->
-                <div class="notif-btn" style="position: relative;">
-                    <button class="header-btn" onclick="toggleNotifications()" title="Notifications">
-                        <i data-lucide="bell" class="header-icon"></i><span id="notifBadge" class="notif-badge" style="display: none;">0</span>
+                <div class="notif-btn">
+                    <button class="header-btn btn-icon" onclick="toggleNotifications()" title="Notifications">
+                        <i data-lucide="bell" class="header-icon"></i>
+                        <span id="notifBadge" class="btn-badge notif-badge" style="display: none;">0</span>
                     </button>
                     <div class="notif-dropdown" id="notifDropdown">
                         <div class="notif-header">

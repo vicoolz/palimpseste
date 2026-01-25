@@ -1307,21 +1307,73 @@ flex-shrink: 0;
 /* Subtle pixel effect */
 text-shadow: 1px 1px 0 var(--pixel-shadow);
 }
-.header-actions { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; flex-wrap: wrap; overflow: visible; }
+.header-actions { display: flex; gap: 0.4rem; align-items: center; flex-shrink: 0; flex-wrap: wrap; overflow: visible; }
+
+/* Séparateur entre groupes */
+.header-separator {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 0.3rem;
+}
 
 /* Icônes Lucide dans le header */
 .header-icon {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
     stroke-width: 2;
     vertical-align: middle;
-    margin-right: 2px;
 }
+
+/* Boutons avec texte */
+.header-btn.btn-with-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.header-btn.btn-with-text .header-icon {
+    margin-right: 0;
+}
+.header-btn.btn-with-text.accent {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+.header-btn.btn-with-text.accent:hover {
+    background: var(--accent);
+    color: white;
+}
+
+/* Boutons icône seule */
+.header-btn.btn-icon {
+    padding: 0.4rem;
+    position: relative;
+}
+.header-btn.btn-icon .header-icon {
+    margin: 0;
+}
+
+/* Badge sur bouton icône */
+.btn-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    background: var(--accent);
+    color: white;
+    font-size: 0.6rem;
+    font-weight: bold;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .header-btn:hover .header-icon {
     color: var(--accent);
 }
 .lang-icon.header-icon {
-    margin-right: 6px;
     color: var(--text-secondary);
 }
 .notif-title-icon {
