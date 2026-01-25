@@ -1209,16 +1209,28 @@ function showMore(cardId) {
 // Pas de création d'extrait - c'est juste un "favori personnel"
 // Les extraits sont créés uniquement via le bouton "Partager"
 
-// Cache local des likes (Set d'URLs likées)
+// Cache local des likes (Map URL -> {timestamp, title, author, preview})
 let likedSourceUrls = new Set();
+let likedSourcesData = new Map(); // Stocke les métadonnées avec timestamp
 
 // Charger les likes depuis localStorage au démarrage
 function loadLikedSources() {
     try {
         const saved = localStorage.getItem('palimpseste-likes');
+        const savedData = localStorage.getItem('palimpseste-likes-data');
         if (saved) {
             likedSourceUrls = new Set(JSON.parse(saved));
         }
+        if (savedData) {
+            const parsed = JSON.parse(savedData);
+            likedSourcesData = new Map(Object.entries(parsed));
+        }
+        // Migration : ajouter timestamp aux anciens likes sans data
+        likedSourceUrls.forEach(url => {
+            if (!likedSourcesData.has(url)) {
+                likedSourcesData.set(url, { timestamp: Date.now() - 86400000 }); // Hier par défaut
+            }
+        });
     } catch (e) {
         console.error('Erreur chargement likes:', e);
     }
@@ -1228,6 +1240,10 @@ function loadLikedSources() {
 function saveLikedSources() {
     try {
         localStorage.setItem('palimpseste-likes', JSON.stringify([...likedSourceUrls]));
+        // Convertir Map en objet pour JSON
+        const dataObj = {};
+        likedSourcesData.forEach((value, key) => dataObj[key] = value);
+        localStorage.setItem('palimpseste-likes-data', JSON.stringify(dataObj));
     } catch (e) {
         console.error('Erreur sauvegarde likes:', e);
     }
@@ -1248,13 +1264,20 @@ function toggleLike(cardId, btn) {
     if (likedSourceUrls.has(sourceUrl)) {
         // UNLIKE
         likedSourceUrls.delete(sourceUrl);
+        likedSourcesData.delete(sourceUrl);
         btn?.classList?.remove('active');
         toast('Like retiré');
     } else {
-        // LIKE
+        // LIKE - stocker avec métadonnées
         likedSourceUrls.add(sourceUrl);
+        likedSourcesData.set(sourceUrl, {
+            timestamp: Date.now(),
+            title: card.dataset.title || extractPageTitleFromUrl(sourceUrl),
+            author: card.dataset.author || extractAuthorFromUrl(sourceUrl),
+            preview: card.querySelector('.text-preview')?.textContent?.substring(0, 300) || ''
+        });
         btn?.classList?.add('active');
-        toast('❤️ Liké !');
+        toast('❤ Liké !');
     }
     
     // Sauvegarder
@@ -1369,74 +1392,72 @@ async function openFavoritesView() {
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
     
-    // Charger les sources likées depuis localStorage
-    const likedUrls = Array.from(likedSourceUrls);
-    
-    if (likedUrls.length === 0) {
-        grid.innerHTML = `
-            <div class="social-empty">
-                <div class="social-empty-icon">💔</div>
-                <div class="social-empty-title">Aucun texte liké</div>
-                <div class="social-empty-text">Cliquez sur ♥ pour sauvegarder vos textes préférés</div>
-            </div>
-        `;
-        return;
-    }
-    
-    // Afficher la liste des sources likées
-    grid.innerHTML = '<div class="loading-spinner">⏳ Chargement...</div>';
-    
-    // Trouver les cartes correspondant aux URLs likées
-    const likedCards = [];
-    likedUrls.forEach(url => {
-        // Chercher dans le feed actuel
-        const card = document.querySelector(`.text-card[data-url="${url}"]`);
-        if (card) {
-            likedCards.push({
-                id: card.id,
-                title: card.dataset.title || 'Sans titre',
-                author: card.dataset.author || 'Anonyme',
-                url: url,
-                preview: card.querySelector('.text-preview')?.textContent?.substring(0, 200) || ''
-            });
-        } else {
-            // URL likée mais pas dans le feed actuel - décoder l'URL pour l'affichage
-            const decodedTitle = decodeURIComponent(url.split('/').pop() || 'Texte');
-            likedCards.push({
-                id: null,
-                title: decodedTitle,
-                author: extractAuthorFromUrl(url),
-                url: url,
-                preview: '',
-                pageTitle: extractPageTitleFromUrl(url)
-            });
-        }
+    // Charger les sources likées avec leurs métadonnées, triées par date
+    const likedItems = [];
+    likedSourceUrls.forEach(url => {
+        const data = likedSourcesData.get(url) || { timestamp: 0 };
+        likedItems.push({
+            url,
+            timestamp: data.timestamp || 0,
+            title: data.title || extractPageTitleFromUrl(url),
+            author: data.author || extractAuthorFromUrl(url),
+            preview: data.preview || ''
+        });
     });
     
-    if (likedCards.length === 0) {
+    // Trier par date décroissante (plus récent en premier)
+    likedItems.sort((a, b) => b.timestamp - a.timestamp);
+    
+    if (likedItems.length === 0) {
         grid.innerHTML = `
-            <div class="social-empty">
-                <div class="social-empty-icon">📚</div>
-                <div class="social-empty-title">${likedUrls.length} texte(s) liké(s)</div>
-                <div class="social-empty-text">Rechargez le feed pour les revoir</div>
+            <div class="likes-empty">
+                <div class="likes-empty-icon">♡</div>
+                <h3>Votre bibliothèque est vide</h3>
+                <p>Cliquez sur ♥ pour sauvegarder vos textes préférés et les retrouver ici.</p>
             </div>
         `;
         return;
     }
     
-    grid.innerHTML = likedCards.map(item => {
-        // Échapper l'URL pour éviter les problèmes avec les caractères spéciaux
-        const safeUrl = item.url.replace(/'/g, "\\'");
-        return `
-        <div class="favorite-card" onclick="${item.id ? `closeFavoritesView(); scrollToCard('${item.id}')` : `loadSourceByUrl('${safeUrl}')`}">
-            <div class="favorite-card-content">
-                <div class="favorite-card-title">${esc(item.title)}</div>
-                <div class="favorite-card-author">${esc(item.author)}</div>
-                ${item.preview ? `<div class="favorite-card-preview">${esc(item.preview)}</div>` : ''}
-            </div>
-            <button class="favorite-card-remove" onclick="event.stopPropagation(); unlikeByUrl('${safeUrl}')" title="Retirer">✕</button>
+    // Générer le HTML avec un style plus attrayant
+    grid.innerHTML = `
+        <div class="likes-header-info">
+            <span class="likes-count">${likedItems.length} texte${likedItems.length > 1 ? 's' : ''} sauvé${likedItems.length > 1 ? 's' : ''}</span>
         </div>
-    `}).join('');
+        <div class="likes-list">
+            ${likedItems.map((item, index) => {
+                const safeUrl = item.url.replace(/'/g, "\\'");
+                const timeAgo = getTimeAgo(item.timestamp);
+                return `
+                <article class="liked-text-card" onclick="loadSourceByUrl('${safeUrl}')" style="animation-delay: ${index * 0.05}s">
+                    <div class="liked-text-main">
+                        <header class="liked-text-header">
+                            <h3 class="liked-text-title">${esc(item.title)}</h3>
+                            <span class="liked-text-time">${timeAgo}</span>
+                        </header>
+                        <p class="liked-text-author">— ${esc(item.author)}</p>
+                        ${item.preview ? `<blockquote class="liked-text-preview">${esc(item.preview.substring(0, 200))}${item.preview.length > 200 ? '…' : ''}</blockquote>` : ''}
+                    </div>
+                    <button class="liked-text-remove" onclick="event.stopPropagation(); unlikeByUrl('${safeUrl}')" title="Retirer">✕</button>
+                </article>
+            `}).join('')}
+        </div>
+    `;
+}
+
+// Formater le temps écoulé
+function getTimeAgo(timestamp) {
+    if (!timestamp) return '';
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    if (seconds < 60) return 'à l\'instant';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `il y a ${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `il y a ${hours}h`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `il y a ${days}j`;
+    if (days < 30) return `il y a ${Math.floor(days / 7)} sem.`;
+    return `il y a ${Math.floor(days / 30)} mois`;
 }
 
 // Extraire l'auteur depuis l'URL
@@ -1462,6 +1483,7 @@ function extractPageTitleFromUrl(url) {
 // Unlike via URL
 function unlikeByUrl(url) {
     likedSourceUrls.delete(url);
+    likedSourcesData.delete(url);
     saveLikedSources();
     updateLikeCount();
     
