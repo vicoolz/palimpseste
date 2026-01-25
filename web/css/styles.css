@@ -24,6 +24,11 @@
 --pixel-highlight: #3d3a30;
 /* Header background */
 --bg-header: rgba(13,13,13,0.95);
+/* Overlay & Ambiance */
+--overlay-bg: rgba(0,0,0,0.85);
+--ambiance-bg: linear-gradient(135deg, rgba(14,13,11,0.95), rgba(28,26,23,0.95));
+--ambiance-badge-bg: rgba(255,255,255,0.1);
+--ambiance-badge-border: rgba(255,255,255,0.1);
 }
 
 /* ═══ MODE CLAIR - Parchemin éclairé ═══ */
@@ -47,6 +52,11 @@
 /* Ombres douces */
 --pixel-shadow: #d0c9ba;
 --pixel-highlight: #ffffff;
+/* Overlay & Ambiance - mode clair */
+--overlay-bg: rgba(255,255,255,0.9);
+--ambiance-bg: linear-gradient(135deg, rgba(248,245,239,0.97), rgba(240,235,225,0.97));
+--ambiance-badge-bg: rgba(0,0,0,0.05);
+--ambiance-badge-border: rgba(0,0,0,0.1);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1734,11 +1744,11 @@ margin-top: 0; /* Pas de marge car déjà dans le flux après exploration */
 z-index: 85;
 padding: 1rem 1.5rem;
 text-align: center;
-background: linear-gradient(135deg, rgba(14,13,11,0.95), rgba(28,26,23,0.95));
+background: var(--ambiance-bg);
 backdrop-filter: blur(10px);
 -webkit-backdrop-filter: blur(10px);
 border-bottom: 1px solid var(--accent-secondary);
-box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+box-shadow: 0 2px 12px rgba(0,0,0,0.15);
 animation: fadeIn 0.5s ease;
 }
 .ambiance-intro .close-intro {
@@ -1766,13 +1776,13 @@ margin-bottom: 0.5rem;
 .ambiance-intro .period-badge {
 display: inline-block;
 padding: 0.2rem 0.6rem;
-background: rgba(255,255,255,0.1);
+background: var(--ambiance-badge-bg);
 border-radius: 12px;
 font-size: 0.75rem;
 color: var(--accent-secondary);
 font-style: normal;
 margin-bottom: 0.5rem;
-border: 1px solid rgba(255,255,255,0.1);
+border: 1px solid var(--ambiance-badge-border);
 }
 .ambiance-intro p {
 font-size: 0.9rem;
@@ -3189,7 +3199,7 @@ opacity: 1;
 .auth-modal {
 position: fixed;
 top: 0; left: 0; right: 0; bottom: 0;
-background: rgba(0,0,0,0.85);
+background: var(--overlay-bg);
 z-index: 500;
 display: none;
 align-items: center;
@@ -3474,7 +3484,7 @@ background: rgba(42, 157, 143, 0.4);
 .share-modal {
 position: fixed;
 top: 0; left: 0; right: 0; bottom: 0;
-background: rgba(0,0,0,0.85);
+background: var(--overlay-bg);
 z-index: 500;
 display: none;
 align-items: center;
@@ -3811,7 +3821,7 @@ top: 0;
 left: 0;
 right: 0;
 bottom: 0;
-background: rgba(0,0,0,0.85);
+background: var(--overlay-bg);
 display: flex;
 align-items: center;
 justify-content: center;
@@ -4056,7 +4066,7 @@ top: 0;
 left: 0;
 right: 0;
 bottom: 0;
-background: rgba(0,0,0,0.9);
+background: var(--overlay-bg);
 z-index: 2500;
 display: flex;
 opacity: 0;
