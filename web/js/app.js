@@ -1875,4 +1875,8 @@ async function exploreKeyword(keyword) {
 
 document.onkeydown = e => { if (e.key === 'Escape') closeReader(); };
 
+// Exposer les fonctions et variables nécessaires pour les autres modules
+window.state = state;
+window.exploreAuthor = exploreAuthor;
+
 init();

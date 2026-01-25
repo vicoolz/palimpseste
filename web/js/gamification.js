@@ -513,17 +513,23 @@ async function pureRandomJump() {
         'Eschyle', 'Platon', 'Aristote', 'Cicéron', 'Sénèque', 'Marc Aurèle'
     ];
     
-    const discoveredAuthors = Object.keys(state.authorStats);
+    const discoveredAuthors = Object.keys(window.state?.authorStats || {});
     const universalTerms = ['sonnet', 'elegy', 'ode', 'ballade', 'fable', 'nocturne', 'poème', 'conte', 'méditation', 'hymne', 'élégie', 'satire'];
     const allOptions = [...discoveredAuthors, ...HIDDEN_GEMS, ...universalTerms, ...classicAuthors];
-    const unvisited = allOptions.filter(a => !state.authorStats[a]);
+    const unvisited = allOptions.filter(a => !(window.state?.authorStats?.[a]));
     const pool = unvisited.length > 3 ? unvisited : allOptions;
     
     const chosen = pool[Math.floor(Math.random() * pool.length)];
     
     toast('✧ Découverte libre...');
     
-    await exploreAuthor(chosen);
+    if (window.exploreAuthor) {
+        await window.exploreAuthor(chosen);
+    } else {
+        console.error('exploreAuthor non disponible');
+        toast('Chargement en cours, réessayez...');
+        return;
+    }
     checkAchievements();
     updateFunStat();
 }
@@ -546,17 +552,19 @@ async function randomJump() {
         pool = [...ambiance.authors, ...ambiance.keywords];
     } else {
         // Mode libre : comportement classique
-        const discoveredAuthors = Object.keys(state.authorStats);
+        const discoveredAuthors = Object.keys(window.state?.authorStats || {});
         const universalTerms = ['sonnet', 'elegy', 'ode', 'ballade', 'fable', 'hymn', 'nocturne'];
         const allOptions = [...discoveredAuthors, ...HIDDEN_GEMS, ...universalTerms];
-        const unvisited = allOptions.filter(a => !state.authorStats[a] && !HIDDEN_GEMS.includes(a) || HIDDEN_GEMS.includes(a));
+        const unvisited = allOptions.filter(a => !(window.state?.authorStats?.[a]) && !HIDDEN_GEMS.includes(a) || HIDDEN_GEMS.includes(a));
         pool = unvisited.length > 3 ? unvisited : allOptions;
     }
     
     const chosen = pool[Math.floor(Math.random() * pool.length)];
     
     // Exploration directe sans message mystérieux
-    await exploreAuthor(chosen);
+    if (window.exploreAuthor) {
+        await window.exploreAuthor(chosen);
+    }
     checkAchievements();
     updateFunStat();
 }
