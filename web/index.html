@@ -275,12 +275,12 @@
             
             <!-- Actions header -->
             <div class="header-actions">
-                <button class="header-btn" onclick="pureRandomJump()" title="Découvrir un texte au hasard (ignore l'ambiance)">🎲 Hasard</button>
-                <button class="header-btn" onclick="openTrendingFeed()" title="Textes populaires du moment">🔥 Tendances</button>
+                <button class="header-btn" onclick="pureRandomJump()" title="Découvrir un texte au hasard (ignore l'ambiance)"><i data-lucide="shuffle" class="header-icon"></i> Hasard</button>
+                <button class="header-btn" onclick="openTrendingFeed()" title="Textes populaires du moment"><i data-lucide="flame" class="header-icon"></i> Tendances</button>
                 
                 <!-- Sélecteur de langue -->
                 <div class="lang-selector">
-                    <span class="lang-icon">🌍</span>
+                    <i data-lucide="globe" class="header-icon lang-icon"></i>
                     <select class="lang-select" id="langSelect" onchange="changeLanguage(this.value)" title="Choisir les langues">
                         <option value="all">Toutes langues</option>
                         <option value="fr">🇫🇷 Français</option>
@@ -298,25 +298,25 @@
                     </select>
                 </div>
                 
-                <button class="header-btn favorites-btn" onclick="openFavoritesView()" title="Voir mes likés">♥ <span id="favCount">0</span></button>
-                <button class="header-btn" onclick="openSocialFeed()" title="Voir le feed communautaire">🐦 Social</button>
+                <button class="header-btn favorites-btn" onclick="openFavoritesView()" title="Voir mes likés"><i data-lucide="heart" class="header-icon"></i> <span id="favCount">0</span></button>
+                <button class="header-btn" onclick="openSocialFeed()" title="Voir le feed communautaire"><i data-lucide="users" class="header-icon"></i> Social</button>
                 <button class="header-btn" onclick="openMessaging()" title="Messages privés" style="position: relative;">
-                    💬<span id="unreadBadge" class="messages-badge" style="display: none;">0</span>
+                    <i data-lucide="mail" class="header-icon"></i><span id="unreadBadge" class="messages-badge" style="display: none;">0</span>
                 </button>
                 
                 <!-- Toggle thème -->
                 <button class="header-btn theme-toggle" onclick="toggleTheme()" title="Changer de thème" id="themeToggle">
-                    ☀︎
+                    <i data-lucide="sun" class="header-icon" id="themeIcon"></i>
                 </button>
                 
                 <!-- Notifications -->
                 <div class="notif-btn" style="position: relative;">
                     <button class="header-btn" onclick="toggleNotifications()" title="Notifications">
-                        🔔<span id="notifBadge" class="notif-badge" style="display: none;">0</span>
+                        <i data-lucide="bell" class="header-icon"></i><span id="notifBadge" class="notif-badge" style="display: none;">0</span>
                     </button>
                     <div class="notif-dropdown" id="notifDropdown">
                         <div class="notif-header">
-                            <span class="notif-title">🔔 Notifications</span>
+                            <span class="notif-title"><i data-lucide="bell" class="notif-title-icon"></i> Notifications</span>
                             <button class="notif-mark-read" onclick="markAllNotifsRead()">Tout marquer lu</button>
                         </div>
                         <div class="notif-list" id="notifList">

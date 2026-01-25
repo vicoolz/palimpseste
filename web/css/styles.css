@@ -1308,6 +1308,30 @@ flex-shrink: 0;
 text-shadow: 1px 1px 0 var(--pixel-shadow);
 }
 .header-actions { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; flex-wrap: wrap; overflow: visible; }
+
+/* Icônes Lucide dans le header */
+.header-icon {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+    vertical-align: middle;
+    margin-right: 2px;
+}
+.header-btn:hover .header-icon {
+    color: var(--accent);
+}
+.lang-icon.header-icon {
+    margin-right: 6px;
+    color: var(--text-secondary);
+}
+.notif-title-icon {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
 .header-btn {
 background: transparent;
 border: 2px solid var(--border);

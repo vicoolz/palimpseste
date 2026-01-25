@@ -70,11 +70,10 @@ function toggleTheme() {
 function updateThemeIcons() {
     const isLight = document.documentElement.getAttribute('data-theme') === 'light';
     
-    // Bouton header desktop
-    const headerBtn = document.getElementById('themeToggle');
-    if (headerBtn) {
-        headerBtn.innerHTML = isLight ? '☾' : '☀︎';
-        headerBtn.title = isLight ? 'Mode sombre' : 'Mode clair';
+    // Bouton header desktop - icône Lucide
+    const themeIcon = document.getElementById('themeIcon');
+    if (themeIcon) {
+        themeIcon.setAttribute('data-lucide', isLight ? 'moon' : 'sun');
     }
     
     // Bouton drawer mobile - icône Lucide
@@ -82,10 +81,11 @@ function updateThemeIcons() {
     const drawerText = document.getElementById('drawerThemeText');
     if (drawerIcon) {
         drawerIcon.setAttribute('data-lucide', isLight ? 'moon' : 'sun');
-        // Réinitialiser Lucide pour l'icône
-        if (window.lucide) lucide.createIcons();
     }
     if (drawerText) drawerText.textContent = isLight ? 'Mode sombre' : 'Mode clair';
+    
+    // Réinitialiser Lucide pour les icônes
+    if (window.lucide) lucide.createIcons();
 }
 
 // ═══════════════════════════════════════════════════════════
