@@ -171,8 +171,9 @@
     }
     
     .mobile-nav-icon {
-        font-size: 1.6rem !important;
-        line-height: 1 !important;
+        width: 24px !important;
+        height: 24px !important;
+        stroke-width: 1.5 !important;
     }
     
     .mobile-nav-label {

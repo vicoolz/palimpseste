@@ -14,6 +14,8 @@
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/mobile.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
@@ -107,19 +109,19 @@
          ═══════════════════════════════════════════════════════════════════════ -->
     <nav class="mobile-bottom-nav" id="mobileBottomNav">
         <button class="mobile-nav-item active" onclick="mobileNavTo('feed')" data-nav="feed" title="Accueil">
-            <span class="mobile-nav-icon">🏠︎</span>
+            <i data-lucide="home" class="mobile-nav-icon"></i>
         </button>
         <button class="mobile-nav-item" onclick="pureRandomJump()" data-nav="random" title="Hasard">
-            <span class="mobile-nav-icon">🎲︎</span>
+            <i data-lucide="shuffle" class="mobile-nav-icon"></i>
         </button>
         <button class="mobile-nav-item" onclick="openTrendingFeed()" data-nav="trending" title="Tendances">
-            <span class="mobile-nav-icon">🔥︎</span>
+            <i data-lucide="flame" class="mobile-nav-icon"></i>
         </button>
         <button class="mobile-nav-item" onclick="openMessaging()" data-nav="messages" title="Messages">
-            <span class="mobile-nav-icon">✉︎</span>
+            <i data-lucide="mail" class="mobile-nav-icon"></i>
         </button>
         <button class="mobile-nav-item" id="mobileMenuBtn" data-nav="menu" onclick="openMobileDrawer()" title="Menu">
-            <span class="mobile-nav-icon">☰</span>
+            <i data-lucide="menu" class="mobile-nav-icon"></i>
         </button>
     </nav>
     
@@ -800,5 +802,6 @@
     <script src="js/gamification.js"></script>
     <script src="js/sources.js"></script>
     <script src="js/app.js"></script>
+    <script>lucide.createIcons();</script>
 </body>
 </html>
