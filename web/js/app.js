@@ -97,22 +97,25 @@ async function loadUserStats() {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', currentUser.id);
     
-    // Utiliser les favoris locaux comme source de vérité pour les likes
-    const favCount = (state.favorites || []).length;
+    // Compter les likes Supabase (extraits que j'ai likés)
+    const { count: myLikesCount } = await supabaseClient
+        .from('likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', currentUser.id);
     
     // Sidebar desktop - section profil
     document.getElementById('myExtraitsCount').textContent = extraitCount || 0;
-    document.getElementById('myLikesCount').textContent = favCount;
+    document.getElementById('myLikesCount').textContent = myLikesCount || 0;
     
     // Header desktop - bouton ♥
     const favCountHeader = document.getElementById('favCount');
-    if (favCountHeader) favCountHeader.textContent = favCount;
+    if (favCountHeader) favCountHeader.textContent = myLikesCount || 0;
     
     // Panneau profil mobile
     const mobileExtraits = document.getElementById('mobileProfileExtraits');
     const mobileLikes = document.getElementById('mobileProfileLikes');
     if (mobileExtraits) mobileExtraits.textContent = extraitCount || 0;
-    if (mobileLikes) mobileLikes.textContent = favCount;
+    if (mobileLikes) mobileLikes.textContent = myLikesCount || 0;
     
     // Aussi afficher le nombre d'abonnés
     const { count: followersCount } = await supabaseClient
@@ -465,16 +468,21 @@ function updateStats() {
     document.getElementById('totalRead').textContent = state.readCount;
     document.getElementById('authorCount').textContent = Object.keys(state.authorStats).length;
     
-    // Bouton favoris toujours visible (favoris locaux fonctionnent sans connexion)
+    // Bouton favoris visible seulement si connecté
     const drawerFavBtn = document.getElementById('drawerFavBtn');
-    if (drawerFavBtn) drawerFavBtn.style.display = '';
+    if (drawerFavBtn) {
+        drawerFavBtn.style.display = currentUser ? '' : 'none';
+    }
     
-    // Section favoris locale cachée (on utilise la vue overlay)
+    // Compteur header à 0 si non connecté
+    if (!currentUser) {
+        const favCountHeader = document.getElementById('favCount');
+        if (favCountHeader) favCountHeader.textContent = 0;
+    }
+    
+    // Section favoris locale cachée
     const favoritesSection = document.getElementById('favoritesSection');
     if (favoritesSection) favoritesSection.style.display = 'none';
-    
-    // Mettre à jour le compteur favoris
-    updateFavCount();
     
     // Titre dynamique selon le contexte
     updateDynamicHeader();
@@ -1183,48 +1191,92 @@ function showMore(cardId) {
     // NE PAS scroller - garder l'écran stable pour ne pas gêner la lecture
 }
 
-function toggleLike(id, btn) {
-    // Les favoris sont stockés localement - pas besoin de connexion
-    const card = document.getElementById(id);
-    const author = card?.dataset?.author;
-    const title = card?.dataset?.title;
-    const text = card?.dataset?.text;
-    
-    if (state.likes.has(id)) { 
-        state.likes.delete(id); 
-        // Supprimer des favoris stockés
-        state.favorites = (state.favorites || []).filter(f => f.id !== id);
-        btn?.classList?.remove('active');
-        // Retirer l'auteur des likedAuthors si plus aucune carte likée
-        if (author && author !== 'Anonyme') {
-            const hasOtherLikes = [...state.likes].some(likeId => {
-                const c = document.getElementById(likeId);
-                return c?.dataset?.author === author;
-            });
-            if (!hasOtherLikes) state.likedAuthors.delete(author);
-        }
-    } else { 
-        state.likes.add(id); 
-        // Ajouter aux favoris stockés
-        if (!state.favorites) state.favorites = [];
-        state.favorites.push({
-            id: id,
-            title: title,
-            author: author,
-            text: text?.substring(0, 200) || '',
-            timestamp: Date.now()
-        });
-        btn?.classList?.add('active'); 
-        toast('❤️ Liké !');
-        // Ajouter l'auteur aux likedAuthors
-        if (author && author !== 'Anonyme') {
-            state.likedAuthors.add(author);
-        }
+async function toggleLike(id, btn) {
+    // Exiger connexion pour liker
+    if (!currentUser || !supabaseClient) {
+        if (typeof openAuthModal === 'function') openAuthModal('login');
+        toast('🔐 Connectez-vous pour aimer des extraits');
+        return;
     }
-    saveState();
-    updateConnections();
-    renderFavorites();
-    updateFavCount();
+    
+    const card = document.getElementById(id);
+    const author = card?.dataset?.author || 'Anonyme';
+    const title = card?.dataset?.title || 'Sans titre';
+    const text = card?.dataset?.text || '';
+    const sourceUrl = card?.dataset?.url || '';
+    
+    btn?.classList?.add('loading');
+    
+    try {
+        // Chercher si un extrait existe déjà pour cette source
+        const { data: existingExtraits } = await supabaseClient
+            .from('extraits')
+            .select('id')
+            .eq('source_url', sourceUrl)
+            .limit(1);
+        
+        let extraitId;
+        
+        if (existingExtraits && existingExtraits.length > 0) {
+            extraitId = existingExtraits[0].id;
+        } else {
+            // Créer un extrait automatiquement
+            const preview = text.substring(0, 150) + (text.length > 150 ? '…' : '');
+            const { data: newExtrait, error } = await supabaseClient.from('extraits').insert({
+                user_id: currentUser.id,
+                texte: preview,
+                source_title: title,
+                source_author: author,
+                source_url: sourceUrl,
+                commentary: null,
+                likes_count: 0,
+                created_at: new Date().toISOString()
+            }).select('id').single();
+            
+            if (error) throw error;
+            extraitId = newExtrait.id;
+        }
+        
+        // Vérifier si déjà liké
+        const { data: existingLike } = await supabaseClient
+            .from('likes')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .eq('extrait_id', extraitId)
+            .single();
+        
+        if (existingLike) {
+            // Unlike
+            await supabaseClient.from('likes').delete().eq('id', existingLike.id);
+            btn?.classList?.remove('active');
+            state.likes.delete(id);
+            toast('💔 Like retiré');
+        } else {
+            // Like
+            await supabaseClient.from('likes').insert({
+                user_id: currentUser.id,
+                extrait_id: extraitId,
+                created_at: new Date().toISOString()
+            });
+            btn?.classList?.add('active');
+            state.likes.add(id);
+            toast('❤️ Liké !');
+            
+            // Ajouter l'auteur aux likedAuthors
+            if (author && author !== 'Anonyme') {
+                state.likedAuthors.add(author);
+            }
+        }
+        
+        // Mettre à jour les compteurs
+        loadUserStats();
+        
+    } catch (err) {
+        console.error('Erreur like:', err);
+        toast('❌ Erreur');
+    } finally {
+        btn?.classList?.remove('loading');
+    }
 }
 
 // Double-tap pour liker (style Instagram)
@@ -1299,45 +1351,17 @@ function removeFavorite(id) {
 
 // === VUE FAVORIS COMPLÈTE ===
 async function openFavoritesView() {
-    // Afficher les favoris locaux (stockés dans localStorage)
-    const overlay = document.getElementById('favoritesOverlay');
-    const grid = document.getElementById('favoritesGrid');
-    if (!overlay || !grid) return;
-    
-    const favorites = state.favorites || [];
-    
-    if (favorites.length === 0) {
-        grid.innerHTML = `
-            <div class="fav-empty">
-                <div class="fav-empty-icon">♥</div>
-                <div class="fav-empty-text">Aucun favori pour l'instant</div>
-                <p style="margin-top: 1rem; color: var(--muted); font-size: 0.9rem;">
-                    Cliquez sur le cœur ♥ d'un texte pour le sauvegarder ici
-                </p>
-            </div>
-        `;
-    } else {
-        const sorted = [...favorites].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        
-        grid.innerHTML = sorted.map(fav => `
-            <div class="fav-card">
-                <div class="fav-card-head">
-                    <div>
-                        <div class="fav-card-author">${esc(fav.author || 'Anonyme')}</div>
-                        <div class="fav-card-title">${esc(fav.title?.split('/').pop() || fav.title || 'Sans titre')}</div>
-                    </div>
-                </div>
-                <div class="fav-card-text">${esc(fav.text || '').substring(0, 500)}${(fav.text?.length || 0) > 500 ? '...' : ''}</div>
-                <div class="fav-card-actions">
-                    <button class="btn" onclick="openFavInReader('${fav.id}')">Lire</button>
-                    <button class="btn" onclick="removeFavoriteFromView('${fav.id}')">Retirer</button>
-                </div>
-            </div>
-        `).join('');
+    // Exiger connexion pour voir les likes
+    if (!currentUser || !supabaseClient) {
+        if (typeof openAuthModal === 'function') openAuthModal('login');
+        toast('🔐 Connectez-vous pour voir vos likés');
+        return;
     }
     
-    overlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    // Afficher les likes Supabase via le feed social
+    if (typeof showMyLikes === 'function') {
+        showMyLikes();
+    }
 }
 
 function closeFavoritesView() {
@@ -1391,19 +1415,10 @@ function removeFavoriteFromView(id) {
 }
 
 function updateFavCount() {
-    const count = (state.favorites || []).length;
-    
-    // Header desktop
-    const countEl = document.getElementById('favCount');
-    if (countEl) countEl.textContent = count;
-    
-    // Sidebar profil
-    const myLikesEl = document.getElementById('myLikesCount');
-    if (myLikesEl) myLikesEl.textContent = count;
-    
-    // Mobile profil
-    const mobileLikesEl = document.getElementById('mobileProfileLikes');
-    if (mobileLikesEl) mobileLikesEl.textContent = count;
+    // Les compteurs sont gérés par loadUserStats() depuis Supabase
+    if (typeof loadUserStats === 'function' && currentUser) {
+        loadUserStats();
+    }
 }
 
 // Trouver les auteurs connexes basés sur les favoris et les découvertes
