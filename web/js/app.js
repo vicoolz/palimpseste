@@ -103,9 +103,17 @@ async function loadUserStats() {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', currentUser.id);
     
-    // Sidebar desktop
+    // Sidebar desktop - section profil
     document.getElementById('myExtraitsCount').textContent = extraitCount || 0;
     document.getElementById('myLikesCount').textContent = myLikesCount || 0;
+    
+    // Header desktop - bouton ♥ (quand connecté, montrer les likes Supabase)
+    const favCountHeader = document.getElementById('favCount');
+    if (favCountHeader) favCountHeader.textContent = myLikesCount || 0;
+    
+    // Panneau stats sidebar - aussi synchroniser
+    const likeCountPanel = document.getElementById('likeCountPanel');
+    if (likeCountPanel) likeCountPanel.textContent = myLikesCount || 0;
     
     // Panneau profil mobile
     const mobileExtraits = document.getElementById('mobileProfileExtraits');
@@ -1294,7 +1302,14 @@ function removeFavorite(id) {
 }
 
 // === VUE FAVORIS COMPLÈTE ===
-function openFavoritesView() {
+async function openFavoritesView() {
+    // Si connecté, afficher les likes Supabase
+    if (typeof currentUser !== 'undefined' && currentUser && typeof supabaseClient !== 'undefined' && supabaseClient) {
+        showMyLikes();
+        return;
+    }
+    
+    // Sinon, afficher les favoris locaux
     const overlay = document.getElementById('favoritesOverlay');
     const grid = document.getElementById('favoritesGrid');
     if (!overlay || !grid) return;
