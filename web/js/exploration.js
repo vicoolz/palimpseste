@@ -27,7 +27,7 @@ const AMBIANCES = {
     libre: {
         name: 'Dérive libre',
         icon: '๏',
-        description: 'Le hasard est une méthode. Les textes arrivent.',
+        description: '',
         authors: [],
         keywords: [],
         color: '#7d8471'
@@ -35,7 +35,7 @@ const AMBIANCES = {
     gothique: {
         name: 'Gothique',
         icon: '⛧',
-        description: 'Les murs se souviennent. Quelque chose attend.',
+        description: '',
         authors: ['Edgar Allan Poe', 'Ann Radcliffe', 'Matthew Lewis', 'Horace Walpole', 'Mary Shelley', 'Bram Stoker', 'Charles Maturin', 'Sheridan Le Fanu', 'Théophile Gautier', 'Villiers de l\'Isle-Adam'],
         keywords: ['fantôme', 'spectre', 'château', 'terreur', 'nuit', 'vampire', 'mort', 'tombe', 'ténèbres', 'effroi'],
         color: '#5c5470'
@@ -43,7 +43,7 @@ const AMBIANCES = {
     surrealiste: {
         name: 'Surréaliste',
         icon: '◬',
-        description: 'Le poisson soluble nage dans l\'encrier.',
+        description: '',
         authors: ['André Breton', 'Paul Éluard', 'Robert Desnos', 'Philippe Soupault', 'Louis Aragon', 'Benjamin Péret', 'René Crevel', 'Antonin Artaud', 'Lautréamont', 'Alfred Jarry'],
         keywords: ['rêve', 'automatique', 'hasard', 'inconscient', 'merveilleux', 'étrange', 'absurde'],
         color: '#a67c52'
@@ -51,7 +51,7 @@ const AMBIANCES = {
     romantique: {
         name: 'Romantique',
         icon: '❧',
-        description: 'Les âmes se reconnaissent à leurs blessures.',
+        description: '',
         authors: ['Victor Hugo', 'Alphonse de Lamartine', 'Alfred de Musset', 'Alfred de Vigny', 'Gérard de Nerval', 'François-René de Chateaubriand', 'George Sand', 'Lord Byron', 'Percy Shelley', 'John Keats'],
         keywords: ['amour', 'passion', 'coeur', 'âme', 'sentiment', 'larmes', 'désespoir', 'nature'],
         color: '#6b3a3a'
@@ -59,7 +59,7 @@ const AMBIANCES = {
     melancolie: {
         name: 'Mélancolie',
         icon: '☁︎',
-        description: 'L\'ennui est une forme de courage.',
+        description: '',
         authors: ['Charles Baudelaire', 'Paul Verlaine', 'Jules Laforgue', 'Maurice Rollinat', 'Sully Prudhomme', 'Albert Samain', 'Francis Jammes', 'Giacomo Leopardi'],
         keywords: ['spleen', 'ennui', 'tristesse', 'automne', 'pluie', 'brume', 'solitude', 'regret', 'nostalgie'],
         color: '#635d4e'
@@ -67,7 +67,7 @@ const AMBIANCES = {
     mystique: {
         name: 'Mystique',
         icon: '⍟',
-        description: 'Ce qui ne peut être dit. Ce qui ne peut être tu.',
+        description: '',
         authors: ['William Blake', 'Emanuel Swedenborg', 'Jakob Böhme', 'Angelus Silesius', 'San Juan de la Cruz', 'Sainte Thérèse d\'Avila', 'Maître Eckhart', 'Hildegarde de Bingen', 'Rûmî'],
         keywords: ['âme', 'divin', 'extase', 'vision', 'lumière', 'éternel', 'sacré', 'céleste', 'spirituel'],
         color: '#5c5470'
@@ -75,7 +75,7 @@ const AMBIANCES = {
     epique: {
         name: 'Épique',
         icon: '☬',
-        description: 'Les héros meurent debout. Parfois.',
+        description: '',
         authors: ['Homère', 'Virgile', 'Le Tasse', 'L\'Arioste', 'Milton', 'Camoens', 'Dante Alighieri', 'Victor Hugo'],
         keywords: ['héros', 'bataille', 'gloire', 'honneur', 'guerre', 'victoire', 'destin', 'épée', 'conquête'],
         color: '#6b3a3a'
@@ -83,7 +83,7 @@ const AMBIANCES = {
     pastoral: {
         name: 'Pastoral',
         icon: '⚘',
-        description: 'Les moutons n\'ont rien à déclarer.',
+        description: '',
         authors: ['Théocrite', 'Virgile', 'Pierre de Ronsard', 'Joachim du Bellay', 'Maurice Scève', 'Francis Jammes', 'Jean Giono', 'Colette'],
         keywords: ['berger', 'prairie', 'champ', 'fleur', 'ruisseau', 'oiseau', 'printemps', 'nature', 'campagne'],
         color: '#7d8471'
@@ -91,7 +91,7 @@ const AMBIANCES = {
     decadent: {
         name: 'Décadent',
         icon: '♱',
-        description: 'La beauté est un poison lent.',
+        description: '',
         authors: ['Joris-Karl Huysmans', 'Jean Lorrain', 'Rachilde', 'Villiers de l\'Isle-Adam', 'Jules Barbey d\'Aurevilly', 'Oscar Wilde', 'Gabriele D\'Annunzio', 'Maurice Rollinat'],
         keywords: ['artifice', 'opium', 'décadence', 'luxe', 'pervers', 'morbide', 'exquis', 'raffiné', 'poison'],
         color: '#5c5470'
@@ -99,7 +99,7 @@ const AMBIANCES = {
     nocturne: {
         name: 'Nocturne',
         icon: '☾',
-        description: 'La nuit a des yeux. Pas de paupières.',
+        description: '',
         authors: ['Gérard de Nerval', 'Novalis', 'Charles Baudelaire', 'Paul Verlaine', 'Rainer Maria Rilke', 'Federico García Lorca', 'E.T.A. Hoffmann', 'Aloysius Bertrand'],
         keywords: ['nuit', 'lune', 'étoiles', 'ténèbres', 'rêve', 'insomnie', 'ombre', 'silence', 'minuit'],
         color: '#201e16'
@@ -107,7 +107,7 @@ const AMBIANCES = {
     antique: {
         name: 'Antique',
         icon: '☤',
-        description: 'Les dieux sont fatigables. Les textes non.',
+        description: '',
         authors: ['Homère', 'Sophocle', 'Euripide', 'Platon', 'Aristote', 'Virgile', 'Ovide', 'Horace', 'Sénèque', 'Marc Aurèle', 'Cicéron'],
         keywords: ['Olympe', 'dieux', 'muse', 'oracle', 'temple', 'philosophe', 'vertu', 'sagesse'],
         color: '#a67c52'
@@ -115,7 +115,7 @@ const AMBIANCES = {
     voyage: {
         name: 'Voyage',
         icon: '⚓︎',
-        description: 'Partir est toujours trahir. Revenir aussi.',
+        description: '',
         authors: ['Jules Verne', 'Pierre Loti', 'Joseph Conrad', 'Herman Melville', 'Robert Louis Stevenson', 'Jack London', 'Marco Polo', 'Ibn Battûta'],
         keywords: ['voyage', 'mer', 'île', 'horizon', 'aventure', 'découverte', 'navire', 'explorateur', 'orient'],
         color: '#7d8471'
@@ -123,7 +123,7 @@ const AMBIANCES = {
     philosophie: {
         name: 'Philosophie',
         icon: '◎',
-        description: 'Penser n\'est pas un sport de contact.',
+        description: '',
         authors: ['Platon', 'Aristote', 'Montaigne', 'Blaise Pascal', 'René Descartes', 'Jean-Jacques Rousseau', 'Voltaire', 'Friedrich Nietzsche', 'Arthur Schopenhauer', 'Sénèque'],
         keywords: ['pensée', 'raison', 'vérité', 'existence', 'mort', 'liberté', 'sagesse', 'doute', 'être'],
         color: '#635d4e'
@@ -143,7 +143,7 @@ const EPOQUES = {
         name: 'Antiquité',
         icon: '☤',
         period: 'VIIIᵉ s. av. J.-C. – Vᵉ s.',
-        description: 'Les ruines parlent couramment.',
+        description: '',
         authors: ['Homère', 'Sophocle', 'Euripide', 'Eschyle', 'Aristophane', 'Platon', 'Aristote', 'Virgile', 'Ovide', 'Horace', 'Sénèque', 'Marc Aurèle', 'Cicéron', 'Lucrèce', 'Apulée', 'Pétrone'],
         keywords: ['mythologie', 'olympe', 'tragédie', 'héros', 'oracle', 'destin'],
         color: '#a67c52'
@@ -152,7 +152,7 @@ const EPOQUES = {
         name: 'Moyen Âge',
         icon: '✠',
         period: 'Vᵉ – XVᵉ siècle',
-        description: 'Mille ans. Quelques lumières.',
+        description: '',
         authors: ['Chrétien de Troyes', 'François Villon', 'Dante Alighieri', 'Boccace', 'Pétrarque', 'Guillaume de Machaut', 'Marie de France', 'Jean de Meung', 'Rutebeuf', 'Christine de Pizan'],
         keywords: ['chevalier', 'amour courtois', 'quête', 'graal', 'troubadour', 'roman'],
         color: '#635d4e'
@@ -161,7 +161,7 @@ const EPOQUES = {
         name: 'Renaissance',
         icon: '✡',
         period: 'XVIᵉ siècle',
-        description: 'L\'homme découvre qu\'il est le centre. Temporairement.',
+        description: '',
         authors: ['François Rabelais', 'Michel de Montaigne', 'Pierre de Ronsard', 'Joachim du Bellay', 'Louise Labé', 'Clément Marot', 'Agrippa d\'Aubigné', 'Étienne de La Boétie', 'Maurice Scève', 'Shakespeare'],
         keywords: ['humanisme', 'éducation', 'sonnet', 'pléiade', 'amour', 'nature'],
         color: '#a67c52'
@@ -170,7 +170,7 @@ const EPOQUES = {
         name: 'Grand Siècle',
         icon: '✧',
         period: 'XVIIᵉ siècle',
-        description: 'La raison triomphe. Provisoirement.',
+        description: '',
         authors: ['Molière', 'Jean Racine', 'Pierre Corneille', 'Jean de La Fontaine', 'Blaise Pascal', 'Madame de La Fayette', 'Nicolas Boileau', 'Jean de La Bruyère', 'François de La Rochefoucauld', 'Madame de Sévigné', 'Bossuet'],
         keywords: ['honnête homme', 'bienséance', 'tragédie', 'comédie', 'fable', 'moraliste'],
         color: '#a67c52'
@@ -179,7 +179,7 @@ const EPOQUES = {
         name: 'Lumières',
         icon: '✶',
         period: 'XVIIIᵉ siècle',
-        description: 'Éclairer. Puis éteindre. Puis recommencer.',
+        description: '',
         authors: ['Voltaire', 'Jean-Jacques Rousseau', 'Denis Diderot', 'Montesquieu', 'Beaumarchais', 'Marivaux', 'L\'Abbé Prévost', 'Choderlos de Laclos', 'Bernardin de Saint-Pierre', 'Marquis de Sade', 'Condorcet'],
         keywords: ['raison', 'progrès', 'philosophie', 'encyclopédie', 'liberté', 'tolérance'],
         color: '#a67c52'
@@ -188,7 +188,7 @@ const EPOQUES = {
         name: 'XIXᵉ siècle',
         icon: '⚗',
         period: '1800 – 1900',
-        description: 'Cent ans de solitude. Plusieurs types.',
+        description: '',
         authors: ['Victor Hugo', 'Honoré de Balzac', 'Gustave Flaubert', 'Émile Zola', 'Stendhal', 'Charles Baudelaire', 'Arthur Rimbaud', 'Paul Verlaine', 'Gérard de Nerval', 'Alexandre Dumas', 'Guy de Maupassant', 'Théophile Gautier'],
         keywords: ['révolution', 'passion', 'société', 'naturalisme', 'symbolisme', 'spleen'],
         color: '#635d4e'
@@ -197,7 +197,7 @@ const EPOQUES = {
         name: 'Belle Époque',
         icon: '❦',
         period: '1880 – 1914',
-        description: 'La fête avant la fête. Avant.',
+        description: '',
         authors: ['Marcel Proust', 'Colette', 'Guillaume Apollinaire', 'Paul Valéry', 'André Gide', 'Oscar Wilde', 'Rainer Maria Rilke', 'Joris-Karl Huysmans', 'Jean Lorrain', 'Maurice Maeterlinck'],
         keywords: ['salon', 'mondain', 'décadence', 'symbolisme', 'impressionnisme', 'art nouveau'],
         color: '#5c5470'
@@ -206,7 +206,7 @@ const EPOQUES = {
         name: 'XXᵉ siècle',
         icon: '☢',
         period: '1900 – 2000',
-        description: 'Siècle court. Longs dégâts.',
+        description: '',
         authors: ['Albert Camus', 'Jean-Paul Sartre', 'Simone de Beauvoir', 'André Breton', 'Louis-Ferdinand Céline', 'Samuel Beckett', 'Marguerite Duras', 'Boris Vian', 'Marguerite Yourcenar', 'Antoine de Saint-Exupéry', 'Jean Genet'],
         keywords: ['absurde', 'existentialisme', 'surréalisme', 'engagement', 'modernité', 'guerre'],
         color: '#6b3a3a'
@@ -226,7 +226,7 @@ const COURANTS = {
         name: 'Humanisme',
         icon: '❁',
         period: 'XVIᵉ siècle',
-        description: 'L\'homme mesure tout. Se trompe souvent.',
+        description: '',
         authors: ['Michel de Montaigne', 'François Rabelais', 'Érasme', 'Thomas More', 'Étienne de La Boétie', 'Guillaume Budé'],
         keywords: ['homme', 'éducation', 'sagesse', 'vertu', 'raison', 'antiquité'],
         color: '#7d8471'
@@ -235,7 +235,7 @@ const COURANTS = {
         name: 'Baroque',
         icon: '❀',
         period: 'Fin XVIᵉ – début XVIIᵉ',
-        description: 'Tout bouge. Rien ne reste. Même pas soi.',
+        description: '',
         authors: ['Agrippa d\'Aubigné', 'Théophile de Viau', 'Saint-Amant', 'Tristan L\'Hermite', 'Góngora', 'Shakespeare'],
         keywords: ['inconstance', 'métamorphose', 'illusion', 'mort', 'vanité', 'spectacle'],
         color: '#5c5470'
@@ -244,7 +244,7 @@ const COURANTS = {
         name: 'Classicisme',
         icon: '⚖︎',
         period: 'XVIIᵉ siècle',
-        description: 'Des règles. Des règles. Des règles.',
+        description: '',
         authors: ['Molière', 'Jean Racine', 'Pierre Corneille', 'Jean de La Fontaine', 'Nicolas Boileau', 'Madame de La Fayette'],
         keywords: ['raison', 'règle', 'vraisemblance', 'bienséance', 'nature', 'universel'],
         color: '#635d4e'
@@ -253,7 +253,7 @@ const COURANTS = {
         name: 'Romantisme',
         icon: '❧',
         period: '1820 – 1850',
-        description: 'Moi. La nature. L\'infini. Moi.',
+        description: '',
         authors: ['Victor Hugo', 'Alphonse de Lamartine', 'Alfred de Musset', 'Alfred de Vigny', 'Gérard de Nerval', 'François-René de Chateaubriand', 'George Sand', 'Novalis', 'Lord Byron', 'John Keats'],
         keywords: ['moi', 'passion', 'nature', 'mélancolie', 'liberté', 'génie', 'sublime'],
         color: '#6b3a3a'
@@ -262,7 +262,7 @@ const COURANTS = {
         name: 'Réalisme',
         icon: '◉',
         period: '1850 – 1880',
-        description: 'Observer. Noter. Ne rien changer.',
+        description: '',
         authors: ['Honoré de Balzac', 'Gustave Flaubert', 'Stendhal', 'Guy de Maupassant', 'Prosper Mérimée', 'Champfleury', 'Fiodor Dostoïevski', 'Léon Tolstoï'],
         keywords: ['société', 'observation', 'objectivité', 'bourgeoisie', 'argent', 'ambition'],
         color: '#635d4e'
@@ -271,7 +271,7 @@ const COURANTS = {
         name: 'Naturalisme',
         icon: '⚗',
         period: '1870 – 1890',
-        description: 'L\'hérédité gagne toujours. Toujours.',
+        description: '',
         authors: ['Émile Zola', 'Guy de Maupassant', 'Alphonse Daudet', 'Edmond et Jules de Goncourt', 'Joris-Karl Huysmans'],
         keywords: ['hérédité', 'milieu', 'expérimental', 'ouvrier', 'misère', 'déterminisme'],
         color: '#3d3d3d'
@@ -280,7 +280,7 @@ const COURANTS = {
         name: 'Symbolisme',
         icon: '✶',
         period: '1880 – 1900',
-        description: 'Ne rien dire. Suggérer. S’enfuir.',
+        description: '',
         authors: ['Charles Baudelaire', 'Stéphane Mallarmé', 'Paul Verlaine', 'Arthur Rimbaud', 'Jean Moréas', 'Gustave Kahn', 'Maurice Maeterlinck', 'Émile Verhaeren'],
         keywords: ['symbole', 'suggestion', 'musique', 'synesthésie', 'idéal', 'mystère'],
         color: '#5c5470'
@@ -289,7 +289,7 @@ const COURANTS = {
         name: 'Surréalisme',
         icon: '◬',
         period: '1920 – 1960',
-        description: 'L\'inconscient a toujours raison. Hélas.',
+        description: '',
         authors: ['André Breton', 'Paul Éluard', 'Louis Aragon', 'Robert Desnos', 'Philippe Soupault', 'Benjamin Péret', 'René Crevel', 'Antonin Artaud'],
         keywords: ['rêve', 'inconscient', 'automatisme', 'hasard', 'merveilleux', 'révolution'],
         color: '#a67c52'
@@ -298,7 +298,7 @@ const COURANTS = {
         name: 'Existentialisme',
         icon: '⦿',
         period: '1940 – 1960',
-        description: 'Vous êtes libre. Bonne chance.',
+        description: '',
         authors: ['Jean-Paul Sartre', 'Albert Camus', 'Simone de Beauvoir', 'Jean Genet', 'Maurice Merleau-Ponty', 'Gabriel Marcel'],
         keywords: ['existence', 'liberté', 'absurde', 'engagement', 'angoisse', 'autrui'],
         color: '#212121'
@@ -307,7 +307,7 @@ const COURANTS = {
         name: 'Absurde',
         icon: '⧖',
         period: '1950 – 1970',
-        description: 'Attendre. Parler. Attendre encore.',
+        description: '',
         authors: ['Samuel Beckett', 'Eugène Ionesco', 'Jean Genet', 'Arthur Adamov', 'Harold Pinter', 'Fernando Arrabal'],
         keywords: ['absurde', 'attente', 'langage', 'vide', 'dérision', 'tragique'],
         color: '#424242'
