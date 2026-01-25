@@ -678,6 +678,7 @@ function updateDynamicHeader() {
 
 function renderAuthorBars() {
     const container = document.getElementById('authorBars');
+    if (!container) return; // Section supprimée
     const sorted = Object.entries(state.authorStats).sort((a, b) => b[1] - a[1]).slice(0, 8);
     const max = sorted[0]?.[1] || 1;
     const colors = ['#ff453a', '#ff9f0a', '#30d158', '#64d2ff', '#bf5af2', '#ff6482', '#ffd60a', '#ac8e68'];
