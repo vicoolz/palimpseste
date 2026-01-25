@@ -764,6 +764,7 @@ async function loadNewTextsOnTop() {
     loadingIndicator.innerHTML = '<div class="spinner-small"></div> Chargement...';
     feed.insertBefore(loadingIndicator, feed.firstChild);
     
+    try {
     let loaded = 0, attempts = 0;
     const newCards = [];
     
@@ -831,7 +832,12 @@ async function loadNewTextsOnTop() {
     }
     
     hideNewTextsBanner();
-    state.loading = false;
+    } finally {
+        state.loading = false;
+        // Nettoyer l'indicateur si encore présent
+        const indicator = document.getElementById('topLoadingIndicator');
+        if (indicator) indicator.remove();
+    }
 }
 
 // Bandeau nouveaux textes supprimé - ne pas déranger le lecteur
@@ -885,6 +891,7 @@ async function loadMore() {
     state.loading = true;
     document.getElementById('loading').style.display = 'block';
 
+    try {
     let loaded = 0, attempts = 0;
     while (loaded < 3 && attempts < 15) {
         attempts++;
@@ -920,9 +927,10 @@ async function loadMore() {
             loaded++;
         }
     }
-
-    document.getElementById('loading').style.display = 'none';
-    state.loading = false;
+    } finally {
+        document.getElementById('loading').style.display = 'none';
+        state.loading = false;
+    }
 }
 
 // Crée un élément de carte sans l'ajouter au DOM (pour insertion flexible)
