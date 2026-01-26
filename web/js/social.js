@@ -427,7 +427,7 @@ async function toggleLikeExtrait(extraitId) {
             // Notifier l'auteur de l'extrait
             const extrait = socialExtraits.find(e => e.id === extraitId);
             if (extrait && extrait.user_id !== currentUser.id && typeof createNotification === 'function') {
-                createNotification(extrait.user_id, 'like', extraitId);
+                await createNotification(extrait.user_id, 'like', extraitId);
             }
         }
         

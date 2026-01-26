@@ -2,6 +2,9 @@
 // 🔥 TENDANCES - Feed doom scrolling des textes populaires
 // ═══════════════════════════════════════════════════════════
 
+// Cache des extraits trending pour les notifications
+let trendingExtraits = [];
+
 function openTrendingFeed() {
     // Ouvrir le feed social sur l'onglet Tendances (ex-Récents)
     if (typeof openSocialFeed === 'function') {
@@ -54,6 +57,9 @@ async function loadTrendingFeed() {
             `;
             return;
         }
+        
+        // Stocker les extraits pour les notifications
+        trendingExtraits = extraits;
         
         // Vérifier les likes de l'utilisateur actuel (utiliser le cache global)
         const userId = currentUser?.id;
@@ -205,6 +211,12 @@ async function toggleLikeTrending(extraitId, btn) {
             
             if (error) throw error;
             await supabaseClient.rpc('increment_likes', { extrait_id: extraitId });
+            
+            // Notifier l'auteur de l'extrait
+            const extrait = trendingExtraits.find(e => e.id === extraitId);
+            if (extrait && extrait.user_id !== currentUser.id && typeof createNotification === 'function') {
+                await createNotification(extrait.user_id, 'like', extraitId);
+            }
         }
         
         // Mettre à jour les stats utilisateur

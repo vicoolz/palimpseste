@@ -277,11 +277,16 @@ async function updateNotifBadge() {
 
 // Créer une notification
 async function createNotification(userId, type, extraitId = null, content = null) {
-    if (!supabaseClient || !currentUser) return;
+    if (!supabaseClient || !currentUser) {
+        console.warn('createNotification: pas de supabaseClient ou currentUser');
+        return;
+    }
     if (userId === currentUser.id) return; // Pas de notif pour soi-même
     
+    console.log(`📩 Création notification: type=${type}, pour user=${userId}, extrait=${extraitId}`);
+    
     try {
-        await supabaseClient
+        const { data, error } = await supabaseClient
             .from('notifications')
             .insert({
                 user_id: userId,
@@ -290,9 +295,17 @@ async function createNotification(userId, type, extraitId = null, content = null
                 extrait_id: extraitId,
                 content: content,
                 created_at: new Date().toISOString()
-            });
+            })
+            .select();
+        
+        if (error) {
+            console.error('❌ Erreur création notification:', error.message, error);
+            return;
+        }
+        
+        console.log('✅ Notification créée:', data);
     } catch (err) {
-        console.warn('Notification non créée:', err);
+        console.error('❌ Exception notification:', err);
     }
 }
 

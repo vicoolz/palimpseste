@@ -184,7 +184,7 @@ async function postComment(extraitId) {
         // Notifier l'auteur de l'extrait
         const extrait = socialExtraits.find(e => e.id === extraitId);
         if (extrait && extrait.user_id !== currentUser.id) {
-            createNotification(extrait.user_id, 'comment', extraitId, content.substring(0, 100));
+            await createNotification(extrait.user_id, 'comment', extraitId, content.substring(0, 100));
         }
         
         // Recharger les commentaires

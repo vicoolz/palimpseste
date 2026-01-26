@@ -73,7 +73,7 @@ async function toggleFollow(userId, event) {
         toast('Abonné !');
         
         // Notifier l'utilisateur qu'on le suit
-        createNotification(userId, 'follow');
+        await createNotification(userId, 'follow');
     }
     
     // Rafraîchir le feed si on est sur l'onglet amis
