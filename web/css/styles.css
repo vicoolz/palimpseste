@@ -1515,13 +1515,22 @@ margin-left: 260px;
 max-width: 720px;
 margin-right: auto;
 margin-left: calc(260px + (100% - 260px - 720px) / 2);
-padding: 130px 2rem 4rem 2rem; /* Espace pour header + filtres dépliés */
+padding: 130px 2rem 4rem 2rem;
 transition: padding-top 0.3s ease;
 }
 
 /* Ajuster le padding quand les filtres sont repliés */
 body.filters-collapsed main {
-padding-top: 60px; /* Espace réduit quand filtres cachés */
+padding-top: 60px;
+}
+
+@media (min-width: 901px) {
+main {
+padding-top: 130px !important;
+}
+body.filters-collapsed main {
+padding-top: 60px !important;
+}
 }
 
 @media (max-width: 1100px) {
