@@ -270,6 +270,18 @@ async function toggleCommentLike(commentId, extraitId) {
                     user_id: currentUser.id,
                     created_at: new Date().toISOString()
                 });
+            
+            // Notifier l'auteur du commentaire
+            // D'abord récupérer le user_id du commentaire
+            const { data: comment } = await supabaseClient
+                .from('comments')
+                .select('user_id')
+                .eq('id', commentId)
+                .single();
+            
+            if (comment && comment.user_id !== currentUser.id && typeof createNotification === 'function') {
+                await createNotification(comment.user_id, 'comment_like', extraitId, commentId);
+            }
         }
         
         // Rafraîchir l'affichage des commentaires

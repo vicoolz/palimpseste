@@ -172,6 +172,9 @@ async function loadNotifications(containerId = 'notifList') {
             if (notif.type === 'like') {
                 icon = '❤️';
                 text = `<strong>${escapeHtml(fromName)}</strong> a aimé votre extrait`;
+            } else if (notif.type === 'comment_like') {
+                icon = '💜';
+                text = `<strong>${escapeHtml(fromName)}</strong> a aimé votre commentaire`;
             } else if (notif.type === 'comment') {
                 icon = '💬';
                 text = `<strong>${escapeHtml(fromName)}</strong> a commenté votre extrait`;
@@ -212,7 +215,7 @@ async function handleNotifClick(notifId, type, extraitId, fromUserId, fromName) 
     document.getElementById('notifDropdown').classList.remove('open');
     
     // Action selon le type
-    if (type === 'like' || type === 'comment') {
+    if (type === 'like' || type === 'comment' || type === 'comment_like') {
         if (extraitId && typeof viewExtraitById === 'function') {
             viewExtraitById(extraitId);
         }
