@@ -7808,6 +7808,29 @@ transition: all 0.2s;
     white-space: pre-wrap;
 }
 
+.collection-full-text {
+    white-space: pre-wrap;
+    line-height: 1.9;
+}
+
+.collection-loading {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--accent);
+    font-style: italic;
+}
+
+.collection-error {
+    padding: 20px;
+    text-align: center;
+    color: var(--muted);
+}
+
+.collection-error a {
+    color: var(--accent);
+    text-decoration: underline;
+}
+
 .collection-item-expand {
     display: inline-block;
     margin-top: 12px;

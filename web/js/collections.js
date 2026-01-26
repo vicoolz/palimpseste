@@ -723,7 +723,7 @@ async function openCollection(collectionId) {
                                     ${item.note ? `<div class="collection-item-note"><span class="note-icon">¶</span> ${escapeHtml(item.note)}</div>` : ''}
                                 </div>
                                 <div class="collection-item-actions" onclick="event.stopPropagation()">
-                                    ${url ? `<button class="item-action" onclick="loadTextFromCollection('${escapeHtml(title || '')}', '${escapeHtml(author || '')}', '${url}')" title="Charger le texte complet">↻</button>` : ''}
+                                    ${url ? `<button class="item-action" onclick="loadTextFromCollection('${itemId}', '${escapeHtml(title || '')}', '${escapeHtml(author || '')}', '${url}')" title="Charger le texte complet">↻</button>` : ''}
                                     ${url ? `<button class="item-action" onclick="window.open('${url}', '_blank')" title="Ouvrir la source">↗</button>` : ''}
                                     <button class="item-action danger" onclick="removeFromCollection('${collectionId}', '${item.id}')" title="Retirer">×</button>
                                 </div>
@@ -1015,30 +1015,67 @@ function toggleCollectionItemText(itemId) {
 }
 
 /**
- * Charger le texte complet depuis la source et l'afficher dans le feed
+ * Charger le texte complet depuis la source et l'afficher dans la vue collection
  */
-function loadTextFromCollection(title, author, url) {
+async function loadTextFromCollection(itemId, title, author, url) {
+    const fullContainer = document.getElementById(`full-${itemId}`);
+    const card = document.getElementById(`coll-item-${itemId}`);
+    const expandBtn = document.getElementById(`expand-btn-${itemId}`);
+    const preview = document.getElementById(`preview-${itemId}`);
+    
+    if (!fullContainer || !card) {
+        toast('Erreur: élément introuvable');
+        return;
+    }
+    
+    // Afficher un loader
+    fullContainer.innerHTML = '<div class="collection-loading">Chargement du texte complet...</div>';
+    fullContainer.style.display = 'block';
+    if (preview) preview.style.display = 'none';
+    card.dataset.expanded = 'true';
+    card.classList.add('expanded');
+    if (expandBtn) expandBtn.textContent = '← Réduire';
+    
     if (url && url.includes('wikisource.org')) {
-        // Fermer l'overlay des collections
-        const overlay = document.getElementById('favoritesOverlay');
-        if (overlay) overlay.classList.remove('open');
-        
-        // Extraire le titre de la page depuis l'URL
-        const pageTitle = decodeURIComponent(url.split('/wiki/').pop());
-        
-        toast('Chargement du texte complet...');
-        
-        // Charger le texte dans le feed principal
-        if (typeof fetchAndDisplayText === 'function') {
-            fetchAndDisplayText(pageTitle, title, author);
-        } else if (typeof loadMoreTexts === 'function') {
-            // Fallback
-            loadMoreTexts();
+        try {
+            // Extraire le titre de la page depuis l'URL
+            const pageTitle = decodeURIComponent(url.split('/wiki/').pop());
+            
+            // Déterminer la langue depuis l'URL
+            const langMatch = url.match(/https?:\/\/([a-z]+)\.wikisource/);
+            const lang = langMatch ? langMatch[1] : 'fr';
+            const apiUrl = `https://${lang}.wikisource.org/w/api.php`;
+            
+            // Charger le texte via l'API Wikisource
+            const response = await fetch(`${apiUrl}?action=query&titles=${encodeURIComponent(pageTitle)}&prop=extracts&explaintext=1&format=json&origin=*`);
+            const data = await response.json();
+            
+            const pages = data.query?.pages;
+            if (pages) {
+                const page = Object.values(pages)[0];
+                if (page && page.extract) {
+                    // Nettoyer et formater le texte
+                    let text = page.extract
+                        .replace(/\n{3,}/g, '\n\n')
+                        .trim();
+                    
+                    // Afficher le texte complet
+                    fullContainer.innerHTML = `<div class="collection-full-text">${escapeHtml(text)}</div>`;
+                    toast('Texte complet chargé');
+                } else {
+                    fullContainer.innerHTML = '<div class="collection-error">Texte non disponible</div>';
+                }
+            } else {
+                fullContainer.innerHTML = '<div class="collection-error">Texte non disponible</div>';
+            }
+        } catch (err) {
+            console.error('Erreur chargement texte:', err);
+            fullContainer.innerHTML = `<div class="collection-error">Erreur de chargement. <a href="${url}" target="_blank">Ouvrir la source</a></div>`;
         }
     } else if (url) {
-        window.open(url, '_blank');
+        fullContainer.innerHTML = `<div class="collection-error">Source externe. <a href="${url}" target="_blank">Ouvrir dans un nouvel onglet</a></div>`;
     } else {
-        toast('Aucune source disponible');
+        fullContainer.innerHTML = '<div class="collection-error">Aucune source disponible</div>';
     }
 }
 
