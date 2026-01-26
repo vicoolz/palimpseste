@@ -2717,6 +2717,32 @@ align-items: center;
 justify-content: center;
 }
 .reader-close:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Bouton fermer flottant en bas */
+.floating-close-btn {
+position: fixed;
+bottom: 24px;
+left: 50%;
+transform: translateX(-50%);
+background: var(--bg-card);
+border: 1px solid var(--border);
+color: var(--text);
+padding: 0.75rem 2rem;
+border-radius: 30px;
+font-size: 0.9rem;
+font-weight: 500;
+cursor: pointer;
+transition: all 0.2s;
+box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+z-index: 100;
+}
+.floating-close-btn:hover {
+background: var(--accent);
+color: white;
+border-color: var(--accent);
+transform: translateX(-50%) scale(1.05);
+}
+
 .reader-content {
 flex: 1;
 overflow-y: auto;
@@ -2856,14 +2882,21 @@ overflow-y: auto;
 max-width: 900px;
 margin: 0 auto;
 padding: 2rem;
+padding-bottom: 80px;
 }
 .favorites-header {
 display: flex;
 justify-content: space-between;
 align-items: center;
-padding-bottom: 1.5rem;
-margin-bottom: 2rem;
+padding-bottom: 1rem;
+margin-bottom: 1rem;
 border-bottom: 1px solid var(--border);
+position: sticky;
+top: 0;
+background: var(--bg);
+z-index: 10;
+padding-top: 1rem;
+margin-top: -1rem;
 }
 .favorites-title {
 font-size: 0.8rem;
@@ -4008,7 +4041,10 @@ background: var(--bg-card);
 border: 1px solid var(--border);
 border-radius: 8px;
 padding: 0.25rem;
-margin-bottom: 1.5rem;
+margin-bottom: 1rem;
+position: sticky;
+top: 60px;
+z-index: 9;
 }
 .feed-tab {
 flex: 1;
@@ -4519,10 +4555,37 @@ border: 1px solid var(--border) !important;
 .btn-close-profile:hover {
 color: var(--text);
 }
+
+/* Bouton fermer flottant dans modal profil */
+.profile-floating-close {
+position: sticky;
+bottom: 0;
+left: 0;
+right: 0;
+width: 100%;
+background: var(--bg-card);
+border: none;
+border-top: 1px solid var(--border);
+color: var(--text);
+padding: 1rem;
+font-size: 0.9rem;
+font-weight: 500;
+cursor: pointer;
+transition: all 0.2s;
+}
+.profile-floating-close:hover {
+background: var(--accent);
+color: white;
+}
+
 /* Profile Tabs */
 .profile-tabs {
 display: flex;
 border-bottom: 1px solid var(--border);
+position: sticky;
+top: 0;
+background: var(--bg-card);
+z-index: 5;
 }
 .profile-tab {
 flex: 1;
