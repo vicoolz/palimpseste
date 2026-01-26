@@ -708,8 +708,14 @@ async function openCollection(collectionId) {
                         const previewText = preview ? preview.substring(0, 300) : '';
                         const hasMore = preview && preview.length > 300;
                         
+                        // Encoder l'URL pour éviter les problèmes de quotes
+                        const safeUrl = url ? encodeURIComponent(url) : '';
+                        const safeTitle = title ? encodeURIComponent(title) : '';
+                        const safeAuthor = author ? encodeURIComponent(author) : '';
+                        
                         return `
-                            <div class="collection-item-card" id="coll-item-${itemId}" data-expanded="false">
+                            <div class="collection-item-card" id="coll-item-${itemId}" data-expanded="false"
+                                 data-url="${safeUrl}" data-title="${safeTitle}" data-author="${safeAuthor}">
                                 <div class="collection-item-content" onclick="toggleCollectionItemText('${itemId}')">
                                     <div class="collection-item-header">
                                         <div class="collection-item-title">${escapeHtml(title || 'Sans titre')}</div>
@@ -723,8 +729,8 @@ async function openCollection(collectionId) {
                                     ${item.note ? `<div class="collection-item-note"><span class="note-icon">¶</span> ${escapeHtml(item.note)}</div>` : ''}
                                 </div>
                                 <div class="collection-item-actions" onclick="event.stopPropagation()">
-                                    ${url ? `<button class="item-action" onclick="loadTextFromCollection('${itemId}', '${escapeHtml(title || '')}', '${escapeHtml(author || '')}', '${url}')" title="Charger le texte complet">↻</button>` : ''}
-                                    ${url ? `<button class="item-action" onclick="window.open('${url}', '_blank')" title="Ouvrir la source">↗</button>` : ''}
+                                    ${url ? `<button class="item-action" onclick="loadTextFromCollectionById('${itemId}')" title="Charger le texte complet">↻</button>` : ''}
+                                    ${url ? `<button class="item-action" onclick="window.open(decodeURIComponent('${safeUrl}'), '_blank')" title="Ouvrir la source">↗</button>` : ''}
                                     <button class="item-action danger" onclick="removeFromCollection('${collectionId}', '${item.id}')" title="Retirer">×</button>
                                 </div>
                             </div>
@@ -1015,6 +1021,23 @@ function toggleCollectionItemText(itemId) {
 }
 
 /**
+ * Charger le texte complet depuis l'ID de l'item (récupère les data-attributes)
+ */
+function loadTextFromCollectionById(itemId) {
+    const card = document.getElementById(`coll-item-${itemId}`);
+    if (!card) {
+        toast('Erreur: élément introuvable');
+        return;
+    }
+    
+    const url = card.dataset.url ? decodeURIComponent(card.dataset.url) : '';
+    const title = card.dataset.title ? decodeURIComponent(card.dataset.title) : '';
+    const author = card.dataset.author ? decodeURIComponent(card.dataset.author) : '';
+    
+    loadTextFromCollection(itemId, title, author, url);
+}
+
+/**
  * Charger le texte complet depuis la source et l'afficher dans la vue collection
  */
 async function loadTextFromCollection(itemId, title, author, url) {
@@ -1118,5 +1141,6 @@ window.submitEditCollection = submitEditCollection;
 window.openCollectionItemReader = openCollectionItemReader;
 window.toggleCollectionItemText = toggleCollectionItemText;
 window.loadTextFromCollection = loadTextFromCollection;
+window.loadTextFromCollectionById = loadTextFromCollectionById;
 window.COLLECTION_EMOJIS = COLLECTION_EMOJIS;
 window.COLLECTION_COLORS = COLLECTION_COLORS;
