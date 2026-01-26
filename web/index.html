@@ -53,6 +53,25 @@
         window.openMobileDrawer = openDrawer;
         window.closeMobileDrawer = closeDrawer;
     </script>
+    <style>
+        /* Force CSS pour le modal likers */
+        #likersModal {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: rgba(0, 0, 0, 0.6) !important;
+            backdrop-filter: blur(4px);
+            z-index: 99999 !important;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        #likersModal.open {
+            display: flex !important;
+        }
+    </style>
 </head>
 <body>
     <!-- ═══════════════════════════════════════════════════════════════════════
@@ -776,6 +795,19 @@
             <div class="share-actions">
                 <button class="share-btn secondary" onclick="closeShareModal()">Annuler</button>
                 <button class="share-btn primary" onclick="publishExtrait()" id="publishBtn">🚀 Publier</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL LIKERS (Statique) -->
+    <div class="likers-modal" id="likersModal" onclick="if(event.target === this) closeLikersModal()">
+        <div class="likers-content">
+            <div class="likers-header">
+                <h3>❤️ Aimé par</h3>
+                <button class="likers-close" onclick="closeLikersModal()">✕</button>
+            </div>
+            <div class="likers-list" id="likersList">
+                <div class="likers-loading">Chargement...</div>
             </div>
         </div>
     </div>
