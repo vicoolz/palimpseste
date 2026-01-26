@@ -7915,8 +7915,9 @@ transition: all 0.2s;
 }
 
 /* ====== BOUTON COLLECTION SUR LES CARTES ====== */
+/* Fix: Always visible */
 .card-btn-collection {
-    opacity: 0;
+    opacity: 1; /* Was 0 */
     transition: opacity 0.2s;
 }
 
