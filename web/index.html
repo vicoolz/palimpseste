@@ -593,21 +593,7 @@
         </div>
     </div>
     
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         OVERLAY TENDANCES
-         ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="favorites-overlay" id="trendingOverlay">
-        <div class="favorites-view trending-view">
-            <div class="favorites-header">
-                <div class="favorites-title">🔥 TENDANCES DU MOMENT</div>
-                <button class="reader-close" onclick="closeTrendingFeed()">✕</button>
-            </div>
-            <div class="trending-subtitle">Les textes les plus aimés et commentés</div>
-            <div class="trending-feed" id="trendingFeed">
-                <div class="trending-loading">Chargement des tendances...</div>
-            </div>
-        </div>
-    </div>
+    <!-- OVERLAY TENDANCES - supprimé, fusionné avec Feed Social -->
     
     <!-- ═══════════════════════════════════════════════════════════════════════
          OVERLAY FEED SOCIAL
@@ -619,7 +605,7 @@
                 <button class="reader-close" onclick="closeSocialFeed()">✕</button>
             </div>
             <div class="feed-tabs">
-                <button class="feed-tab active" onclick="switchSocialTab('recent')" id="tabRecent">🔥 Récents</button>
+                <button class="feed-tab active" onclick="switchSocialTab('recent')" id="tabRecent">🔥 Tendances</button>
                 <button class="feed-tab" onclick="switchSocialTab('activity')" id="tabActivity">❤️ Activité</button>
                 <button class="feed-tab" onclick="switchSocialTab('friends')" id="tabFriends">👥 Abonnements</button>
                 <button class="feed-tab" onclick="switchSocialTab('followers')" id="tabFollowers">💌 Abonnés</button>

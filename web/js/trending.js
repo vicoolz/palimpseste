@@ -3,12 +3,21 @@
 // ═══════════════════════════════════════════════════════════
 
 function openTrendingFeed() {
-    document.getElementById('trendingOverlay').classList.add('open');
-    loadTrendingFeed();
+    // Ouvrir le feed social sur l'onglet Tendances (ex-Récents)
+    if (typeof openSocialFeed === 'function') {
+        openSocialFeed();
+    }
+    // S'assurer que l'onglet Tendances est actif
+    if (typeof switchSocialTab === 'function') {
+        switchSocialTab('recent');
+    }
 }
 
 function closeTrendingFeed() {
-    document.getElementById('trendingOverlay').classList.remove('open');
+    // Fermer le feed social
+    if (typeof closeSocialFeed === 'function') {
+        closeSocialFeed();
+    }
 }
 
 async function loadTrendingFeed() {
