@@ -861,19 +861,29 @@
         margin-top: 0 !important;
         background: var(--bg-card) !important;
         border-bottom: 1px solid var(--border) !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-        padding: 0.3rem 0 !important;
-        max-height: 45vh !important;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.15) !important;
+        padding: 0.4rem 0 0.3rem !important;
+        max-height: 42vh !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         -webkit-overflow-scrolling: touch !important;
-        transition: max-height 0.3s ease, opacity 0.3s ease !important;
+        transition: max-height 0.3s ease !important;
     }
     
-    /* État rétracté sur mobile - une seule ligne scrollable */
+    /* Conteneur des lignes - disposition en grille propre */
+    .exploration-container > .filter-row {
+        border-bottom: 1px dotted rgba(212, 165, 116, 0.15) !important;
+    }
+    
+    .exploration-container > .filter-row:last-of-type {
+        border-bottom: none !important;
+    }
+    
+    /* État rétracté sur mobile - une seule ligne */
     .exploration-container.collapsed {
-        max-height: 52px !important;
+        max-height: 48px !important;
         overflow-y: hidden !important;
+        padding: 0.3rem 0 !important;
     }
     
     .exploration-container.collapsed .filter-row:not(:first-child) {
@@ -889,11 +899,12 @@
     }
     
     .filter-row {
-        padding: 0.25rem 0.5rem !important;
-        gap: 0.4rem !important;
+        padding: 0.4rem 0.6rem !important;
+        gap: 0.5rem !important;
         flex-wrap: nowrap !important;
         overflow-x: auto !important;
         scrollbar-width: none !important;
+        align-items: center !important;
     }
     
     .filter-row::-webkit-scrollbar {
@@ -901,51 +912,66 @@
     }
     
     .filter-label {
-        font-size: 0.7rem !important;
-        min-width: 60px !important;
+        font-size: 0.72rem !important;
+        min-width: auto !important;
         font-weight: 600 !important;
         flex-shrink: 0 !important;
+        color: var(--accent) !important;
+        opacity: 0.9 !important;
+        padding-right: 0.3rem !important;
+        border-right: 1px solid rgba(212, 165, 116, 0.2) !important;
+        margin-right: 0.2rem !important;
     }
     
     .filter-chips {
         display: flex !important;
-        gap: 0.3rem !important;
+        gap: 0.35rem !important;
         flex-wrap: nowrap !important;
         overflow-x: auto !important;
+        padding: 0.1rem 0 !important;
     }
     
     .filter-chip {
-        padding: 0.35rem 0.6rem !important;
-        font-size: 0.72rem !important;
-        border-radius: 14px !important;
-        min-height: 32px !important;
+        padding: 0.32rem 0.55rem !important;
+        font-size: 0.7rem !important;
+        border-radius: 12px !important;
+        min-height: 30px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         -webkit-tap-highlight-color: rgba(212, 165, 116, 0.3) !important;
         touch-action: manipulation !important;
         flex-shrink: 0 !important;
+        background: rgba(255,255,255,0.02) !important;
     }
     
     .filter-chip.filter-parent {
-        padding: 0.35rem 0.65rem !important;
+        padding: 0.32rem 0.6rem !important;
         font-weight: 500 !important;
+        border-color: rgba(212, 165, 116, 0.3) !important;
     }
     
     .filter-chip.filter-child {
-        padding: 0.3rem 0.55rem !important;
-        font-size: 0.7rem !important;
+        padding: 0.28rem 0.5rem !important;
+        font-size: 0.68rem !important;
     }
     
+    /* Sous-catégories - fond légèrement différent */
     .filter-subchips {
-        padding: 0.3rem 0.5rem 0.3rem 60px !important;
+        padding: 0.35rem 0.6rem !important;
         gap: 0.35rem !important;
         flex-wrap: wrap !important;
+        background: rgba(212, 165, 116, 0.03) !important;
+        border-top: 1px dashed rgba(212, 165, 116, 0.15) !important;
+        margin-top: 0.1rem !important;
     }
     
     .filter-summary {
-        padding: 0.35rem 0.5rem !important;
-        gap: 0.4rem !important;
+        padding: 0.4rem 0.6rem !important;
+        gap: 0.5rem !important;
+        background: rgba(212, 165, 116, 0.05) !important;
+        border-top: 1px solid rgba(212, 165, 116, 0.2) !important;
+        margin-top: 0.2rem !important;
     }
     
     .filter-summary-text {
@@ -953,17 +979,28 @@
     }
     
     .filter-summary-go {
-        padding: 0.3rem 0.7rem !important;
+        padding: 0.3rem 0.8rem !important;
         font-size: 0.72rem !important;
-        min-height: 32px !important;
+        min-height: 30px !important;
     }
     
     .filter-summary-clear,
     .filter-summary-random {
-        padding: 0.4rem !important;
-        font-size: 1.1rem !important;
-        min-width: 36px !important;
-        min-height: 36px !important;
+        padding: 0.3rem !important;
+        font-size: 1rem !important;
+        min-width: 32px !important;
+        min-height: 32px !important;
+    }
+    
+    /* Bouton toggle plus visible */
+    .exploration-toggle {
+        right: 0.4rem !important;
+        top: 0.35rem !important;
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 0.6rem !important;
+        background: rgba(212, 165, 116, 0.1) !important;
+        border: 1px solid rgba(212, 165, 116, 0.3) !important;
     }
     
     /* Bandeau ambiance (quand on clique sur Romantique, Mélancolie, etc.) */
