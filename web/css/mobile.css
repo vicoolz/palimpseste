@@ -345,6 +345,42 @@
         background: var(--bg-elevated) !important;
     }
     
+    /* Boutons d'action principaux (Collections, Communauté) */
+    .mobile-profile-actions {
+        display: flex !important;
+        gap: 10px !important;
+        margin-bottom: 16px !important;
+    }
+    
+    .mobile-profile-action-btn {
+        flex: 1 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        padding: 14px 12px !important;
+        background: linear-gradient(135deg, var(--accent), #d62839) !important;
+        border: none !important;
+        border-radius: 12px !important;
+        color: white !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        box-shadow: 0 4px 12px rgba(230, 57, 70, 0.25) !important;
+        transition: transform 0.15s, opacity 0.15s !important;
+    }
+    
+    .mobile-profile-action-btn:active {
+        transform: scale(0.97) !important;
+        opacity: 0.9 !important;
+    }
+    
+    .mobile-profile-action-btn i,
+    .mobile-profile-action-btn svg {
+        width: 18px !important;
+        height: 18px !important;
+    }
+    
     .mobile-profile-btn-logout {
         display: block !important;
         width: 100% !important;

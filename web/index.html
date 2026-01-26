@@ -125,6 +125,17 @@
                     <span class="mobile-profile-stat-label">abonnements</span>
                 </div>
             </div>
+            
+            <!-- Boutons en évidence -->
+            <div class="mobile-profile-actions">
+                <button class="mobile-profile-action-btn" onclick="openCollectionsView(); closeProfilePanel();">
+                    <i data-lucide="folder-heart"></i> Mes Collections
+                </button>
+                <button class="mobile-profile-action-btn" onclick="openSocialFeed(); closeProfilePanel();">
+                    <i data-lucide="users"></i> Communauté
+                </button>
+            </div>
+            
             <button class="mobile-profile-btn-logout" onclick="logout(); closeProfilePanel();">
                 ⎋ Déconnexion
             </button>
