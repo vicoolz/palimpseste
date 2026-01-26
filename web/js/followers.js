@@ -768,7 +768,7 @@ async function loadProfileExtraits(userId) {
     
     const { data: extraits, error } = await supabaseClient
         .from('extraits')
-        .select('*')
+        .select('*, profiles:user_id(username)')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(30);
@@ -789,22 +789,59 @@ async function loadProfileExtraits(userId) {
         return;
     }
     
+    // S'assurer que le cache des likes est chargé
+    if (currentUser && typeof loadUserLikesCache === 'function' && !likesLoaded) {
+        await loadUserLikesCache();
+    }
+    
     container.innerHTML = `
         <div class="profile-extraits-list">
-            ${extraits.map((e, index) => {
-                const texte = e.texte || '';
-                const isLong = texte.length > 200;
-                const displayText = isLong ? texte.substring(0, 200) + '...' : texte;
+            ${extraits.map((e) => {
+                const username = e.profiles?.username || 'Anonyme';
+                const avatarSymbol = getAvatarSymbol(username);
+                const timeAgo = formatTimeAgo(new Date(e.created_at));
+                const isLiked = typeof isExtraitLiked === 'function' && isExtraitLiked(e.id);
+                const likeCount = typeof getLikeCount === 'function' ? getLikeCount(e.id) : (e.likes_count || 0);
+                
                 return `
-                <div class="profile-extrait-card" id="profExtrait-${e.id}">
-                    <div class="profile-extrait-text" id="profExtraitText-${e.id}">"${esc(displayText)}"</div>
-                    ${isLong ? `<button class="profile-voir-plus" onclick="toggleProfileExtraitText('${e.id}', ${JSON.stringify(texte).replace(/'/g, "\\'")})" id="profVoirPlus-${e.id}">▼ Voir plus</button>` : ''}
-                    <div class="profile-extrait-source">
-                        <strong>${esc(e.source_author || '')}</strong> — ${esc(e.source_title || '')}
+                <div class="extrait-card" data-id="${e.id}">
+                    <div class="extrait-header">
+                        <div class="extrait-avatar" onclick="openUserProfile('${e.user_id}', '${esc(username)}')" style="cursor:pointer">${avatarSymbol}</div>
+                        <div class="extrait-user-info" onclick="openUserProfile('${e.user_id}', '${esc(username)}')" style="cursor:pointer">
+                            <div class="extrait-username">${esc(username)}</div>
+                            <div class="extrait-time">${timeAgo}</div>
+                        </div>
                     </div>
-                    <div class="profile-extrait-meta">
-                        <span>❤️ ${e.likes_count || 0} likes</span>
-                        <span>${formatTimeAgo(new Date(e.created_at))}</span>
+                    <div class="extrait-text" id="extraitText-${e.id}">${esc(e.texte || '')}</div>
+                    ${e.source_url ? `<button class="btn-voir-plus" onclick="loadFullTextFromSource('${e.id}', '${esc(e.source_url)}', '${esc(e.source_title)}')" id="voirPlus-${e.id}">📖 Voir le texte complet</button>` : ''}
+                    <div class="extrait-source">
+                        <strong>${esc(e.source_author || '')}</strong> — ${esc(e.source_title || '')}
+                        ${e.source_url ? `<a href="${e.source_url}" target="_blank" class="source-link">↗</a>` : ''}
+                    </div>
+                    ${e.commentary ? `<div class="extrait-commentary">${esc(e.commentary)}</div>` : ''}
+                    <div class="extrait-actions">
+                        <button class="extrait-action like-btn ${isLiked ? 'liked' : ''}" id="likeBtn-${e.id}" onclick="toggleLikeExtrait('${e.id}')" data-extrait-id="${e.id}">
+                            <span class="like-icon">${isLiked ? '❤️' : '🤍'}</span>
+                            <span class="like-count" id="likeCount-${e.id}">${likeCount}</span>
+                        </button>
+                        <button class="extrait-action" onclick="copyExtrait('${e.id}')">
+                            <span class="icon">📋</span>
+                            <span>Copier</span>
+                        </button>
+                    </div>
+                    <div class="comments-section">
+                        <button class="comments-toggle" onclick="toggleComments('${e.id}')">
+                            💬 <span id="commentCount-${e.id}">${e.comments_count || 0}</span> commentaire${(e.comments_count || 0) !== 1 ? 's' : ''}
+                        </button>
+                        <div class="comments-container" id="comments-${e.id}">
+                            <div class="comments-list" id="commentsList-${e.id}">
+                                <div class="comments-empty">Chargement...</div>
+                            </div>
+                            <div class="comment-input-area">
+                                <textarea class="comment-input" id="commentInput-${e.id}" placeholder="Écrire un commentaire..." rows="1" onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); postComment('${e.id}'); }"></textarea>
+                                <button class="comment-send" onclick="postComment('${e.id}')">➤</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `}).join('')}
@@ -874,6 +911,11 @@ async function loadProfileLikes(userId) {
         return;
     }
     
+    // S'assurer que le cache des likes est chargé
+    if (currentUser && typeof loadUserLikesCache === 'function' && !likesLoaded) {
+        await loadUserLikesCache();
+    }
+    
     const extraitMap = new Map(extraits.map(e => [e.id, e]));
     
     container.innerHTML = `
@@ -881,22 +923,53 @@ async function loadProfileLikes(userId) {
             ${likes.map(l => {
                 const e = extraitMap.get(l.extrait_id);
                 if (!e) return '';
-                const authorName = e.profiles?.username || 'Anonyme';
-                const texte = e.texte || '';
-                const isLong = texte.length > 200;
-                const displayText = isLong ? texte.substring(0, 200) + '...' : texte;
+                const username = e.profiles?.username || 'Anonyme';
+                const avatarSymbol = getAvatarSymbol(username);
+                const timeAgo = formatTimeAgo(new Date(e.created_at));
+                const isLiked = typeof isExtraitLiked === 'function' && isExtraitLiked(e.id);
+                const likeCount = typeof getLikeCount === 'function' ? getLikeCount(e.id) : (e.likes_count || 0);
+                
                 return `
-                    <div class="profile-extrait-card" id="profLike-${e.id}">
-                        <div class="profile-extrait-text" id="profLikeText-${e.id}">"${esc(displayText)}"</div>
-                        ${isLong ? `<button class="profile-voir-plus" onclick="toggleProfileLikeText('${e.id}', ${JSON.stringify(texte).replace(/'/g, "\\'")})" id="profLikeVoirPlus-${e.id}">▼ Voir plus</button>` : ''}
-                        <div class="profile-extrait-source">
-                            <strong>${esc(e.source_author || '')}</strong> — ${esc(e.source_title || '')}
-                        </div>
-                        <div class="profile-extrait-meta">
-                            <span>par @${esc(authorName)}</span>
-                            <span>liké ${formatTimeAgo(new Date(l.created_at))}</span>
+                <div class="extrait-card" data-id="${e.id}">
+                    <div class="extrait-header">
+                        <div class="extrait-avatar" onclick="openUserProfile('${e.user_id}', '${esc(username)}')" style="cursor:pointer">${avatarSymbol}</div>
+                        <div class="extrait-user-info" onclick="openUserProfile('${e.user_id}', '${esc(username)}')" style="cursor:pointer">
+                            <div class="extrait-username">${esc(username)}</div>
+                            <div class="extrait-time">${timeAgo}</div>
                         </div>
                     </div>
+                    <div class="extrait-text" id="extraitText-${e.id}">${esc(e.texte || '')}</div>
+                    ${e.source_url ? `<button class="btn-voir-plus" onclick="loadFullTextFromSource('${e.id}', '${esc(e.source_url)}', '${esc(e.source_title)}')" id="voirPlus-${e.id}">📖 Voir le texte complet</button>` : ''}
+                    <div class="extrait-source">
+                        <strong>${esc(e.source_author || '')}</strong> — ${esc(e.source_title || '')}
+                        ${e.source_url ? `<a href="${e.source_url}" target="_blank" class="source-link">↗</a>` : ''}
+                    </div>
+                    ${e.commentary ? `<div class="extrait-commentary">${esc(e.commentary)}</div>` : ''}
+                    <div class="extrait-actions">
+                        <button class="extrait-action like-btn ${isLiked ? 'liked' : ''}" id="likeBtn-${e.id}" onclick="toggleLikeExtrait('${e.id}')" data-extrait-id="${e.id}">
+                            <span class="like-icon">${isLiked ? '❤️' : '🤍'}</span>
+                            <span class="like-count" id="likeCount-${e.id}">${likeCount}</span>
+                        </button>
+                        <button class="extrait-action" onclick="copyExtrait('${e.id}')">
+                            <span class="icon">📋</span>
+                            <span>Copier</span>
+                        </button>
+                    </div>
+                    <div class="comments-section">
+                        <button class="comments-toggle" onclick="toggleComments('${e.id}')">
+                            💬 <span id="commentCount-${e.id}">${e.comments_count || 0}</span> commentaire${(e.comments_count || 0) !== 1 ? 's' : ''}
+                        </button>
+                        <div class="comments-container" id="comments-${e.id}">
+                            <div class="comments-list" id="commentsList-${e.id}">
+                                <div class="comments-empty">Chargement...</div>
+                            </div>
+                            <div class="comment-input-area">
+                                <textarea class="comment-input" id="commentInput-${e.id}" placeholder="Écrire un commentaire..." rows="1" onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); postComment('${e.id}'); }"></textarea>
+                                <button class="comment-send" onclick="postComment('${e.id}')">➤</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 `;
             }).join('')}
         </div>
