@@ -141,6 +141,7 @@ async function loadConversations() {
             const item = document.createElement('div');
             item.className = 'conversation-item';
             if (currentConversationUserId === userId) item.classList.add('active');
+            if (conv.unreadCount > 0) item.classList.add('has-unread');
             item.onclick = () => openConversation(userId, profile.username);
             item.innerHTML = `
                 <div class="conversation-avatar">${avatarSymbol}</div>
@@ -236,9 +237,18 @@ async function loadMessages(otherUserId) {
             const isSent = msg.sender_id === currentUser.id;
             const msgEl = document.createElement('div');
             msgEl.className = `chat-message ${isSent ? 'sent' : 'received'}`;
+            
+            // Indicateur de lecture pour les messages envoyés
+            let readIndicator = '';
+            if (isSent) {
+                readIndicator = msg.read_at 
+                    ? '<span class="msg-read-indicator read" title="Lu">✓✓</span>' 
+                    : '<span class="msg-read-indicator" title="Envoyé">✓</span>';
+            }
+            
             msgEl.innerHTML = `
                 ${escapeHtml(msg.content)}
-                <div class="chat-message-time">${formatMessageTime(msg.created_at)}</div>
+                <div class="chat-message-time">${formatMessageTime(msg.created_at)} ${readIndicator}</div>
             `;
             container.appendChild(msgEl);
         }

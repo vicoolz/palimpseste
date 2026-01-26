@@ -4463,6 +4463,19 @@ align-items: center;
 justify-content: center;
 font-weight: 600;
 }
+
+/* Conversation avec messages non lus */
+.conversation-item.has-unread {
+background: rgba(212, 165, 116, 0.08);
+}
+.conversation-item.has-unread .conversation-name {
+font-weight: 700;
+color: var(--accent);
+}
+.conversation-item.has-unread .conversation-preview {
+color: var(--text);
+font-weight: 500;
+}
 .messages-main {
 flex: 1;
 display: flex;
@@ -4532,9 +4545,27 @@ font-size: 0.6rem;
 color: rgba(255,255,255,0.6);
 margin-top: 0.25rem;
 text-align: right;
+display: flex;
+align-items: center;
+justify-content: flex-end;
+gap: 0.3rem;
 }
 .chat-message.received .chat-message-time {
 color: var(--muted);
+}
+
+/* Indicateur de lecture */
+.msg-read-indicator {
+font-size: 0.65rem;
+opacity: 0.6;
+letter-spacing: -2px;
+}
+.msg-read-indicator.read {
+color: #4ade80;
+opacity: 1;
+}
+.chat-message.received .msg-read-indicator {
+display: none;
 }
 .chat-input-area {
 padding: 1rem;
