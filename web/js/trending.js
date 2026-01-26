@@ -61,6 +61,19 @@ async function loadTrendingFeed() {
         // Stocker les extraits pour les notifications
         trendingExtraits = extraits;
         
+        // Compter les vrais likes depuis la table likes
+        const extraitIds = extraits.map(e => e.id);
+        const { data: allLikesData } = await supabaseClient
+            .from('likes')
+            .select('extrait_id')
+            .in('extrait_id', extraitIds);
+        
+        const realLikesCount = {};
+        extraitIds.forEach(id => realLikesCount[id] = 0);
+        (allLikesData || []).forEach(l => {
+            realLikesCount[l.extrait_id] = (realLikesCount[l.extrait_id] || 0) + 1;
+        });
+        
         // Vérifier les likes de l'utilisateur actuel (utiliser le cache global)
         const userId = currentUser?.id;
         let userLikes = new Set();
@@ -82,7 +95,7 @@ async function loadTrendingFeed() {
             const username = extrait.profiles?.username || 'Anonyme';
             const avatar = extrait.profiles?.avatar_url || getAvatarSymbol(username);
             const isLiked = userLikes.has(extrait.id);
-            const likesCount = extrait.likes_count || 0;
+            const likesCount = realLikesCount[extrait.id] || 0;
             const commentsCount = extrait.comments_count || 0;
             const isHot = likesCount >= 5 || commentsCount >= 3;
             const timeAgo = formatTimeAgo(new Date(extrait.created_at));

@@ -408,7 +408,8 @@ async function toggleLikeExtrait(extraitId) {
             if (error) throw error;
             
             // Décrémenter le compteur likes_count dans la table extraits
-            await supabaseClient.rpc('decrement_likes', { extrait_id: extraitId });
+            const { error: rpcError } = await supabaseClient.rpc('decrement_likes', { extrait_id: extraitId });
+            if (rpcError) console.warn('RPC decrement_likes échoué:', rpcError);
             
         } else {
             // Ajouter le like
@@ -422,7 +423,8 @@ async function toggleLikeExtrait(extraitId) {
             if (error) throw error;
             
             // Incrémenter le compteur likes_count dans la table extraits
-            await supabaseClient.rpc('increment_likes', { extrait_id: extraitId });
+            const { error: rpcError } = await supabaseClient.rpc('increment_likes', { extrait_id: extraitId });
+            if (rpcError) console.warn('RPC increment_likes échoué:', rpcError);
             
             // Notifier l'auteur de l'extrait
             const extrait = socialExtraits.find(e => e.id === extraitId);

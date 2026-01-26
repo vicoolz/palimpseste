@@ -823,6 +823,19 @@ async function loadProfileExtraits(userId) {
         await loadUserLikesCache();
     }
     
+    // Compter les vrais likes depuis la table likes (pas le compteur dénormalisé)
+    const extraitIds = extraits.map(e => e.id);
+    const { data: allLikesData } = await supabaseClient
+        .from('likes')
+        .select('extrait_id')
+        .in('extrait_id', extraitIds);
+    
+    const realLikesCount = {};
+    extraitIds.forEach(id => realLikesCount[id] = 0);
+    (allLikesData || []).forEach(l => {
+        realLikesCount[l.extrait_id] = (realLikesCount[l.extrait_id] || 0) + 1;
+    });
+    
     container.innerHTML = `
         <div class="profile-extraits-list">
             ${extraits.map((e) => {
@@ -830,7 +843,7 @@ async function loadProfileExtraits(userId) {
                 const avatarSymbol = getAvatarSymbol(username);
                 const timeAgo = formatTimeAgo(new Date(e.created_at));
                 const isLiked = typeof isExtraitLiked === 'function' && isExtraitLiked(e.id);
-                const likeCount = e.likes_count || 0;
+                const likeCount = realLikesCount[e.id] || 0;
                 // Échapper les quotes pour les attributs onclick
                 const safeUrl = (e.source_url || '').replace(/'/g, "\\'");
                 const safeTitle = (e.source_title || '').replace(/'/g, "\\'");
@@ -949,6 +962,18 @@ async function loadProfileLikes(userId) {
         await loadUserLikesCache();
     }
     
+    // Compter les vrais likes depuis la table likes (pas le compteur dénormalisé)
+    const { data: allLikesData } = await supabaseClient
+        .from('likes')
+        .select('extrait_id')
+        .in('extrait_id', extraitIds);
+    
+    const realLikesCount = {};
+    extraitIds.forEach(id => realLikesCount[id] = 0);
+    (allLikesData || []).forEach(l => {
+        realLikesCount[l.extrait_id] = (realLikesCount[l.extrait_id] || 0) + 1;
+    });
+    
     const extraitMap = new Map(extraits.map(e => [e.id, e]));
     
     container.innerHTML = `
@@ -959,8 +984,8 @@ async function loadProfileLikes(userId) {
                 const username = e.profiles?.username || 'Anonyme';
                 const avatarSymbol = getAvatarSymbol(username);
                 const timeAgo = formatTimeAgo(new Date(e.created_at));
-                const isLiked = true; // Forcément liké puisque c'est dans mes likes
-                const likeCount = e.likes_count || 0;
+                const isLiked = currentUser ? (typeof userLikesCache !== 'undefined' && userLikesCache.has(e.id)) : false;
+                const likeCount = realLikesCount[e.id] || 0;
                 // Échapper les quotes pour les attributs onclick
                 const safeUrl = (e.source_url || '').replace(/'/g, "\\'");
                 const safeTitle = (e.source_title || '').replace(/'/g, "\\'");
