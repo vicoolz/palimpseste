@@ -6868,21 +6868,21 @@ transition: all 0.2s;
 /* MODAL LIKERS - Voir qui a like */
 
 .likers-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.6) !important;
     backdrop-filter: blur(4px);
-    z-index: 10000;
+    z-index: 99999 !important;
     display: none;
     align-items: center;
     justify-content: center;
 }
 
 .likers-modal.open {
-    display: flex;
+    display: flex !important;
 }
 
 .likers-content {

@@ -636,7 +636,7 @@ function resetLikesCache() {
  * Afficher la liste des utilisateurs qui ont liké un extrait
  */
 async function showLikers(extraitId) {
-    console.log('showLikers appelé avec:', extraitId);
+    console.log('🔴 showLikers appelé avec:', extraitId);
     
     if (!supabaseClient) {
         console.log('Pas de supabaseClient');
@@ -645,7 +645,7 @@ async function showLikers(extraitId) {
     
     // Créer la modal si elle n'existe pas
     let modal = document.getElementById('likersModal');
-    console.log('Modal existante:', !!modal);
+    console.log('🔴 Modal existante:', !!modal);
     
     if (!modal) {
         modal = document.createElement('div');
@@ -664,11 +664,15 @@ async function showLikers(extraitId) {
         `;
         modal.onclick = (e) => { if (e.target === modal) closeLikersModal(); };
         document.body.appendChild(modal);
-        console.log('Modal créée et ajoutée au body');
+        console.log('🔴 Modal créée et ajoutée au body');
     }
     
-    // Ouvrir la modal
+    // Ouvrir la modal et log
+    console.log('🔴 Ajout classe open sur modal');
     modal.classList.add('open');
+    console.log('🔴 Classes du modal:', modal.className);
+    console.log('🔴 Style computed display:', window.getComputedStyle(modal).display);
+    
     const listContainer = document.getElementById('likersList');
     listContainer.innerHTML = '<div class="likers-loading">Chargement...</div>';
     
