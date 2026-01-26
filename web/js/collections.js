@@ -683,35 +683,47 @@ async function openCollection(collectionId) {
                        </div>`
                     : items.map(item => {
                         // Déterminer les données de l'item
-                        let title, author, preview, url;
+                        let title, author, preview, url, fullText;
                         if (item.extraits) {
                             title = item.extraits.source_title;
                             author = item.extraits.source_author;
                             preview = item.extraits.texte;
+                            fullText = item.extraits.texte;
                             url = item.extraits.source_url;
                         } else if (item.source_likes) {
                             title = item.source_likes.title;
                             author = item.source_likes.author;
                             preview = item.source_likes.preview;
+                            fullText = item.source_likes.preview;
                             url = item.source_likes.source_url;
                         } else {
                             title = item.local_title;
                             author = item.local_author;
                             preview = item.local_preview;
+                            fullText = item.local_preview;
                             url = item.local_url;
                         }
                         
+                        const itemId = item.id;
+                        const previewText = preview ? preview.substring(0, 300) : '';
+                        const hasMore = preview && preview.length > 300;
+                        
                         return `
-                            <div class="collection-item-card" onclick="openCollectionItemReader('${item.id}', '${escapeHtml(title || '')}', '${escapeHtml(author || '')}', '${url || ''}')">
-                                <div class="collection-item-content">
+                            <div class="collection-item-card" id="coll-item-${itemId}" data-expanded="false">
+                                <div class="collection-item-content" onclick="toggleCollectionItemText('${itemId}')">
                                     <div class="collection-item-header">
                                         <div class="collection-item-title">${escapeHtml(title || 'Sans titre')}</div>
                                         <div class="collection-item-author">${escapeHtml(author || 'Auteur inconnu')}</div>
                                     </div>
-                                    ${preview ? `<div class="collection-item-preview">${escapeHtml(preview.substring(0, 300))}${preview.length > 300 ? '...' : ''}</div>` : ''}
+                                    <div class="collection-item-text-container">
+                                        <div class="collection-item-preview" id="preview-${itemId}">${escapeHtml(previewText)}${hasMore ? '...' : ''}</div>
+                                        <div class="collection-item-full" id="full-${itemId}" style="display:none;">${escapeHtml(fullText || '')}</div>
+                                    </div>
+                                    ${hasMore ? `<button class="collection-item-expand" id="expand-btn-${itemId}">Lire la suite →</button>` : ''}
                                     ${item.note ? `<div class="collection-item-note"><span class="note-icon">¶</span> ${escapeHtml(item.note)}</div>` : ''}
                                 </div>
                                 <div class="collection-item-actions" onclick="event.stopPropagation()">
+                                    ${url ? `<button class="item-action" onclick="loadTextFromCollection('${escapeHtml(title || '')}', '${escapeHtml(author || '')}', '${url}')" title="Charger le texte complet">↻</button>` : ''}
                                     ${url ? `<button class="item-action" onclick="window.open('${url}', '_blank')" title="Ouvrir la source">↗</button>` : ''}
                                     <button class="item-action danger" onclick="removeFromCollection('${collectionId}', '${item.id}')" title="Retirer">×</button>
                                 </div>
@@ -973,36 +985,66 @@ function escapeHtml(text) {
 }
 
 /**
- * Ouvrir un lecteur pour un item de collection
+ * Toggle l'affichage du texte complet d'un item de collection
  */
-function openCollectionItemReader(itemId, title, author, url) {
-    // Si on a une URL source, on peut charger le texte complet depuis Wikisource
+function toggleCollectionItemText(itemId) {
+    const card = document.getElementById(`coll-item-${itemId}`);
+    const preview = document.getElementById(`preview-${itemId}`);
+    const full = document.getElementById(`full-${itemId}`);
+    const expandBtn = document.getElementById(`expand-btn-${itemId}`);
+    
+    if (!card || !preview || !full) return;
+    
+    const isExpanded = card.dataset.expanded === 'true';
+    
+    if (isExpanded) {
+        // Réduire
+        preview.style.display = 'block';
+        full.style.display = 'none';
+        card.dataset.expanded = 'false';
+        card.classList.remove('expanded');
+        if (expandBtn) expandBtn.textContent = 'Lire la suite →';
+    } else {
+        // Étendre
+        preview.style.display = 'none';
+        full.style.display = 'block';
+        card.dataset.expanded = 'true';
+        card.classList.add('expanded');
+        if (expandBtn) expandBtn.textContent = '← Réduire';
+    }
+}
+
+/**
+ * Charger le texte complet depuis la source et l'afficher dans le feed
+ */
+function loadTextFromCollection(title, author, url) {
     if (url && url.includes('wikisource.org')) {
+        // Fermer l'overlay des collections
+        const overlay = document.getElementById('favoritesOverlay');
+        if (overlay) overlay.classList.remove('open');
+        
         // Extraire le titre de la page depuis l'URL
         const pageTitle = decodeURIComponent(url.split('/wiki/').pop());
-        if (typeof exploreFromCard === 'function') {
-            // Fermer l'overlay des collections temporairement
-            const overlay = document.getElementById('favoritesOverlay');
-            if (overlay) overlay.classList.remove('open');
-            
-            // Charger le texte dans le feed
-            toast('Chargement du texte...');
-            
-            // Utiliser la fonction de chargement existante
-            if (typeof loadTextDirectly === 'function') {
-                loadTextDirectly(pageTitle, title, author);
-            } else if (typeof pureRandomJump === 'function') {
-                // Fallback: ouvrir la source dans un nouvel onglet
-                window.open(url, '_blank');
-            }
-        } else {
-            window.open(url, '_blank');
+        
+        toast('Chargement du texte complet...');
+        
+        // Charger le texte dans le feed principal
+        if (typeof fetchAndDisplayText === 'function') {
+            fetchAndDisplayText(pageTitle, title, author);
+        } else if (typeof loadMoreTexts === 'function') {
+            // Fallback
+            loadMoreTexts();
         }
     } else if (url) {
         window.open(url, '_blank');
     } else {
         toast('Aucune source disponible');
     }
+}
+
+// Fonction legacy pour compatibilité
+function openCollectionItemReader(itemId, title, author, url) {
+    toggleCollectionItemText(itemId);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1037,5 +1079,7 @@ window.selectEditEmoji = selectEditEmoji;
 window.selectEditColor = selectEditColor;
 window.submitEditCollection = submitEditCollection;
 window.openCollectionItemReader = openCollectionItemReader;
+window.toggleCollectionItemText = toggleCollectionItemText;
+window.loadTextFromCollection = loadTextFromCollection;
 window.COLLECTION_EMOJIS = COLLECTION_EMOJIS;
 window.COLLECTION_COLORS = COLLECTION_COLORS;
