@@ -83,17 +83,7 @@ const ALT_SOURCES = {
         ]
     },
     // ═══════════════════════════════════════════════════════════
-    // 📚 BIBLIOTHÈQUE NATIONALE DE FRANCE - Gallica
-    // ═══════════════════════════════════════════════════════════
-    gallica: {
-        name: 'Gallica (BNF)',
-        url: 'https://gallica.bnf.fr',
-        lang: 'fr',
-        // Termes de recherche pour l'API SRU
-        searchTerms: ['poésie française', 'roman XIXe', 'fables', 'théâtre classique', 'contes', 'nouvelles', 'essais']
-    },
-    // ═══════════════════════════════════════════════════════════
-    // 📖 ARCHIVE.ORG - Internet Archive
+    //  ARCHIVE.ORG - Internet Archive
     // ═══════════════════════════════════════════════════════════
     archiveorg: {
         name: 'Archive.org',
@@ -115,18 +105,6 @@ const ALT_SOURCES = {
             { id: 'wutheringheight00bron', title: 'Wuthering Heights', author: 'Emily Brontë', lang: 'en' },
             { id: 'greatexpectatio00dick', title: 'Great Expectations', author: 'Charles Dickens', lang: 'en' }
         ]
-    },
-    // ═══════════════════════════════════════════════════════════
-    // 📱 FEEDBOOKS - Livres libres de droits
-    // ═══════════════════════════════════════════════════════════
-    feedbooks: {
-        name: 'Feedbooks',
-        url: 'https://www.feedbooks.com',
-        // IDs de livres du domaine public (sans extraits codés)
-        bookIds: {
-            fr: [28, 27, 58, 59, 38, 39, 143, 49, 2612, 282, 5618, 5664],
-            en: [61, 62, 5, 8, 23, 24, 254]
-        }
     }
 };
 
@@ -785,72 +763,7 @@ async function fetchPoetryDB() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 📚 GALLICA (BNF) - Bibliothèque Nationale de France
-// ═══════════════════════════════════════════════════════════
-async function fetchGallica() {
-    if (selectedLang !== 'all' && selectedLang !== 'fr') return [];
-    
-    const searchTerms = ALT_SOURCES.gallica.searchTerms;
-    const term = searchTerms[Math.floor(Math.random() * searchTerms.length)];
-    const cacheKey = `gallica:${term}:${Date.now()}`;
-    
-    try {
-        // Recherche via l'API SRU de Gallica (documents textuels)
-        const searchUrl = `https://gallica.bnf.fr/SRU?operation=searchRetrieve&version=1.2&query=dc.type%20all%20"texte"%20and%20dc.subject%20all%20"${encodeURIComponent(term)}"&maximumRecords=20&startRecord=1`;
-        
-        const res = await fetch(searchUrl);
-        const xmlText = await res.text();
-        
-        // Parser le XML pour extraire les infos
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(xmlText, 'text/xml');
-        const records = xml.querySelectorAll('record');
-        
-        const results = [];
-        for (const record of records) {
-            const identifier = record.querySelector('identifier')?.textContent;
-            const title = record.querySelector('title')?.textContent;
-            const creator = record.querySelector('creator')?.textContent;
-            const description = record.querySelector('description')?.textContent;
-            
-            if (identifier && identifier.includes('ark:') && title) {
-                const arkId = identifier.match(/ark:\/\d+\/\w+/)?.[0];
-                if (arkId && !state.shownPages.has(`gallica:${arkId}`)) {
-                    results.push({
-                        title: title.split('/')[0].trim(),
-                        author: creator || 'Auteur inconnu',
-                        text: description || `Document de la collection Gallica`,
-                        arkId: arkId,
-                        source: 'gallica',
-                        lang: 'fr',
-                        sourceUrl: `https://gallica.bnf.fr/${arkId}`
-                    });
-                }
-            }
-        }
-        
-        // Retourner un résultat aléatoire
-        if (results.length > 0) {
-            const item = results[Math.floor(Math.random() * results.length)];
-            state.shownPages.add(`gallica:${item.arkId}`);
-            return [{
-                title: item.title,
-                author: item.author,
-                text: item.text,
-                source: 'gallica',
-                sourceUrl: item.sourceUrl,
-                lang: 'fr',
-                isPreloaded: true
-            }];
-        }
-    } catch (e) {
-        console.error('Gallica error:', e);
-    }
-    return [];
-}
-
-// ═══════════════════════════════════════════════════════════
-// 📖 ARCHIVE.ORG - Internet Archive (textes complets)
+//  ARCHIVE.ORG - Internet Archive (textes complets)
 // ═══════════════════════════════════════════════════════════
 async function fetchArchiveOrg() {
     const works = ALT_SOURCES.archiveorg.works;
@@ -922,58 +835,6 @@ async function fetchArchiveOrg() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 📱 FEEDBOOKS - Livres du domaine public (OPDS API)
-// ═══════════════════════════════════════════════════════════
-async function fetchFeedbooks() {
-    const bookIds = ALT_SOURCES.feedbooks.bookIds;
-    // Filtrer par langue si nécessaire
-    const ids = selectedLang === 'all' 
-        ? [...bookIds.fr, ...bookIds.en]
-        : (bookIds[selectedLang] || []);
-    
-    if (ids.length === 0) return [];
-    
-    // Choisir un ID au hasard
-    const bookId = ids[Math.floor(Math.random() * ids.length)];
-    const cacheKey = `feedbooks:${bookId}`;
-    
-    // Éviter les doublons
-    if (state.shownPages.has(cacheKey)) return [];
-    
-    try {
-        // Récupérer les métadonnées via l'API OPDS
-        const opdsUrl = `https://www.feedbooks.com/book/${bookId}.atom`;
-        const res = await fetch(opdsUrl);
-        const xmlText = await res.text();
-        
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(xmlText, 'application/xml');
-        
-        const title = xml.querySelector('title')?.textContent || 'Sans titre';
-        const author = xml.querySelector('author name')?.textContent || 'Auteur inconnu';
-        const summary = xml.querySelector('summary')?.textContent || xml.querySelector('content')?.textContent || '';
-        
-        if (title && summary) {
-            state.shownPages.add(cacheKey);
-            return [{
-                title: title,
-                author: author,
-                text: summary.trim(),
-                source: 'feedbooks',
-                sourceUrl: `https://www.feedbooks.com/book/${bookId}`,
-                lang: selectedLang === 'all' ? 'fr' : selectedLang,
-                feedbooksId: bookId,
-                isPreloaded: true
-            }];
-        }
-    } catch (e) {
-        console.error('Feedbooks error:', bookId, e);
-    }
-    
-    return [];
-}
-
-// ═══════════════════════════════════════════════════════════
 // 🌍 ALIMENTER LE POOL - Littérature mondiale
 // ═══════════════════════════════════════════════════════════
 async function fillPool() {
@@ -1023,21 +884,6 @@ async function fillPool() {
         }
     } catch (e) {
         console.error('Archive.org fillPool error:', e);
-    }
-    
-    // === 1.7 FEEDBOOKS - Domaine public (français) ===
-    if (selectedLang === 'all' || selectedLang === 'fr') {
-        try {
-            const feedbooksTexts = await fetchFeedbooks();
-            for (const item of feedbooksTexts) {
-                state.textPool.unshift({
-                    ...item,
-                    isPreloaded: true
-                });
-            }
-        } catch (e) {
-            console.error('Feedbooks fillPool error:', e);
-        }
     }
     
     // === 2. WIKISOURCE (sources traditionnelles) ===
@@ -1417,9 +1263,7 @@ window.isValidTitle = isValidTitle;
 window.analyzeContentQuality = analyzeContentQuality;
 window.fetchGutenberg = fetchGutenberg;
 window.fetchPoetryDB = fetchPoetryDB;
-window.fetchGallica = fetchGallica;
 window.fetchArchiveOrg = fetchArchiveOrg;
-window.fetchFeedbooks = fetchFeedbooks;
 window.fillPool = fillPool;
 window.exploreCategory = exploreCategory;
 window.renderEnrichedBranches = renderEnrichedBranches;
