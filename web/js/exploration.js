@@ -483,23 +483,22 @@ function filterByTerritory(category, value) {
 let lastScrollY = 0;
 let isExplorationCollapsed = false;
 let userManuallyToggled = false;
-let userInteracting = false; // Empêche le collapse pendant l'interaction
 
 /**
  * Détecte si on est sur mobile
  */
 function isMobileDevice() {
-    return window.innerWidth <= 768 || ('ontouchstart' in window);
+    return window.innerWidth <= 768;
 }
 
 /**
- * Gère la rétraction automatique au scroll
+ * Gère la rétraction automatique au scroll (desktop uniquement)
  */
 function handleExplorationScroll() {
     const container = document.getElementById('explorationContainer');
-    if (!container || userManuallyToggled || userInteracting) return;
+    if (!container || userManuallyToggled) return;
     
-    // Désactiver le collapse auto sur mobile
+    // Désactiver le collapse auto sur mobile - géré par CSS
     if (isMobileDevice()) return;
     
     const currentScrollY = window.scrollY;
@@ -510,15 +509,7 @@ function handleExplorationScroll() {
         container.classList.add('collapsed');
         isExplorationCollapsed = true;
         // Fermer tous les groupes ouverts
-        ['forme', 'epoque', 'ton', 'pensee'].forEach(cat => {
-            if (openGroups[cat]) {
-                const subchips = document.getElementById(`subchips-${cat}-${openGroups[cat]}`);
-                const parentBtn = document.querySelector(`.filter-parent[data-filter="${cat}"][data-group="${openGroups[cat]}"]`);
-                if (subchips) subchips.style.display = 'none';
-                if (parentBtn) parentBtn.classList.remove('expanded');
-                openGroups[cat] = null;
-            }
-        });
+        closeAllFilterGroups();
     }
     // Si on scrolle vers le haut près du top → déplier
     else if (currentScrollY < 50 && isExplorationCollapsed) {
@@ -527,6 +518,21 @@ function handleExplorationScroll() {
     }
     
     lastScrollY = currentScrollY;
+}
+
+/**
+ * Ferme tous les groupes de filtres ouverts
+ */
+function closeAllFilterGroups() {
+    ['forme', 'epoque', 'ton', 'pensee'].forEach(cat => {
+        if (openGroups[cat]) {
+            const subchips = document.getElementById(`subchips-${cat}-${openGroups[cat]}`);
+            const parentBtn = document.querySelector(`.filter-parent[data-filter="${cat}"][data-group="${openGroups[cat]}"]`);
+            if (subchips) subchips.style.display = 'none';
+            if (parentBtn) parentBtn.classList.remove('expanded');
+            openGroups[cat] = null;
+        }
+    });
 }
 
 /**
@@ -540,34 +546,19 @@ function toggleExplorationCollapse() {
     isExplorationCollapsed = !isExplorationCollapsed;
     container.classList.toggle('collapsed', isExplorationCollapsed);
     
-    // Réinitialiser après 5 secondes pour permettre le scroll auto à nouveau
+    if (isExplorationCollapsed) {
+        closeAllFilterGroups();
+    }
+    
+    // Réinitialiser après 10 secondes pour permettre le scroll auto à nouveau
     setTimeout(() => {
         userManuallyToggled = false;
-    }, 5000);
-}
-
-/**
- * Marquer le début d'une interaction utilisateur (empêche le collapse)
- */
-function startFilterInteraction() {
-    userInteracting = true;
-    // Réinitialiser après 2 secondes d'inactivité
-    clearTimeout(window.filterInteractionTimeout);
-    window.filterInteractionTimeout = setTimeout(() => {
-        userInteracting = false;
-    }, 2000);
+    }, 10000);
 }
 
 // Attacher l'écouteur de scroll
 document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', handleExplorationScroll, { passive: true });
-    
-    // Empêcher le collapse pendant les interactions avec les filtres
-    const explorationContainer = document.getElementById('explorationContainer');
-    if (explorationContainer) {
-        explorationContainer.addEventListener('touchstart', startFilterInteraction, { passive: true });
-        explorationContainer.addEventListener('mousedown', startFilterInteraction, { passive: true });
-    }
 });
 
 // Exports globaux pour le nouveau système

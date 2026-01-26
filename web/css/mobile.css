@@ -862,61 +862,100 @@
         background: var(--bg-card) !important;
         border-bottom: 1px solid var(--border) !important;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-        padding: 0.25rem 0 !important;
+        padding: 0.3rem 0 !important;
+        max-height: 45vh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        transition: max-height 0.3s ease, opacity 0.3s ease !important;
+    }
+    
+    /* État rétracté sur mobile - une seule ligne scrollable */
+    .exploration-container.collapsed {
+        max-height: 52px !important;
+        overflow-y: hidden !important;
+    }
+    
+    .exploration-container.collapsed .filter-row:not(:first-child) {
+        display: none !important;
+    }
+    
+    .exploration-container.collapsed .filter-subchips {
+        display: none !important;
+    }
+    
+    .exploration-container.collapsed .filter-summary {
+        display: none !important;
     }
     
     .filter-row {
-        padding: 0.4rem 0.75rem !important;
-        gap: 0.5rem !important;
-        flex-wrap: wrap !important;
+        padding: 0.25rem 0.5rem !important;
+        gap: 0.4rem !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        scrollbar-width: none !important;
+    }
+    
+    .filter-row::-webkit-scrollbar {
+        display: none !important;
     }
     
     .filter-label {
-        font-size: 0.75rem !important;
-        min-width: 70px !important;
+        font-size: 0.7rem !important;
+        min-width: 60px !important;
         font-weight: 600 !important;
+        flex-shrink: 0 !important;
+    }
+    
+    .filter-chips {
+        display: flex !important;
+        gap: 0.3rem !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
     }
     
     .filter-chip {
-        padding: 0.5rem 0.85rem !important;
-        font-size: 0.8rem !important;
-        border-radius: 16px !important;
-        min-height: 36px !important;
+        padding: 0.35rem 0.6rem !important;
+        font-size: 0.72rem !important;
+        border-radius: 14px !important;
+        min-height: 32px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         -webkit-tap-highlight-color: rgba(212, 165, 116, 0.3) !important;
         touch-action: manipulation !important;
+        flex-shrink: 0 !important;
     }
     
     .filter-chip.filter-parent {
-        padding: 0.55rem 0.9rem !important;
-        font-weight: 600 !important;
+        padding: 0.35rem 0.65rem !important;
+        font-weight: 500 !important;
     }
     
     .filter-chip.filter-child {
-        padding: 0.45rem 0.75rem !important;
-        font-size: 0.78rem !important;
+        padding: 0.3rem 0.55rem !important;
+        font-size: 0.7rem !important;
     }
     
     .filter-subchips {
-        padding: 0.5rem 0.75rem 0.5rem 70px !important;
-        gap: 0.5rem !important;
+        padding: 0.3rem 0.5rem 0.3rem 60px !important;
+        gap: 0.35rem !important;
+        flex-wrap: wrap !important;
     }
     
     .filter-summary {
-        padding: 0.5rem 0.75rem !important;
-        gap: 0.6rem !important;
+        padding: 0.35rem 0.5rem !important;
+        gap: 0.4rem !important;
     }
     
     .filter-summary-text {
-        font-size: 0.75rem !important;
+        font-size: 0.68rem !important;
     }
     
     .filter-summary-go {
-        padding: 0.45rem 1rem !important;
-        font-size: 0.8rem !important;
-        min-height: 38px !important;
+        padding: 0.3rem 0.7rem !important;
+        font-size: 0.72rem !important;
+        min-height: 32px !important;
     }
     
     .filter-summary-clear,
