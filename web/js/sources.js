@@ -36,116 +36,35 @@ const ALT_SOURCES = {
     poetrydb: {
         name: 'PoetryDB',
         url: 'https://poetrydb.org',
-        lang: 'en',
-        // Auteurs disponibles dans PoetryDB
-        authors: ['Shakespeare', 'Emily Dickinson', 'William Blake', 'John Keats', 
-                  'Percy Shelley', 'Lord Byron', 'William Wordsworth', 'Edgar Allan Poe',
-                  'Walt Whitman', 'Robert Frost', 'Oscar Wilde', 'Alfred Tennyson']
+        lang: 'en'
     },
     gutenberg: {
         name: 'Project Gutenberg',
-        url: 'https://www.gutenberg.org',
-        // Œuvres populaires avec leurs IDs Gutenberg (domaine public)
-        works: [
-            { id: 1342, title: 'Pride and Prejudice', author: 'Jane Austen', lang: 'en' },
-            { id: 11, title: 'Alice\'s Adventures in Wonderland', author: 'Lewis Carroll', lang: 'en' },
-            { id: 84, title: 'Frankenstein', author: 'Mary Shelley', lang: 'en' },
-            { id: 1661, title: 'The Adventures of Sherlock Holmes', author: 'Arthur Conan Doyle', lang: 'en' },
-            { id: 2701, title: 'Moby Dick', author: 'Herman Melville', lang: 'en' },
-            { id: 1232, title: 'The Prince', author: 'Niccolò Machiavelli', lang: 'en' },
-            { id: 174, title: 'The Picture of Dorian Gray', author: 'Oscar Wilde', lang: 'en' },
-            { id: 345, title: 'Dracula', author: 'Bram Stoker', lang: 'en' },
-            { id: 1400, title: 'Great Expectations', author: 'Charles Dickens', lang: 'en' },
-            { id: 98, title: 'A Tale of Two Cities', author: 'Charles Dickens', lang: 'en' },
-            { id: 2600, title: 'War and Peace', author: 'Leo Tolstoy', lang: 'en' },
-            { id: 2554, title: 'Crime and Punishment', author: 'Fyodor Dostoevsky', lang: 'en' },
-            { id: 4300, title: 'Ulysses', author: 'James Joyce', lang: 'en' },
-            { id: 1080, title: 'A Modest Proposal', author: 'Jonathan Swift', lang: 'en' },
-            { id: 76, title: 'Adventures of Huckleberry Finn', author: 'Mark Twain', lang: 'en' },
-            { id: 74, title: 'The Adventures of Tom Sawyer', author: 'Mark Twain', lang: 'en' },
-            { id: 219, title: 'Heart of Darkness', author: 'Joseph Conrad', lang: 'en' },
-            { id: 5200, title: 'Metamorphosis', author: 'Franz Kafka', lang: 'en' },
-            { id: 1952, title: 'The Yellow Wallpaper', author: 'Charlotte Perkins Gilman', lang: 'en' },
-            { id: 120, title: 'Treasure Island', author: 'Robert Louis Stevenson', lang: 'en' },
-            // Français
-            { id: 17489, title: 'Les Misérables', author: 'Victor Hugo', lang: 'fr' },
-            { id: 13951, title: 'Le Comte de Monte-Cristo', author: 'Alexandre Dumas', lang: 'fr' },
-            { id: 14287, title: 'Les Trois Mousquetaires', author: 'Alexandre Dumas', lang: 'fr' },
-            { id: 4650, title: 'Du côté de chez Swann', author: 'Marcel Proust', lang: 'fr' },
-            { id: 17396, title: 'Madame Bovary', author: 'Gustave Flaubert', lang: 'fr' },
-            { id: 13704, title: 'Le Rouge et le Noir', author: 'Stendhal', lang: 'fr' },
-            { id: 5053, title: 'Germinal', author: 'Émile Zola', lang: 'fr' },
-            // Autres langues
-            { id: 2000, title: 'Don Quixote', author: 'Miguel de Cervantes', lang: 'es' },
-            { id: 1012, title: 'The Divine Comedy', author: 'Dante Alighieri', lang: 'it' },
-            { id: 2229, title: 'The Sorrows of Young Werther', author: 'Johann Wolfgang von Goethe', lang: 'de' },
-            { id: 7849, title: 'Faust', author: 'Johann Wolfgang von Goethe', lang: 'de' }
-        ]
+        url: 'https://www.gutenberg.org'
     },
     // ═══════════════════════════════════════════════════════════
     //  ARCHIVE.ORG - Internet Archive
     // ═══════════════════════════════════════════════════════════
     archiveorg: {
         name: 'Archive.org',
-        url: 'https://archive.org',
-        // Identifiants de livres classiques sur Archive.org
-        works: [
-            // Français
-            { id: 'lesmisrables00hugogoog', title: 'Les Misérables', author: 'Victor Hugo', lang: 'fr' },
-            { id: 'lesfleursdumal00baud', title: 'Les Fleurs du mal', author: 'Charles Baudelaire', lang: 'fr' },
-            { id: 'germinalleszougoog', title: 'Germinal', author: 'Émile Zola', lang: 'fr' },
-            { id: 'madamebovary00flau', title: 'Madame Bovary', author: 'Gustave Flaubert', lang: 'fr' },
-            { id: 'lecomtedemontec01duma', title: 'Le Comte de Monte-Cristo', author: 'Alexandre Dumas', lang: 'fr' },
-            { id: 'lespenseesdepas00pasc', title: 'Pensées', author: 'Blaise Pascal', lang: 'fr' },
-            { id: 'lesessaisdemon01mont', title: 'Essais', author: 'Michel de Montaigne', lang: 'fr' },
-            // Anglais
-            { id: 'completeworksof00shakuoft', title: 'Complete Works', author: 'William Shakespeare', lang: 'en' },
-            { id: 'prideandprejudi00aust', title: 'Pride and Prejudice', author: 'Jane Austen', lang: 'en' },
-            { id: 'janeeyre00bron', title: 'Jane Eyre', author: 'Charlotte Brontë', lang: 'en' },
-            { id: 'wutheringheight00bron', title: 'Wuthering Heights', author: 'Emily Brontë', lang: 'en' },
-            { id: 'greatexpectatio00dick', title: 'Great Expectations', author: 'Charles Dickens', lang: 'en' }
-        ]
+        url: 'https://archive.org'
     }
 };
 
 // Mots-clés de recherche par langue (termes qui fonctionnent bien sur Wikisource)
 const SEARCH_TERMS = {
-    fr: [
-        'Les Fleurs du Mal', 'Fables de La Fontaine', 'Les Contemplations',
-        'Baudelaire', 'Hugo poème', 'Verlaine', 'Rimbaud',
-        'Maupassant nouvelle', 'Balzac', 'Zola chapitre',
-        'Molière acte', 'Racine tragédie', 'La Fontaine fable',
-        'Musset poésie', 'Lamartine méditation', 'Nerval sonnet',
-        'Flaubert', 'Stendhal', 'Voltaire conte'
-    ],
-    en: [
-        'Shakespeare sonnet', 'Milton Paradise', 'Keats ode',
-        'Byron poem', 'Shelley', 'Wordsworth', 'Blake songs',
-        'Dickens chapter', 'Austen', 'Poe tale',
-        'Whitman leaves', 'Dickinson poem', 'Tennyson'
-    ],
-    de: [
-        'Goethe Faust', 'Schiller', 'Heine Gedicht',
-        'Rilke', 'Novalis', 'Hölderlin', 'Grimm Märchen',
-        'Kafka', 'Mann Kapitel', 'Nietzsche'
-    ],
-    it: [
-        'Dante Divina', 'Petrarca sonetto', 'Leopardi canto',
-        'Manzoni capitolo', 'Boccaccio novella', 'Ariosto',
-        'Pirandello', 'Foscolo', 'Carducci'
-    ],
-    es: [
-        'Cervantes Quijote', 'Góngora soneto', 'Quevedo',
-        'Lorca poema', 'Machado', 'Bécquer rima',
-        'Calderón', 'Lope de Vega'
-    ],
-    pt: ['Camões soneto', 'Pessoa poema', 'Eça de Queirós', 'Machado de Assis'],
-    ru: ['Пушкин стихотворение', 'Толстой глава', 'Достоевский', 'Чехов рассказ', 'Лермонтов'],
-    la: ['Vergilius Aeneis', 'Horatius ode', 'Ovidius', 'Cicero', 'Catullus carmen'],
-    zh: ['李白 詩', '杜甫', '蘇軾', '白居易'],
-    ja: ['芥川龍之介', '夏目漱石', '太宰治', '宮沢賢治'],
-    ar: ['المتنبي قصيدة', 'أبو تمام', 'البحتري'],
-    el: ['Ομήρου', 'Σαπφώ', 'Πίνδαρος'],
+    fr: [],
+    en: [],
+    de: [],
+    it: [],
+    es: [],
+    pt: [],
+    ru: [],
+    la: [],
+    zh: [],
+    ja: [],
+    ar: [],
+    el: [],
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -164,57 +83,36 @@ const GENRE_COLORS = {
     'roman': '#ff6482', 'novel': '#ff6482', 'Roman': '#ff6482', 'romanzo': '#ff6482'
 };
 
-// Branches enrichies par genre (auteurs majeurs + courants)
+// Branches enrichies par genre (Structure de concepts uniquement)
 const GENRE_BRANCHES = {
     'philosophie': {
         'Courants': ['Rationalisme', 'Empirisme', 'Idéalisme', 'Existentialisme', 'Stoïcisme', 'Épicurisme', 'Scepticisme', 'Phénoménologie'],
-        'Domaines': ['Métaphysique', 'Éthique', 'Épistémologie', 'Logique', 'Esthétique', 'Philosophie politique', 'Ontologie'],
-        'Antiquité': ['Platon', 'Aristote', 'Épictète', 'Marc Aurèle', 'Sénèque', 'Cicéron', 'Lucrèce'],
-        'XVIIe siècle': ['Descartes', 'Pascal', 'Spinoza', 'Leibniz', 'Malebranche', 'Hobbes', 'Locke'],
-        'XVIIIe siècle': ['Voltaire', 'Rousseau', 'Montesquieu', 'Diderot', 'Hume', 'Kant', 'Condillac'],
-        'XIXe siècle': ['Hegel', 'Schopenhauer', 'Nietzsche', 'Kierkegaard', 'Comte', 'Marx', 'Bergson']
+        'Domaines': ['Métaphysique', 'Éthique', 'Épistémologie', 'Logique', 'Esthétique', 'Philosophie politique', 'Ontologie']
     },
     'poésie': {
         'Formes': ['Sonnet', 'Ode', 'Élégie', 'Ballade', 'Fable', 'Épopée', 'Haïku'],
-        'Mouvements': ['Romantisme', 'Parnasse', 'Symbolisme', 'Surréalisme', 'Baroque'],
-        'XVIe siècle': ['Ronsard', 'Du Bellay', 'Louise Labé', 'Marot'],
-        'XVIIe siècle': ['La Fontaine', 'Malherbe', 'Boileau', 'Racine'],
-        'XIXe siècle': ['Hugo', 'Baudelaire', 'Verlaine', 'Rimbaud', 'Mallarmé', 'Lamartine', 'Musset', 'Nerval'],
-        'XXe siècle': ['Apollinaire', 'Éluard', 'Aragon', 'Prévert', 'Char', 'Valéry']
+        'Mouvements': ['Romantisme', 'Parnasse', 'Symbolisme', 'Surréalisme', 'Baroque']
     },
     'roman': {
-        'Genres': ['Roman épistolaire', 'Roman historique', 'Roman réaliste', 'Roman naturaliste', 'Roman psychologique'],
-        'XVIIe siècle': ['Madame de La Fayette', 'Scarron', 'Fénelon'],
-        'XVIIIe siècle': ['Voltaire', 'Rousseau', 'Diderot', 'Laclos', 'Prévost', 'Bernardin de Saint-Pierre'],
-        'XIXe siècle': ['Balzac', 'Stendhal', 'Flaubert', 'Zola', 'Maupassant', 'Hugo', 'Dumas', 'Sand'],
-        'XXe siècle': ['Proust', 'Gide', 'Céline', 'Camus', 'Sartre', 'Colette']
+        'Genres': ['Roman épistolaire', 'Roman historique', 'Roman réaliste', 'Roman naturaliste', 'Roman psychologique']
     },
     'théâtre': {
-        'Genres': ['Tragédie', 'Comédie', 'Drame', 'Farce', 'Vaudeville'],
-        'Antiquité': ['Sophocle', 'Euripide', 'Eschyle', 'Aristophane', 'Plaute', 'Térence'],
-        'XVIIe siècle': ['Molière', 'Racine', 'Corneille', 'Marivaux'],
-        'XVIIIe siècle': ['Beaumarchais', 'Voltaire', 'Marivaux'],
-        'XIXe siècle': ['Hugo', 'Musset', 'Rostand', 'Labiche'],
-        'XXe siècle': ['Claudel', 'Giraudoux', 'Anouilh', 'Ionesco', 'Beckett']
+        'Genres': ['Tragédie', 'Comédie', 'Drame', 'Farce', 'Vaudeville']
     },
     'conte': {
-        'Types': ['Conte merveilleux', 'Conte philosophique', 'Conte moral', 'Conte fantastique'],
-        'Auteurs': ['Perrault', 'Grimm', 'Andersen', 'Voltaire', 'Maupassant', 'Hoffmann']
+        'Types': ['Conte merveilleux', 'Conte philosophique', 'Conte moral', 'Conte fantastique']
     },
     'nouvelle': {
-        'Styles': ['Nouvelle réaliste', 'Nouvelle fantastique', 'Nouvelle psychologique'],
-        'Auteurs': ['Maupassant', 'Mérimée', 'Balzac', 'Flaubert', 'Zola', 'Villiers de l\'Isle-Adam']
+        'Styles': ['Nouvelle réaliste', 'Nouvelle fantastique', 'Nouvelle psychologique']
     },
     'mystique': {
-        'Traditions': ['Mystique chrétienne', 'Mystique soufie', 'Kabbale'],
-        'Auteurs': ['Thérèse d\'Avila', 'Jean de la Croix', 'Maître Eckhart', 'François de Sales', 'Fénelon', 'Bossuet']
+        'Traditions': ['Mystique chrétienne', 'Mystique soufie', 'Kabbale']
     },
     'fable': {
-        'Auteurs': ['La Fontaine', 'Ésope', 'Phèdre', 'Florian']
+        'Types': ['Animalière']
     },
     'histoire': {
-        'Périodes': ['Antiquité', 'Moyen Âge', 'Renaissance', 'Révolution française', 'XIXe siècle'],
-        'Historiens': ['Hérodote', 'Thucydide', 'Tacite', 'Michelet', 'Tocqueville', 'Voltaire']
+        'Périodes': ['Antiquité', 'Moyen Âge', 'Renaissance', 'Révolution française', 'XIXe siècle']
     }
 };
 
@@ -659,88 +557,30 @@ function analyzeContentQuality(text, links, title) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 📚 PROJECT GUTENBERG - Classiques du domaine public
+// 📚 PROJECT GUTENBERG
 // ═══════════════════════════════════════════════════════════
 async function fetchGutenberg() {
-    const works = ALT_SOURCES.gutenberg.works;
-    // Filtrer par langue si nécessaire
-    const filtered = selectedLang === 'all' 
-        ? works 
-        : works.filter(w => w.lang === selectedLang);
-    
-    if (filtered.length === 0) return [];
-    
-    // Choisir une œuvre au hasard
-    const work = filtered[Math.floor(Math.random() * filtered.length)];
-    const cacheKey = `gutenberg:${work.id}`;
-    
-    // Éviter les doublons
-    if (state.shownPages.has(cacheKey)) return [];
-    
-    try {
-        // Utiliser l'API de téléchargement texte de Gutenberg
-        const res = await fetch(`https://www.gutenberg.org/files/${work.id}/${work.id}-0.txt`, {
-            mode: 'cors'
-        }).catch(() => 
-            // Fallback sur un autre format
-            fetch(`https://www.gutenberg.org/cache/epub/${work.id}/pg${work.id}.txt`)
-        );
-        
-        if (!res.ok) throw new Error('Gutenberg fetch failed');
-        
-        let text = await res.text();
-        
-        // Nettoyer le texte Gutenberg (retirer header/footer légaux)
-        const startMarkers = ['*** START OF', '***START OF', 'START OF THE PROJECT'];
-        const endMarkers = ['*** END OF', '***END OF', 'END OF THE PROJECT', 'End of Project'];
-        
-        for (const marker of startMarkers) {
-            const idx = text.indexOf(marker);
-            if (idx !== -1) {
-                const nextLine = text.indexOf('\n', idx);
-                text = text.substring(nextLine + 1);
-                break;
-            }
-        }
-        
-        for (const marker of endMarkers) {
-            const idx = text.indexOf(marker);
-            if (idx !== -1) {
-                text = text.substring(0, idx);
-                break;
-            }
-        }
-        
-        // Prendre un extrait aléatoire (pas tout le livre!)
-        const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 100);
-        if (paragraphs.length > 10) {
-            // Choisir un passage au hasard (pas le début)
-            const startIdx = Math.floor(Math.random() * Math.max(1, paragraphs.length - 10)) + 5;
-            const excerpt = paragraphs.slice(startIdx, startIdx + 5).join('\n\n');
-            
-            return [{
-                title: work.title,
-                text: excerpt.trim(),
-                author: work.author,
-                source: 'gutenberg',
-                lang: work.lang,
-                gutenbergId: work.id
-            }];
-        }
-    } catch (e) {
-        console.error('Gutenberg error:', work.title, e);
-    }
+    // Note: Sans liste d'IDs "Works", Gutenberg est difficile à exploiter proprement via API JS simple.
+    // L'utilisateur a demandé de ne pas avoir de listes d'auteurs/oeuvres en dur.
+    // Pour l'instant on retourne vide, sauf si on implémente une recherche miroir (complexe sans backend).
     return [];
 }
 
 // ═══════════════════════════════════════════════════════════
-// 📜 POETRYDB - Poésie anglaise de qualité (pas de scories!)
+// 📜 POETRYDB - Poésie anglaise de qualité
 // ═══════════════════════════════════════════════════════════
 async function fetchPoetryDB() {
-    const authors = ALT_SOURCES.poetrydb.authors;
-    const randomAuthor = authors[Math.floor(Math.random() * authors.length)];
-    
     try {
+        // 1. Récupérer la liste de TOUS les auteurs disponibles (dynamique)
+        const authorsRes = await fetch('https://poetrydb.org/author');
+        const authorsData = await authorsRes.json();
+        
+        if (!authorsData || !authorsData.authors || authorsData.authors.length === 0) return [];
+        
+        // 2. Choisir un auteur au hasard
+        const randomAuthor = authorsData.authors[Math.floor(Math.random() * authorsData.authors.length)];
+        
+        // 3. Récupérer ses poèmes
         const res = await fetch(`https://poetrydb.org/author/${encodeURIComponent(randomAuthor)}/title,author,lines`);
         const poems = await res.json();
         
@@ -750,7 +590,7 @@ async function fetchPoetryDB() {
             
             return shuffled.map(poem => ({
                 title: poem.title,
-                text: poem.lines.join('\n'),
+                text: Array.isArray(poem.lines) ? poem.lines.join('\n') : poem.lines,
                 author: poem.author,
                 source: 'poetrydb',
                 lang: 'en'
@@ -763,85 +603,11 @@ async function fetchPoetryDB() {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  ARCHIVE.ORG - Internet Archive (textes complets)
+//  ARCHIVE.ORG - Internet Archive
 // ═══════════════════════════════════════════════════════════
 async function fetchArchiveOrg() {
-    const works = ALT_SOURCES.archiveorg.works;
-    // Filtrer par langue si nécessaire
-    const filtered = selectedLang === 'all' 
-        ? works 
-        : works.filter(w => w.lang === selectedLang);
-    
-    if (filtered.length === 0) return [];
-    
-    // Choisir une œuvre au hasard
-    const work = filtered[Math.floor(Math.random() * filtered.length)];
-    const cacheKey = `archiveorg:${work.id}`;
-    
-    // Éviter les doublons
-    if (state.shownPages.has(cacheKey)) return [];
-    
-    try {
-        // Utiliser l'API metadata pour obtenir des infos
-        const metaRes = await fetch(`https://archive.org/metadata/${work.id}`);
-        const metadata = await metaRes.json();
-        
-        // Chercher un fichier texte (préférer djvu.txt quand présent)
-        const files = Array.isArray(metadata.files) ? metadata.files : [];
-        const textFile =
-            files.find(f => typeof f?.name === 'string' && f.name.endsWith('_djvu.txt')) ||
-            files.find(f => typeof f?.name === 'string' && f.name.endsWith('.txt'));
-        
-        if (textFile) {
-            const safeFileName = encodeURIComponent(textFile.name);
-            const textUrl = `https://archive.org/download/${work.id}/${safeFileName}`;
-            let text = '';
-            try {
-                const textRes = await fetch(textUrl);
-                text = await textRes.text();
-            } catch (e) {
-                // Fallback si CORS bloque /download (cas fréquent en front pur)
-                // r.jina.ai renvoie le contenu en texte brut.
-                const proxied = `https://r.jina.ai/http://archive.org/download/${work.id}/${safeFileName}`;
-                const textRes = await fetch(proxied);
-                text = await textRes.text();
-            }
-            
-            // Nettoyer le texte OCR (djvu) des scories
-            text = text
-                .replace(/\f/g, '\n\n') // Form feeds → paragraphes
-                .replace(/\r\n/g, '\n')
-                .replace(/\n{4,}/g, '\n\n\n');
-            
-            // Extraire un passage intéressant
-            const paragraphs = text.split(/\n\n+/).filter(p => 
-                p.trim().length > 80 && 
-                p.trim().length < 2000 &&
-                !p.includes('Internet Archive') &&
-                !p.includes('Digitized by') &&
-                !p.includes('Google') &&
-                !p.match(/^\d+$/) && // Pas les numéros de page seuls
-                !p.match(/^[A-Z\s]{20,}$/) // Pas les titres en majuscules
-            );
-            
-            if (paragraphs.length > 3) {
-                const startIdx = Math.floor(Math.random() * Math.max(1, paragraphs.length - 4));
-                const excerpt = paragraphs.slice(startIdx, startIdx + 4).join('\n\n');
-                
-                return [{
-                    title: work.title,
-                    text: excerpt.trim(),
-                    author: work.author,
-                    source: 'archiveorg',
-                    sourceUrl: `https://archive.org/details/${work.id}`,
-                    lang: work.lang,
-                    archiveId: work.id
-                }];
-            }
-        }
-    } catch (e) {
-        console.error('Archive.org error:', work.title, e);
-    }
+    // Note: Sans liste d'IDs "Works", Archive.org est difficile à exploiter proprement via API JS simple.
+    // L'utilisateur a demandé de ne pas avoir de listes d'auteurs/oeuvres en dur.
     return [];
 }
 
@@ -903,102 +669,131 @@ async function fillPool() {
         console.error('Aucune source active');
         return;
     }
-    const shuffledSources = [...activeSources].sort(() => Math.random() - 0.5).slice(0, Math.min(3, activeSources.length));
+    
+    // Mélanger les sources
+    const shuffledSources = [...activeSources].sort(() => Math.random() - 0.5).slice(0, 3);
     
     for (const ws of shuffledSources) {
-        const terms = [...(SEARCH_TERMS[ws.lang] || SEARCH_TERMS.en)];
-        const selectedTerms = terms.sort(() => Math.random() - 0.5).slice(0, 5);
+        // A) Stratégie de remplissage
+        // 1. Si un terme de recherche est actif (ex: clic sur hashtag), on l'utilise en priorité
+        // 2. Sinon, on alterne entre mots-clés génériques et hasard total
         
-        for (const term of selectedTerms) {
-            try {
-                const results = await searchTexts(term, 15, ws);
-                for (const r of results) {
-                    if (!state.shownPages.has(r.title) && !state.textPool.some(t => t.title === r.title)) {
-                        // Filtrage généraliste par structure du titre
-                        if (isValidTitle(r.title) && r.snippet?.length > 20) {
-                            // Prioriser les sous-pages (contenu réel)
-                            const item = { 
-                                title: r.title, 
-                                snippet: r.snippet, 
+        let searchTerm = null;
+        let useRandom = false;
+
+        if (state.activeSearchTerm) {
+            searchTerm = state.activeSearchTerm;
+        } else {
+            // Mots-clés génériques par langue
+            const GENERIC_TERMS = {
+                fr: ['Poésie', 'Roman', 'Conte', 'Théâtre', 'Philosophie', 'Lettres', 'Histoire'],
+                en: ['Poetry', 'Novel', 'Tale', 'Play', 'Philosophy', 'Letters', 'History'],
+                de: ['Gedicht', 'Roman', 'Märchen', 'Theater', 'Philosophie'],
+                it: ['Poesia', 'Romanzo', 'Favola', 'Teatro'],
+                es: ['Poesía', 'Novela', 'Cuento', 'Teatro']
+            };
+            const fallbackTerms = GENERIC_TERMS[ws.lang] || GENERIC_TERMS['fr'];
+            
+            // 50% de chance d'utiliser l'API Random vs Recherche générique
+            if (Math.random() > 0.5) {
+                useRandom = true;
+            } else {
+                searchTerm = fallbackTerms[Math.floor(Math.random() * fallbackTerms.length)];
+            }
+        }
+            
+        if (useRandom) {
+             // --- MODE RANDOM (Découverte pure) ---
+             try {
+                // Récupérer 5 pages aléatoires
+                const url = `${ws.url}/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=5&format=json&origin=*`;
+                const res = await fetch(url);
+                const data = await res.json();
+                const randomPages = data.query?.random || [];
+                
+                for (const page of randomPages) {
+                    // On simule un objet "recherche" pour que le reste du flux l'accepte
+                    if (!state.shownPages.has(page.title)) {
+                        state.textPool.push({
+                            title: page.title,
+                            snippet: '...', 
+                            lang: ws.lang,
+                            wikisource: ws,
+                            isRandom: true
+                        });
+                    }
+                }
+             } catch (e) {
+                 console.error('Random API error:', e);
+             }
+        } else {
+             // --- MODE RECHERCHE CIBLÉE OU GÉNÉRIQUE ---
+             // Si on a un searchTerm (défini par le contexte ou fallback), on l'utilise
+             const term = searchTerm || 'Poésie'; // Fallback ultime
+             
+             try {
+                // On cherche plus de résultats pour avoir du choix
+                const results = await searchTexts(term, 10, ws);
+                
+                // On ajoute plusieurs résultats au pool si c'est une recherche ciblée
+                if (results.length > 0) {
+                    // Si recherche ciblée, on prend les meilleurs résultats
+                    // Si générique, on prend un au hasard pour varier
+                    const itemsToAdd = state.activeSearchTerm ? results.slice(0, 3) : [results[Math.floor(Math.random() * results.length)]];
+                    
+                    for (const r of itemsToAdd) {
+                        if (r && !state.shownPages.has(r.title)) {
+                            state.textPool.push({
+                                title: r.title,
+                                snippet: r.snippet,
                                 lang: ws.lang,
-                                wikisource: ws 
-                            };
-                            if (r.title.includes('/')) {
-                                state.textPool.unshift(item);
-                            } else {
-                                state.textPool.push(item);
-                            }
+                                wikisource: ws,
+                                isContextual: !!state.activeSearchTerm // Marqueur pour debug
+                            });
                         }
                     }
                 }
-            } catch (e) { 
-                console.error('fillPool error:', e);
-            }
+             } catch (e) { console.error('Search error:', e); }
         }
     }
-    state.textPool = [...state.textPool].sort(() => Math.random() - 0.5);
 }
 
 // ═══════════════════════════════════════════════════════════
-// 🕸️ EXPLORATION PAR ARBORESCENCE (Catégories)
+// 📂 NAVIGATION PAR CATÉGORIES
 // ═══════════════════════════════════════════════════════════
 
-async function exploreCategory(genreOrCategoryName, isSubCat = false) {
-    // Protection contre les clics multiples
-    if (state.loading) {
-        console.log('🛑 Chargement en cours, ignoré');
-        return;
-    }
-    state.loading = true;
-    
-    const wikisource = currentWikisource;
-    const lang = wikisource.lang;
-    const genreLower = genreOrCategoryName.toLowerCase();
-    
-    // Afficher l'UI
-    document.getElementById('categoryNav').style.display = 'block';
-    document.getElementById('catSubcategories').innerHTML = '<div style="color:var(--muted)">Chargement...</div>';
-    document.getElementById('feed').innerHTML = '';
-    state.textPool = [];
-    
-    // Cas 1: C'est un genre racine avec branches enrichies
-    if (!isSubCat && GENRE_BRANCHES[genreLower]) {
-        currentCategoryPath = [genreOrCategoryName];
-        currentBrowseMode = 'branches';
-        renderBreadcrumbs();
-        renderEnrichedBranches(genreLower);
-        state.loading = false;
-        return;
-    }
-    
-    // Cas 2: C'est une branche (recherche par terme)
-    if (!isSubCat) {
-        currentCategoryPath = [genreOrCategoryName];
-    } else if (!currentCategoryPath.includes(genreOrCategoryName)) {
-        currentCategoryPath.push(genreOrCategoryName);
+async function exploreCategory(categoryId, isNav = false) {
+    const ws = currentWikisource || getActiveWikisources()[0];
+    if (!ws) return;
+
+    if (!isNav) {
+        // Premier clic sur une racine
+        currentCategoryPath = [categoryId];
+        const nav = document.getElementById('categoryNav');
+        if (nav) nav.style.display = 'block';
     } else {
-        const index = currentCategoryPath.indexOf(genreOrCategoryName);
-        currentCategoryPath = currentCategoryPath.slice(0, index + 1);
+        // Navigation dans l'arbre : on gère le fil d'ariane
+        const idx = currentCategoryPath.indexOf(categoryId);
+        if (idx !== -1) {
+            // Retour en arrière
+            currentCategoryPath = currentCategoryPath.slice(0, idx + 1);
+        } else {
+            // Niveau suivant
+            currentCategoryPath.push(categoryId);
+        }
     }
     
-    renderBreadcrumbs();
-    currentBrowseMode = 'search';
-    
-    // Rechercher sur Wikisource
-    try {
-        await searchByTerm(genreOrCategoryName, wikisource);
-    } finally {
-        state.loading = false;
-    }
+    if (window.renderBreadcrumbs) renderBreadcrumbs();
+    if (window.fetchCategoryData) await fetchCategoryData(categoryId, ws);
 }
 
-// Affiche les branches enrichies pour un genre
-function renderEnrichedBranches(genre) {
-    const branches = GENRE_BRANCHES[genre];
-    if (!branches) return;
+function renderEnrichedBranches() {
+    const container = document.getElementById('feed');
+    const ws = currentWikisource || getActiveWikisources()[0];
+    if (!ws) return;
     
-    const container = document.getElementById('catSubcategories');
-    let html = '<div class="branches-container">';
+    const branches = GENRE_BRANCHES[ws.lang] || GENRE_BRANCHES['fr'];
+    let html = '<div class="genre-grid">';
     
     for (const [groupName, items] of Object.entries(branches)) {
         html += `<div class="branch-group">
@@ -1010,10 +805,10 @@ function renderEnrichedBranches(genre) {
     }
     
     html += '</div>';
-    container.innerHTML = html;
-    
-    // Message d'info
-    document.getElementById('feed').innerHTML = '<div class="empty-state">👆 Choisissez une branche ci-dessus pour explorer les textes</div>';
+    if (container) {
+        container.innerHTML = html;
+        container.innerHTML += '<div class="empty-state">👆 Choisissez une branche ci-dessus pour explorer les textes</div>';
+    }
 }
 
 // Recherche par terme (auteur, courant, etc.)

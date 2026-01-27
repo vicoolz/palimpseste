@@ -44,92 +44,92 @@ const openGroups = {
  */
 const FORMES = {
     // Poésie détaillée
-    'sonnet': { keywords: ['sonnet', 'quatrain', 'tercet'], authors: ['Pierre de Ronsard', 'Joachim du Bellay', 'Charles Baudelaire', 'José-Maria de Heredia', 'Gérard de Nerval'] },
-    'ode': { keywords: ['ode', 'strophe', 'chant'], authors: ['Pierre de Ronsard', 'Victor Hugo', 'Paul Claudel', 'Pindare', 'Horace'] },
-    'elegie': { keywords: ['élégie', 'plainte', 'deuil', 'lamentation'], authors: ['André Chénier', 'Alphonse de Lamartine', 'Properce', 'Tibulle', 'Ovide'] },
-    'ballade': { keywords: ['ballade', 'refrain', 'envoi'], authors: ['François Villon', 'Charles d\'Orléans', 'Christine de Pizan', 'Guillaume de Machaut'] },
-    'hymne': { keywords: ['hymne', 'louange', 'célébration', 'gloire'], authors: ['Pierre de Ronsard', 'Victor Hugo', 'Paul Claudel', 'Pindare'] },
-    'poeme-prose': { keywords: ['poème en prose', 'petit poème'], authors: ['Charles Baudelaire', 'Arthur Rimbaud', 'Aloysius Bertrand', 'Max Jacob', 'Francis Ponge'] },
+    'sonnet': { keywords: ['sonnet', 'quatrain', 'tercet'] },
+    'ode': { keywords: ['ode', 'strophe', 'chant'] },
+    'elegie': { keywords: ['élégie', 'plainte', 'deuil', 'lamentation'] },
+    'ballade': { keywords: ['ballade', 'refrain', 'envoi'] },
+    'hymne': { keywords: ['hymne', 'louange', 'célébration', 'gloire'] },
+    'poeme-prose': { keywords: ['poème en prose', 'petit poème'] },
     // Récits courts
-    'conte': { keywords: ['conte', 'il était une fois', 'fée', 'merveilleux', 'enchanté'], authors: ['Charles Perrault', 'Madame d\'Aulnoy', 'Madame Leprince de Beaumont', 'Hans Christian Andersen'] },
-    'fable': { keywords: ['fable', 'morale', 'la cigale', 'le corbeau', 'le loup'], authors: ['Jean de La Fontaine', 'Ésope', 'Phèdre', 'Florian'] },
-    'legende': { keywords: ['légende', 'légendes', 'merveilleux', 'héros légendaire'], authors: ['Jacques de Voragine', 'Victor Hugo', 'Gustave Flaubert'] },
-    'mythe': { keywords: ['mythe', 'dieu', 'olympe', 'titan', 'héros'], authors: ['Homère', 'Hésiode', 'Ovide', 'Apollodore'] },
+    'conte': { keywords: ['conte', 'il était une fois', 'fée', 'merveilleux', 'enchanté'] },
+    'fable': { keywords: ['fable', 'morale', 'la cigale', 'le corbeau', 'le loup'] },
+    'legende': { keywords: ['légende', 'légendes', 'merveilleux', 'héros légendaire'] },
+    'mythe': { keywords: ['mythe', 'dieu', 'olympe', 'titan', 'héros'] },
     // Récits longs
-    'roman': { keywords: ['roman', 'chapitre', 'partie première'], authors: ['Honoré de Balzac', 'Gustave Flaubert', 'Émile Zola', 'Stendhal', 'Victor Hugo', 'Marcel Proust'] },
-    'nouvelle': { keywords: ['nouvelle', 'court récit'], authors: ['Guy de Maupassant', 'Prosper Mérimée', 'Théophile Gautier', 'Edgar Allan Poe', 'Henry James'] },
-    'recit': { keywords: ['récit', 'narration', 'histoire'], authors: ['Albert Camus', 'Marguerite Duras', 'André Gide'] },
+    'roman': { keywords: ['roman', 'chapitre', 'partie première'] },
+    'nouvelle': { keywords: ['nouvelle', 'court récit'] },
+    'recit': { keywords: ['récit', 'narration', 'histoire'] },
     // Théâtre détaillé
-    'tragedie': { keywords: ['tragédie', 'acte', 'chœur', 'catharsis'], authors: ['Jean Racine', 'Pierre Corneille', 'Sophocle', 'Euripide', 'Eschyle'] },
-    'comedie': { keywords: ['comédie', 'scène', 'rire', 'valet'], authors: ['Molière', 'Marivaux', 'Beaumarchais', 'Aristophane', 'Plaute'] },
-    'drame': { keywords: ['drame', 'romantique', 'mélodrame'], authors: ['Victor Hugo', 'Alfred de Musset', 'Alexandre Dumas'] },
+    'tragedie': { keywords: ['tragédie', 'acte', 'chœur', 'catharsis'] },
+    'comedie': { keywords: ['comédie', 'scène', 'rire', 'valet'] },
+    'drame': { keywords: ['drame', 'romantique', 'mélodrame'] },
     // Prose d'idées
-    'essai': { keywords: ['essai', 'essais', 'réflexion', 'méditation'], authors: ['Michel de Montaigne', 'Blaise Pascal', 'Jean-Jacques Rousseau', 'Albert Camus'] },
-    'maxime': { keywords: ['maxime', 'sentence', 'réflexion morale'], authors: ['François de La Rochefoucauld', 'Vauvenargues', 'Chamfort'] },
-    'aphorisme': { keywords: ['aphorisme', 'pensée', 'fragment'], authors: ['Blaise Pascal', 'Friedrich Nietzsche', 'La Bruyère', 'Emil Cioran'] },
-    'discours': { keywords: ['discours', 'éloquence', 'oraison', 'plaidoyer', 'harangue'], authors: ['Cicéron', 'Bossuet', 'Victor Hugo', 'Jean Jaurès'] },
-    'lettre': { keywords: ['lettre', 'correspondance', 'épître', 'mon cher'], authors: ['Madame de Sévigné', 'Voltaire', 'Denis Diderot', 'Gustave Flaubert'] },
-    'journal': { keywords: ['journal', 'intime', 'carnet', 'ce jour'], authors: ['André Gide', 'Jules Renard', 'Stendhal', 'Benjamin Constant'] },
-    'memoires': { keywords: ['mémoires', 'souvenirs', 'autobiographie'], authors: ['Saint-Simon', 'Chateaubriand', 'Simone de Beauvoir', 'Jean-Jacques Rousseau'] }
+    'essai': { keywords: ['essai', 'essais', 'réflexion', 'méditation'] },
+    'maxime': { keywords: ['maxime', 'sentence', 'réflexion morale'] },
+    'aphorisme': { keywords: ['aphorisme', 'pensée', 'fragment'] },
+    'discours': { keywords: ['discours', 'éloquence', 'oraison', 'plaidoyer', 'harangue'] },
+    'lettre': { keywords: ['lettre', 'correspondance', 'épître', 'mon cher'] },
+    'journal': { keywords: ['journal', 'intime', 'carnet', 'ce jour'] },
+    'memoires': { keywords: ['mémoires', 'souvenirs', 'autobiographie'] }
 };
 
 /**
- * Mapping des époques/courants vers des auteurs
+ * Mapping des époques/courants (SANS AUTEURS - Recherche pure)
  */
 const EPOQUES_FILTER = {
     // Antiquité détaillée
-    'antiquite-grecque': { period: 'Grèce antique', authors: ['Homère', 'Sophocle', 'Euripide', 'Eschyle', 'Aristophane', 'Platon', 'Aristote', 'Sappho', 'Pindare'] },
-    'antiquite-romaine': { period: 'Rome antique', authors: ['Virgile', 'Ovide', 'Horace', 'Sénèque', 'Cicéron', 'Lucrèce', 'Tacite', 'Pétrone', 'Marc Aurèle'] },
+    'antiquite-grecque': { period: 'Grèce antique' },
+    'antiquite-romaine': { period: 'Rome antique' },
     // Moyen Âge et Renaissance
-    'medieval': { period: 'Moyen Âge', authors: ['Chrétien de Troyes', 'François Villon', 'Dante Alighieri', 'Marie de France', 'Rutebeuf', 'Guillaume de Lorris', 'Charles d\'Orléans'] },
-    'renaissance': { period: 'Renaissance', authors: ['François Rabelais', 'Michel de Montaigne', 'Pierre de Ronsard', 'Joachim du Bellay', 'Louise Labé', 'Clément Marot', 'Maurice Scève'] },
+    'medieval': { period: 'Moyen Âge' },
+    'renaissance': { period: 'Renaissance' },
     // XVIIe siècle
-    'baroque': { period: 'Baroque', authors: ['Agrippa d\'Aubigné', 'Théophile de Viau', 'Saint-Amant', 'Tristan L\'Hermite', 'Honoré d\'Urfé'] },
-    'classique': { period: 'Classicisme', authors: ['Molière', 'Jean Racine', 'Pierre Corneille', 'Jean de La Fontaine', 'Blaise Pascal', 'Madame de La Fayette', 'Nicolas Boileau', 'La Bruyère'] },
+    'baroque': { period: 'Baroque' },
+    'classique': { period: 'Classicisme' },
     // XVIIIe siècle
-    'lumieres': { period: 'Lumières', authors: ['Voltaire', 'Jean-Jacques Rousseau', 'Denis Diderot', 'Montesquieu', 'Beaumarchais', 'Marivaux', 'L\'Abbé Prévost', 'Choderlos de Laclos'] },
+    'lumieres': { period: 'Lumières' },
     // XIXe siècle détaillé
-    'romantisme': { period: 'Romantisme', authors: ['Victor Hugo', 'Alphonse de Lamartine', 'Alfred de Musset', 'Alfred de Vigny', 'Gérard de Nerval', 'Chateaubriand', 'George Sand'] },
-    'realisme': { period: 'Réalisme', authors: ['Honoré de Balzac', 'Gustave Flaubert', 'Stendhal', 'Prosper Mérimée'] },
-    'naturalisme': { period: 'Naturalisme', authors: ['Émile Zola', 'Guy de Maupassant', 'Alphonse Daudet', 'Edmond de Goncourt', 'Jules de Goncourt'] },
-    'symbolisme': { period: 'Symbolisme', authors: ['Charles Baudelaire', 'Stéphane Mallarmé', 'Paul Verlaine', 'Arthur Rimbaud', 'Gustave Kahn', 'Jean Moréas'] },
-    'decadentisme': { period: 'Décadentisme', authors: ['Joris-Karl Huysmans', 'Jean Lorrain', 'Rachilde', 'Villiers de l\'Isle-Adam', 'Jules Barbey d\'Aurevilly'] },
+    'romantisme': { period: 'Romantisme' },
+    'realisme': { period: 'Réalisme' },
+    'naturalisme': { period: 'Naturalisme' },
+    'symbolisme': { period: 'Symbolisme' },
+    'decadentisme': { period: 'Décadentisme' },
     // XXe siècle détaillé
-    'surrealisme': { period: 'Surréalisme', authors: ['André Breton', 'Paul Éluard', 'Louis Aragon', 'Robert Desnos', 'Philippe Soupault', 'René Char', 'Antonin Artaud'] },
-    'existentialisme': { period: 'Existentialisme', authors: ['Jean-Paul Sartre', 'Albert Camus', 'Simone de Beauvoir', 'Jean Genet', 'Boris Vian'] },
-    'absurde': { period: 'Absurde', authors: ['Samuel Beckett', 'Eugène Ionesco', 'Arthur Adamov', 'Jean Genet'] },
-    'nouveau-roman': { period: 'Nouveau roman', authors: ['Alain Robbe-Grillet', 'Nathalie Sarraute', 'Michel Butor', 'Claude Simon', 'Marguerite Duras'] }
+    'surrealisme': { period: 'Surréalisme' },
+    'existentialisme': { period: 'Existentialisme' },
+    'absurde': { period: 'Absurde' },
+    'nouveau-roman': { period: 'Nouveau roman' }
 };
 
 /**
- * Mapping des registres/tonalités vers des mots-clés et auteurs
+ * Mapping des registres/tonalités
  */
 const TONS = {
     // Lyrisme et émotion
-    'lyrique': { keywords: ['amour', 'cœur', 'âme', 'sentiment', 'émotion', 'passion'], authors: ['Pierre de Ronsard', 'Alphonse de Lamartine', 'Paul Verlaine', 'Paul Éluard'] },
-    'elegiaque': { keywords: ['élégie', 'plainte', 'regret', 'perte', 'deuil', 'larmes'], authors: ['André Chénier', 'Alphonse de Lamartine', 'Marceline Desbordes-Valmore'] },
-    'melancolique': { keywords: ['spleen', 'ennui', 'tristesse', 'automne', 'solitude', 'nostalgie', 'vague'], authors: ['Charles Baudelaire', 'Paul Verlaine', 'Gérard de Nerval', 'Giacomo Leopardi'] },
-    'tragique': { keywords: ['destin', 'fatalité', 'mort', 'sacrifice', 'héros', 'chute'], authors: ['Jean Racine', 'Sophocle', 'Pierre Corneille', 'Albert Camus'] },
+    'lyrique': { keywords: ['amour', 'cœur', 'âme', 'sentiment', 'émotion', 'passion'] },
+    'elegiaque': { keywords: ['élégie', 'plainte', 'regret', 'perte', 'deuil', 'larmes'] },
+    'melancolique': { keywords: ['spleen', 'ennui', 'tristesse', 'automne', 'solitude', 'nostalgie', 'vague'] },
+    'tragique': { keywords: ['destin', 'fatalité', 'mort', 'sacrifice', 'héros', 'chute'] },
     // Héroïsme
-    'epique': { keywords: ['héros', 'bataille', 'gloire', 'honneur', 'guerre', 'conquête', 'exploit'], authors: ['Homère', 'Virgile', 'Le Tasse', 'Victor Hugo'] },
-    'heroique': { keywords: ['héros', 'courage', 'vaillance', 'combat', 'victoire'], authors: ['Pierre Corneille', 'Victor Hugo', 'Alexandre Dumas'] },
-    'chevaleresque': { keywords: ['chevalier', 'quête', 'graal', 'dame', 'honneur', 'tournoi'], authors: ['Chrétien de Troyes', 'L\'Arioste', 'Le Tasse', 'Thomas Malory'] },
+    'epique': { keywords: ['héros', 'bataille', 'gloire', 'honneur', 'guerre', 'conquête', 'exploit'] },
+    'heroique': { keywords: ['héros', 'courage', 'vaillance', 'combat', 'victoire'] },
+    'chevaleresque': { keywords: ['chevalier', 'quête', 'graal', 'dame', 'honneur', 'tournoi'] },
     // Fantastique et imagination
-    'gothique': { keywords: ['fantôme', 'spectre', 'château', 'terreur', 'nuit', 'vampire', 'mort', 'ténèbres'], authors: ['Edgar Allan Poe', 'Ann Radcliffe', 'Mary Shelley', 'Bram Stoker', 'Théophile Gautier'] },
-    'fantastique': { keywords: ['étrange', 'surnaturel', 'apparition', 'mystère', 'inexplicable'], authors: ['Edgar Allan Poe', 'Guy de Maupassant', 'Théophile Gautier', 'E.T.A. Hoffmann', 'Prosper Mérimée'] },
-    'onirique': { keywords: ['rêve', 'songe', 'vision', 'sommeil', 'chimère', 'illusion'], authors: ['Gérard de Nerval', 'André Breton', 'Robert Desnos', 'Lewis Carroll'] },
-    'mystique': { keywords: ['âme', 'divin', 'extase', 'vision', 'lumière', 'sacré', 'éternel'], authors: ['San Juan de la Cruz', 'Sainte Thérèse d\'Avila', 'Maître Eckhart', 'William Blake', 'Rûmî'] },
+    'gothique': { keywords: ['fantôme', 'spectre', 'château', 'terreur', 'nuit', 'vampire', 'mort', 'ténèbres'] },
+    'fantastique': { keywords: ['étrange', 'surnaturel', 'apparition', 'mystère', 'inexplicable'] },
+    'onirique': { keywords: ['rêve', 'songe', 'vision', 'sommeil', 'chimère', 'illusion'] },
+    'mystique': { keywords: ['âme', 'divin', 'extase', 'vision', 'lumière', 'sacré', 'éternel'] },
     // Comique et critique
-    'satirique': { keywords: ['satire', 'critique', 'moquerie', 'ridicule', 'vice'], authors: ['Voltaire', 'Molière', 'Jonathan Swift', 'La Bruyère', 'Juvénal'] },
-    'ironique': { keywords: ['ironie', 'double sens', 'antiphrase', 'sous-entendu'], authors: ['Voltaire', 'Stendhal', 'Gustave Flaubert', 'Anatole France'] },
-    'burlesque': { keywords: ['burlesque', 'parodie', 'grotesque', 'carnaval', 'farce'], authors: ['Paul Scarron', 'Rabelais', 'Alfred Jarry', 'Théophile Gautier'] },
+    'satirique': { keywords: ['satire', 'critique', 'moquerie', 'ridicule', 'vice'] },
+    'ironique': { keywords: ['ironie', 'double sens', 'antiphrase', 'sous-entendu'] },
+    'burlesque': { keywords: ['burlesque', 'parodie', 'grotesque', 'carnaval', 'farce'] },
     // Nature et contemplation
-    'pastoral': { keywords: ['berger', 'prairie', 'fleur', 'ruisseau', 'troupeau', 'nature'], authors: ['Théocrite', 'Virgile', 'Honoré d\'Urfé', 'Francis Jammes'] },
-    'bucolique': { keywords: ['campagne', 'champ', 'moisson', 'vendange', 'paysan'], authors: ['Virgile', 'George Sand', 'Jean Giono', 'Colette'] },
-    'contemplatif': { keywords: ['méditation', 'silence', 'solitude', 'harmonie', 'sérénité'], authors: ['Jean-Jacques Rousseau', 'Alphonse de Lamartine', 'Francis Jammes'] },
+    'pastoral': { keywords: ['berger', 'prairie', 'fleur', 'ruisseau', 'troupeau', 'nature'] },
+    'bucolique': { keywords: ['campagne', 'champ', 'moisson', 'vendange', 'paysan'] },
+    'contemplatif': { keywords: ['méditation', 'silence', 'solitude', 'harmonie', 'sérénité'] },
     // Sensualité
-    'erotique': { keywords: ['désir', 'volupté', 'baiser', 'caresse', 'corps', 'plaisir'], authors: ['Pierre de Ronsard', 'Ovide', 'Pierre Louÿs', 'Paul Verlaine'] },
-    'libertin': { keywords: ['libertinage', 'séduction', 'plaisir', 'jouissance'], authors: ['Choderlos de Laclos', 'Marquis de Sade', 'Crébillon fils', 'Restif de la Bretonne'] }
+    'erotique': { keywords: ['désir', 'volupté', 'baiser', 'caresse', 'corps', 'plaisir'] },
+    'libertin': { keywords: ['libertinage', 'séduction', 'plaisir', 'jouissance'] }
 };
 
 /**
@@ -137,23 +137,23 @@ const TONS = {
  */
 const PENSEES = {
     // Philosophie antique
-    'stoicisme': { keywords: ['vertu', 'sagesse', 'raison', 'nature', 'destin', 'apathie'], authors: ['Sénèque', 'Marc Aurèle', 'Épictète', 'Cicéron'] },
-    'epicurisme': { keywords: ['plaisir', 'bonheur', 'ataraxie', 'amitié', 'nature'], authors: ['Épicure', 'Lucrèce', 'Horace'] },
-    'platonisme': { keywords: ['idée', 'beauté', 'vérité', 'bien', 'âme', 'caverne'], authors: ['Platon', 'Plotin', 'Marsile Ficin'] },
-    'scepticisme': { keywords: ['doute', 'suspension', 'apparence', 'relativité'], authors: ['Pyrrhon', 'Sextus Empiricus', 'Montaigne'] },
+    'stoicisme': { keywords: ['vertu', 'sagesse', 'raison', 'nature', 'destin', 'apathie'] },
+    'epicurisme': { keywords: ['plaisir', 'bonheur', 'ataraxie', 'amitié', 'nature'] },
+    'platonisme': { keywords: ['idée', 'beauté', 'vérité', 'bien', 'âme', 'caverne'] },
+    'scepticisme': { keywords: ['doute', 'suspension', 'apparence', 'relativité'] },
     // Renaissance et âge classique
-    'humanisme': { keywords: ['homme', 'éducation', 'dignité', 'liberté', 'culture'], authors: ['Michel de Montaigne', 'Érasme', 'Thomas More', 'Rabelais'] },
-    'rationalisme': { keywords: ['raison', 'méthode', 'évidence', 'cogito', 'vérité'], authors: ['René Descartes', 'Baruch Spinoza', 'Nicolas Malebranche', 'Leibniz'] },
-    'empirisme': { keywords: ['expérience', 'sensation', 'observation', 'connaissance'], authors: ['John Locke', 'David Hume', 'Condillac'] },
+    'humanisme': { keywords: ['homme', 'éducation', 'dignité', 'liberté', 'culture'] },
+    'rationalisme': { keywords: ['raison', 'méthode', 'évidence', 'cogito', 'vérité'] },
+    'empirisme': { keywords: ['expérience', 'sensation', 'observation', 'connaissance'] },
     // Philosophie moderne
-    'idealisme': { keywords: ['esprit', 'conscience', 'absolu', 'dialectique'], authors: ['Emmanuel Kant', 'Hegel', 'Fichte', 'Schelling'] },
-    'nihilisme': { keywords: ['néant', 'absurdité', 'valeur', 'destruction', 'surhomme'], authors: ['Friedrich Nietzsche', 'Fiodor Dostoïevski', 'Emil Cioran'] },
-    'existentialisme-p': { keywords: ['existence', 'liberté', 'angoisse', 'choix', 'authenticité', 'engagement'], authors: ['Jean-Paul Sartre', 'Albert Camus', 'Simone de Beauvoir', 'Martin Heidegger', 'Søren Kierkegaard'] },
-    'absurde-p': { keywords: ['absurde', 'révolte', 'Sisyphe', 'sens', 'condition humaine'], authors: ['Albert Camus', 'Samuel Beckett', 'Eugène Ionesco'] },
+    'idealisme': { keywords: ['esprit', 'conscience', 'absolu', 'dialectique'] },
+    'nihilisme': { keywords: ['néant', 'absurdité', 'valeur', 'destruction', 'surhomme'] },
+    'existentialisme-p': { keywords: ['existence', 'liberté', 'angoisse', 'choix', 'authenticité', 'engagement'] },
+    'absurde-p': { keywords: ['absurde', 'révolte', 'Sisyphe', 'sens', 'condition humaine'] },
     // Éthique et société
-    'moraliste': { keywords: ['morale', 'vertu', 'vice', 'caractère', 'nature humaine', 'passion'], authors: ['La Rochefoucauld', 'La Bruyère', 'Pascal', 'Vauvenargues', 'Chamfort'] },
-    'utopie': { keywords: ['utopie', 'idéal', 'cité', 'société parfaite', 'bonheur'], authors: ['Thomas More', 'Tommaso Campanella', 'Voltaire', 'Fourier'] },
-    'spiritualite': { keywords: ['âme', 'prière', 'mystique', 'foi', 'contemplation', 'Dieu'], authors: ['Blaise Pascal', 'Bossuet', 'Fénelon', 'Maître Eckhart', 'Simone Weil'] }
+    'moraliste': { keywords: ['morale', 'vertu', 'vice', 'caractère', 'nature humaine', 'passion'] },
+    'utopie': { keywords: ['utopie', 'idéal', 'cité', 'société parfaite', 'bonheur'] },
+    'spiritualite': { keywords: ['âme', 'prière', 'mystique', 'foi', 'contemplation', 'Dieu'] }
 };
 
 /**
@@ -299,79 +299,109 @@ function randomizeFilters() {
  * Applique les filtres et lance l'exploration
  */
 async function applyFilters() {
-    // Collecter les auteurs et mots-clés en fonction des filtres
-    let authors = [];
-    let keywords = [];
+    // 🧪 1. Collecter les "ingrédients" par catégorie
+    const ingredients = {
+        forme: [],
+        epoque: [],
+        ton: [],
+        pensee: []
+    };
     
-    // Filtres de forme
+    // Récolte Forme
     if (!activeFilters.forme.includes('all')) {
-        activeFilters.forme.forEach(forme => {
-            if (FORMES[forme]) {
-                authors.push(...FORMES[forme].authors);
-                keywords.push(...FORMES[forme].keywords);
-            }
+        activeFilters.forme.forEach(f => {
+            if (FORMES[f]?.keywords) ingredients.forme.push(...FORMES[f].keywords);
         });
     }
     
-    // Filtres d'époque
+    // Récolte Époque (On utilise la période comme ingrédient principal)
     if (!activeFilters.epoque.includes('all')) {
-        activeFilters.epoque.forEach(epoque => {
-            if (EPOQUES_FILTER[epoque]) {
-                authors.push(...EPOQUES_FILTER[epoque].authors);
-            }
+        activeFilters.epoque.forEach(e => {
+            if (EPOQUES_FILTER[e]?.period) ingredients.epoque.push(EPOQUES_FILTER[e].period);
         });
     }
     
-    // Filtres de ton
+    // Récolte Ton
     if (!activeFilters.ton.includes('all')) {
-        activeFilters.ton.forEach(ton => {
-            if (TONS[ton]) {
-                authors.push(...TONS[ton].authors);
-                keywords.push(...TONS[ton].keywords);
-            }
+        activeFilters.ton.forEach(t => {
+            if (TONS[t]?.keywords) ingredients.ton.push(...TONS[t].keywords);
         });
     }
     
-    // Filtres de pensée/philosophie
+    // Récolte Pensée
     if (activeFilters.pensee && !activeFilters.pensee.includes('all')) {
-        activeFilters.pensee.forEach(pensee => {
-            if (PENSEES[pensee]) {
-                authors.push(...PENSEES[pensee].authors);
-                keywords.push(...PENSEES[pensee].keywords);
-            }
+        activeFilters.pensee.forEach(p => {
+            if (PENSEES[p]?.keywords) ingredients.pensee.push(...PENSEES[p].keywords);
         });
     }
-    
-    // Dédupliquer
-    authors = [...new Set(authors)];
-    keywords = [...new Set(keywords)];
-    
-    // Si pas de filtres spécifiques, mode libre
-    if (authors.length === 0 && keywords.length === 0) {
-        const classicAuthors = ['Victor Hugo', 'Charles Baudelaire', 'Gustave Flaubert', 'Voltaire'];
-        authors = classicAuthors;
-    }
-    
-    // Effacer le feed
+
+    // 🧹 Nettoyage UI
     const feed = document.getElementById('feed');
     if (feed) feed.innerHTML = '';
     state.loading = false;
     
-    // Toast
-    toast('🧭 Exploration en cours...');
+    // 🎲 2. Création des "Chimères" (Combinaisons de recherche)
+    // On va générer 3 types de requêtes pour maximiser la chance et le fun
     
-    // Mélanger et charger
-    const shuffledAuthors = [...authors].sort(() => Math.random() - 0.5);
-    const shuffledKeywords = [...keywords].sort(() => Math.random() - 0.5);
+    const queries = [];
     
-    // Charger 2-3 auteurs
-    for (const author of shuffledAuthors.slice(0, 3)) {
-        await exploreAuthor(author);
+    // Helper pour piocher un élément au hasard
+    const pick = (arr) => arr.length > 0 ? arr[Math.floor(Math.random() * arr.length)] : null;
+
+    // --- STRATÉGIE A : Le "Cadravre Exquis" (Intersection stricte) ---
+    // On essaie de combiner un élément de chaque catégorie active
+    let chimeraParts = [];
+    if (ingredients.forme.length) chimeraParts.push(pick(ingredients.forme));
+    if (ingredients.epoque.length) chimeraParts.push(pick(ingredients.epoque));
+    if (ingredients.ton.length) chimeraParts.push(pick(ingredients.ton));
+    if (ingredients.pensee.length) chimeraParts.push(pick(ingredients.pensee));
+    
+    if (chimeraParts.length > 1) {
+        queries.push({
+            term: chimeraParts.join(' '),
+            type: 'chimera' // Pour le fun
+        });
+    }
+
+    // --- STRATÉGIE B : Le "Duo Choc" (Forme + Époque ou Ton + Pensée) ---
+    // Souvent plus pertinent historiquement
+    if (ingredients.forme.length && ingredients.epoque.length) {
+        queries.push({
+            term: `${pick(ingredients.forme)} ${pick(ingredients.epoque)}`,
+            type: 'history'
+        });
+    } else if (ingredients.ton.length && ingredients.pensee.length) {
+         queries.push({
+            term: `${pick(ingredients.ton)} ${pick(ingredients.pensee)}`,
+            type: 'philosophy'
+        });
+    }
+
+    // --- STRATÉGIE C : L' "Electron Libre" (Un mot clé simple mais fort) ---
+    // Fallback pour être sûr d'avoir des résultats
+    const allKeywords = [...ingredients.forme, ...ingredients.epoque, ...ingredients.ton, ...ingredients.pensee];
+    if (allKeywords.length > 0) {
+        queries.push({
+            term: pick(allKeywords),
+            type: 'simple'
+        });
     }
     
-    // Et éventuellement un mot-clé
-    if (shuffledKeywords.length > 0 && Math.random() > 0.5) {
-        await exploreAuthor(shuffledKeywords[0]);
+    // Fallback ultime si aucun filtre
+    if (queries.length === 0) {
+        const defaults = ['Poésie', 'Roman', 'Philosophie', 'Théâtre'];
+        queries.push({ term: pick(defaults), type: 'random' });
+    }
+
+    // Limiter à 3 requêtes et dédupliquer les termes
+    const uniqueQueries = [...new Map(queries.map(q => [q.term, q])).values()].slice(0, 3);
+
+    // 🚀 3. Lancement
+    toast(`⚗️ Distillation : ${uniqueQueries.map(q => `"${q.term}"`).join(', ')}...`);
+
+    for (const q of uniqueQueries) {
+        // Petit délai pour l'effet dramatique (et l'API)
+        await exploreAuthor(q.term);
     }
 }
 
@@ -462,13 +492,10 @@ window.applyFilters = applyFilters;
 window.activeFilters = activeFilters;
 
 // ═══════════════════════════════════════════════════════════
-// 🎨 AMBIANCES DE LECTURE (conservé pour compatibilité)
+// 🎨 AMBIANCES DE LECTURE (Supprimé)
 // ═══════════════════════════════════════════════════════════
+// (Section supprimée à la demande de l'utilisateur pour alléger le code et éviter les listes d'auteurs en dur)
 
-/**
- * Définition des ambiances thématiques de lecture
- * Chaque ambiance : name, icon, description, authors[], keywords[], color
- */
 const AMBIANCES = {
     libre: {
         name: 'Dérive libre',
@@ -477,102 +504,6 @@ const AMBIANCES = {
         authors: [],
         keywords: [],
         color: '#7d8471'
-    },
-    gothique: {
-        name: 'Gothique',
-        icon: '⛧',
-        description: '',
-        authors: ['Edgar Allan Poe', 'Ann Radcliffe', 'Matthew Lewis', 'Horace Walpole', 'Mary Shelley', 'Bram Stoker', 'Charles Maturin', 'Sheridan Le Fanu', 'Théophile Gautier', 'Villiers de l\'Isle-Adam'],
-        keywords: ['fantôme', 'spectre', 'château', 'terreur', 'nuit', 'vampire', 'mort', 'tombe', 'ténèbres', 'effroi'],
-        color: '#5c5470'
-    },
-    surrealiste: {
-        name: 'Surréaliste',
-        icon: '◬',
-        description: '',
-        authors: ['André Breton', 'Paul Éluard', 'Robert Desnos', 'Philippe Soupault', 'Louis Aragon', 'Benjamin Péret', 'René Crevel', 'Antonin Artaud', 'Lautréamont', 'Alfred Jarry'],
-        keywords: ['rêve', 'automatique', 'hasard', 'inconscient', 'merveilleux', 'étrange', 'absurde'],
-        color: '#a67c52'
-    },
-    romantique: {
-        name: 'Romantique',
-        icon: '❧',
-        description: '',
-        authors: ['Victor Hugo', 'Alphonse de Lamartine', 'Alfred de Musset', 'Alfred de Vigny', 'Gérard de Nerval', 'François-René de Chateaubriand', 'George Sand', 'Lord Byron', 'Percy Shelley', 'John Keats'],
-        keywords: ['amour', 'passion', 'coeur', 'âme', 'sentiment', 'larmes', 'désespoir', 'nature'],
-        color: '#6b3a3a'
-    },
-    melancolie: {
-        name: 'Mélancolie',
-        icon: '☁︎',
-        description: '',
-        authors: ['Charles Baudelaire', 'Paul Verlaine', 'Jules Laforgue', 'Maurice Rollinat', 'Sully Prudhomme', 'Albert Samain', 'Francis Jammes', 'Giacomo Leopardi'],
-        keywords: ['spleen', 'ennui', 'tristesse', 'automne', 'pluie', 'brume', 'solitude', 'regret', 'nostalgie'],
-        color: '#635d4e'
-    },
-    mystique: {
-        name: 'Mystique',
-        icon: '⍟',
-        description: '',
-        authors: ['William Blake', 'Emanuel Swedenborg', 'Jakob Böhme', 'Angelus Silesius', 'San Juan de la Cruz', 'Sainte Thérèse d\'Avila', 'Maître Eckhart', 'Hildegarde de Bingen', 'Rûmî'],
-        keywords: ['âme', 'divin', 'extase', 'vision', 'lumière', 'éternel', 'sacré', 'céleste', 'spirituel'],
-        color: '#5c5470'
-    },
-    epique: {
-        name: 'Épique',
-        icon: '☬',
-        description: '',
-        authors: ['Homère', 'Virgile', 'Le Tasse', 'L\'Arioste', 'Milton', 'Camoens', 'Dante Alighieri', 'Victor Hugo'],
-        keywords: ['héros', 'bataille', 'gloire', 'honneur', 'guerre', 'victoire', 'destin', 'épée', 'conquête'],
-        color: '#6b3a3a'
-    },
-    pastoral: {
-        name: 'Pastoral',
-        icon: '⚘',
-        description: '',
-        authors: ['Théocrite', 'Virgile', 'Pierre de Ronsard', 'Joachim du Bellay', 'Maurice Scève', 'Francis Jammes', 'Jean Giono', 'Colette'],
-        keywords: ['berger', 'prairie', 'champ', 'fleur', 'ruisseau', 'oiseau', 'printemps', 'nature', 'campagne'],
-        color: '#7d8471'
-    },
-    decadent: {
-        name: 'Décadent',
-        icon: '♱',
-        description: '',
-        authors: ['Joris-Karl Huysmans', 'Jean Lorrain', 'Rachilde', 'Villiers de l\'Isle-Adam', 'Jules Barbey d\'Aurevilly', 'Oscar Wilde', 'Gabriele D\'Annunzio', 'Maurice Rollinat'],
-        keywords: ['artifice', 'opium', 'décadence', 'luxe', 'pervers', 'morbide', 'exquis', 'raffiné', 'poison'],
-        color: '#5c5470'
-    },
-    nocturne: {
-        name: 'Nocturne',
-        icon: '☾',
-        description: '',
-        authors: ['Gérard de Nerval', 'Novalis', 'Charles Baudelaire', 'Paul Verlaine', 'Rainer Maria Rilke', 'Federico García Lorca', 'E.T.A. Hoffmann', 'Aloysius Bertrand'],
-        keywords: ['nuit', 'lune', 'étoiles', 'ténèbres', 'rêve', 'insomnie', 'ombre', 'silence', 'minuit'],
-        color: '#201e16'
-    },
-    antique: {
-        name: 'Antique',
-        icon: '☤',
-        description: '',
-        authors: ['Homère', 'Sophocle', 'Euripide', 'Platon', 'Aristote', 'Virgile', 'Ovide', 'Horace', 'Sénèque', 'Marc Aurèle', 'Cicéron'],
-        keywords: ['Olympe', 'dieux', 'muse', 'oracle', 'temple', 'philosophe', 'vertu', 'sagesse'],
-        color: '#a67c52'
-    },
-    voyage: {
-        name: 'Voyage',
-        icon: '⚓︎',
-        description: '',
-        authors: ['Jules Verne', 'Pierre Loti', 'Joseph Conrad', 'Herman Melville', 'Robert Louis Stevenson', 'Jack London', 'Marco Polo', 'Ibn Battûta'],
-        keywords: ['voyage', 'mer', 'île', 'horizon', 'aventure', 'découverte', 'navire', 'explorateur', 'orient'],
-        color: '#7d8471'
-    },
-    philosophie: {
-        name: 'Philosophie',
-        icon: '◎',
-        description: '',
-        authors: ['Platon', 'Aristote', 'Montaigne', 'Blaise Pascal', 'René Descartes', 'Jean-Jacques Rousseau', 'Voltaire', 'Friedrich Nietzsche', 'Arthur Schopenhauer', 'Sénèque'],
-        keywords: ['pensée', 'raison', 'vérité', 'existence', 'mort', 'liberté', 'sagesse', 'doute', 'être'],
-        color: '#635d4e'
     }
 };
 
@@ -582,7 +513,7 @@ const AMBIANCES = {
 
 /**
  * Définition des grandes époques de l'histoire littéraire
- * Chaque époque : name, icon, period, description, authors[], keywords[], color
+ * Chaque époque : name, icon, period, description, keywords[], color
  */
 const EPOQUES = {
     antiquite: {
@@ -590,8 +521,7 @@ const EPOQUES = {
         icon: '☤',
         period: 'VIIIᵉ s. av. J.-C. – Vᵉ s.',
         description: '',
-        authors: ['Homère', 'Sophocle', 'Euripide', 'Eschyle', 'Aristophane', 'Platon', 'Aristote', 'Virgile', 'Ovide', 'Horace', 'Sénèque', 'Marc Aurèle', 'Cicéron', 'Lucrèce', 'Apulée', 'Pétrone'],
-        keywords: ['mythologie', 'olympe', 'tragédie', 'héros', 'oracle', 'destin'],
+        keywords: ['mythologie', 'olympe', 'tragédie', 'héros', 'oracle', 'destin', 'Homère', 'Platon', 'Virgile'],
         color: '#a67c52'
     },
     medieval: {
@@ -599,8 +529,7 @@ const EPOQUES = {
         icon: '✠',
         period: 'Vᵉ – XVᵉ siècle',
         description: '',
-        authors: ['Chrétien de Troyes', 'François Villon', 'Dante Alighieri', 'Boccace', 'Pétrarque', 'Guillaume de Machaut', 'Marie de France', 'Jean de Meung', 'Rutebeuf', 'Christine de Pizan'],
-        keywords: ['chevalier', 'amour courtois', 'quête', 'graal', 'troubadour', 'roman'],
+        keywords: ['chevalier', 'amour courtois', 'quête', 'graal', 'troubadour', 'roman', 'chanson de geste'],
         color: '#635d4e'
     },
     renaissance: {
@@ -608,8 +537,7 @@ const EPOQUES = {
         icon: '✡',
         period: 'XVIᵉ siècle',
         description: '',
-        authors: ['François Rabelais', 'Michel de Montaigne', 'Pierre de Ronsard', 'Joachim du Bellay', 'Louise Labé', 'Clément Marot', 'Agrippa d\'Aubigné', 'Étienne de La Boétie', 'Maurice Scève', 'Shakespeare'],
-        keywords: ['humanisme', 'éducation', 'sonnet', 'pléiade', 'amour', 'nature'],
+        keywords: ['humanisme', 'éducation', 'sonnet', 'pléiade', 'amour', 'nature', 'Rabelais', 'Montaigne'],
         color: '#a67c52'
     },
     classique: {
@@ -617,8 +545,7 @@ const EPOQUES = {
         icon: '✧',
         period: 'XVIIᵉ siècle',
         description: '',
-        authors: ['Molière', 'Jean Racine', 'Pierre Corneille', 'Jean de La Fontaine', 'Blaise Pascal', 'Madame de La Fayette', 'Nicolas Boileau', 'Jean de La Bruyère', 'François de La Rochefoucauld', 'Madame de Sévigné', 'Bossuet'],
-        keywords: ['honnête homme', 'bienséance', 'tragédie', 'comédie', 'fable', 'moraliste'],
+        keywords: ['honnête homme', 'bienséance', 'tragédie', 'comédie', 'fable', 'moraliste', 'Molière', 'Racine'],
         color: '#a67c52'
     },
     lumieres: {
@@ -626,8 +553,7 @@ const EPOQUES = {
         icon: '✶',
         period: 'XVIIIᵉ siècle',
         description: '',
-        authors: ['Voltaire', 'Jean-Jacques Rousseau', 'Denis Diderot', 'Montesquieu', 'Beaumarchais', 'Marivaux', 'L\'Abbé Prévost', 'Choderlos de Laclos', 'Bernardin de Saint-Pierre', 'Marquis de Sade', 'Condorcet'],
-        keywords: ['raison', 'progrès', 'philosophie', 'encyclopédie', 'liberté', 'tolérance'],
+        keywords: ['raison', 'progrès', 'philosophie', 'encyclopédie', 'liberté', 'tolérance', 'Voltaire', 'Rousseau'],
         color: '#a67c52'
     },
     xixe: {
@@ -635,8 +561,7 @@ const EPOQUES = {
         icon: '⚗',
         period: '1800 – 1900',
         description: '',
-        authors: ['Victor Hugo', 'Honoré de Balzac', 'Gustave Flaubert', 'Émile Zola', 'Stendhal', 'Charles Baudelaire', 'Arthur Rimbaud', 'Paul Verlaine', 'Gérard de Nerval', 'Alexandre Dumas', 'Guy de Maupassant', 'Théophile Gautier'],
-        keywords: ['révolution', 'passion', 'société', 'naturalisme', 'symbolisme', 'spleen'],
+        keywords: ['révolution', 'passion', 'société', 'naturalisme', 'symbolisme', 'spleen', 'Hugo', 'Balzac'],
         color: '#635d4e'
     },
     belleepoque: {
@@ -644,8 +569,7 @@ const EPOQUES = {
         icon: '❦',
         period: '1880 – 1914',
         description: '',
-        authors: ['Marcel Proust', 'Colette', 'Guillaume Apollinaire', 'Paul Valéry', 'André Gide', 'Oscar Wilde', 'Rainer Maria Rilke', 'Joris-Karl Huysmans', 'Jean Lorrain', 'Maurice Maeterlinck'],
-        keywords: ['salon', 'mondain', 'décadence', 'symbolisme', 'impressionnisme', 'art nouveau'],
+        keywords: ['salon', 'mondain', 'décadence', 'symbolisme', 'impressionnisme', 'art nouveau', 'Proust'],
         color: '#5c5470'
     },
     xxe: {
@@ -653,8 +577,7 @@ const EPOQUES = {
         icon: '☢',
         period: '1900 – 2000',
         description: '',
-        authors: ['Albert Camus', 'Jean-Paul Sartre', 'Simone de Beauvoir', 'André Breton', 'Louis-Ferdinand Céline', 'Samuel Beckett', 'Marguerite Duras', 'Boris Vian', 'Marguerite Yourcenar', 'Antoine de Saint-Exupéry', 'Jean Genet'],
-        keywords: ['absurde', 'existentialisme', 'surréalisme', 'engagement', 'modernité', 'guerre'],
+        keywords: ['absurde', 'existentialisme', 'surréalisme', 'engagement', 'modernité', 'guerre', 'Camus', 'Sartre'],
         color: '#6b3a3a'
     }
 };
@@ -665,7 +588,7 @@ const EPOQUES = {
 
 /**
  * Définition des grands courants/mouvements littéraires
- * Chaque courant : name, icon, period, description, authors[], keywords[], color
+ * Chaque courant : name, icon, period, description, keywords[], color
  */
 const COURANTS = {
     humanisme: {
@@ -673,8 +596,7 @@ const COURANTS = {
         icon: '❁',
         period: 'XVIᵉ siècle',
         description: '',
-        authors: ['Michel de Montaigne', 'François Rabelais', 'Érasme', 'Thomas More', 'Étienne de La Boétie', 'Guillaume Budé'],
-        keywords: ['homme', 'éducation', 'sagesse', 'vertu', 'raison', 'antiquité'],
+        keywords: ['homme', 'éducation', 'sagesse', 'vertu', 'raison', 'antiquité', 'Montaigne', 'Rabelais'],
         color: '#7d8471'
     },
     baroque: {
@@ -682,7 +604,6 @@ const COURANTS = {
         icon: '❀',
         period: 'Fin XVIᵉ – début XVIIᵉ',
         description: '',
-        authors: ['Agrippa d\'Aubigné', 'Théophile de Viau', 'Saint-Amant', 'Tristan L\'Hermite', 'Góngora', 'Shakespeare'],
         keywords: ['inconstance', 'métamorphose', 'illusion', 'mort', 'vanité', 'spectacle'],
         color: '#5c5470'
     },
@@ -691,7 +612,6 @@ const COURANTS = {
         icon: '⚖︎',
         period: 'XVIIᵉ siècle',
         description: '',
-        authors: ['Molière', 'Jean Racine', 'Pierre Corneille', 'Jean de La Fontaine', 'Nicolas Boileau', 'Madame de La Fayette'],
         keywords: ['raison', 'règle', 'vraisemblance', 'bienséance', 'nature', 'universel'],
         color: '#635d4e'
     },
@@ -700,8 +620,7 @@ const COURANTS = {
         icon: '❧',
         period: '1820 – 1850',
         description: '',
-        authors: ['Victor Hugo', 'Alphonse de Lamartine', 'Alfred de Musset', 'Alfred de Vigny', 'Gérard de Nerval', 'François-René de Chateaubriand', 'George Sand', 'Novalis', 'Lord Byron', 'John Keats'],
-        keywords: ['moi', 'passion', 'nature', 'mélancolie', 'liberté', 'génie', 'sublime'],
+        keywords: ['moi', 'passion', 'nature', 'mélancolie', 'liberté', 'génie', 'sublime', 'Hugo', 'Lamartine'],
         color: '#6b3a3a'
     },
     realisme: {
@@ -709,8 +628,7 @@ const COURANTS = {
         icon: '◉',
         period: '1850 – 1880',
         description: '',
-        authors: ['Honoré de Balzac', 'Gustave Flaubert', 'Stendhal', 'Guy de Maupassant', 'Prosper Mérimée', 'Champfleury', 'Fiodor Dostoïevski', 'Léon Tolstoï'],
-        keywords: ['société', 'observation', 'objectivité', 'bourgeoisie', 'argent', 'ambition'],
+        keywords: ['société', 'observation', 'objectivité', 'bourgeoisie', 'argent', 'ambition', 'Balzac', 'Flaubert'],
         color: '#635d4e'
     },
     naturalisme: {
@@ -718,8 +636,7 @@ const COURANTS = {
         icon: '⚗',
         period: '1870 – 1890',
         description: '',
-        authors: ['Émile Zola', 'Guy de Maupassant', 'Alphonse Daudet', 'Edmond et Jules de Goncourt', 'Joris-Karl Huysmans'],
-        keywords: ['hérédité', 'milieu', 'expérimental', 'ouvrier', 'misère', 'déterminisme'],
+        keywords: ['hérédité', 'milieu', 'expérimental', 'ouvrier', 'misère', 'déterminisme', 'Zola'],
         color: '#3d3d3d'
     },
     symbolisme: {
@@ -727,8 +644,7 @@ const COURANTS = {
         icon: '✶',
         period: '1880 – 1900',
         description: '',
-        authors: ['Charles Baudelaire', 'Stéphane Mallarmé', 'Paul Verlaine', 'Arthur Rimbaud', 'Jean Moréas', 'Gustave Kahn', 'Maurice Maeterlinck', 'Émile Verhaeren'],
-        keywords: ['symbole', 'suggestion', 'musique', 'synesthésie', 'idéal', 'mystère'],
+        keywords: ['symbole', 'suggestion', 'musique', 'synesthésie', 'idéal', 'mystère', 'Baudelaire', 'Mallarmé'],
         color: '#5c5470'
     },
     surrealisme: {
@@ -736,8 +652,7 @@ const COURANTS = {
         icon: '◬',
         period: '1920 – 1960',
         description: '',
-        authors: ['André Breton', 'Paul Éluard', 'Louis Aragon', 'Robert Desnos', 'Philippe Soupault', 'Benjamin Péret', 'René Crevel', 'Antonin Artaud'],
-        keywords: ['rêve', 'inconscient', 'automatisme', 'hasard', 'merveilleux', 'révolution'],
+        keywords: ['rêve', 'inconscient', 'automatisme', 'hasard', 'merveilleux', 'révolution', 'Breton'],
         color: '#a67c52'
     },
     existentialisme: {
@@ -745,8 +660,7 @@ const COURANTS = {
         icon: '⦿',
         period: '1940 – 1960',
         description: '',
-        authors: ['Jean-Paul Sartre', 'Albert Camus', 'Simone de Beauvoir', 'Jean Genet', 'Maurice Merleau-Ponty', 'Gabriel Marcel'],
-        keywords: ['existence', 'liberté', 'absurde', 'engagement', 'angoisse', 'autrui'],
+        keywords: ['existence', 'liberté', 'absurde', 'engagement', 'angoisse', 'autrui', 'Sartre', 'Camus'],
         color: '#212121'
     },
     absurde: {
@@ -754,8 +668,7 @@ const COURANTS = {
         icon: '⧖',
         period: '1950 – 1970',
         description: '',
-        authors: ['Samuel Beckett', 'Eugène Ionesco', 'Jean Genet', 'Arthur Adamov', 'Harold Pinter', 'Fernando Arrabal'],
-        keywords: ['absurde', 'attente', 'langage', 'vide', 'dérision', 'tragique'],
+        keywords: ['absurde', 'attente', 'langage', 'vide', 'dérision', 'tragique', 'Beckett'],
         color: '#424242'
     }
 };
@@ -835,8 +748,7 @@ async function setEpoque(epoqueId) {
             <p class="period-badge">${epoque.period}</p>
             <p>${epoque.description}</p>
             <div class="ambiance-tags">
-                ${epoque.authors.slice(0, 6).map(a => `<span class="ambiance-tag" onclick="exploreFromAmbiance('${a.replace(/'/g, "\\'")}')" title="Explorer ${a}">${a}</span>`).join('')}
-                ${epoque.authors.length > 6 ? `<span class="ambiance-tag more-authors" title="${epoque.authors.slice(6).join(', ')}">+${epoque.authors.length - 6}</span>` : ''}
+                ${epoque.keywords.slice(0, 6).map(a => `<span class="ambiance-tag" onclick="exploreFromAmbiance('${a.replace(/'/g, "\\'")}')" title="Explorer ${a}">${a}</span>`).join('')}
             </div>
         `;
         introEl.style.display = 'block';
@@ -850,10 +762,10 @@ async function setEpoque(epoqueId) {
     
     toast(`${epoque.icon} ${epoque.name} – ${epoque.period}`);
     
-    // Charger des auteurs de cette époque
-    const shuffled = [...epoque.authors].sort(() => Math.random() - 0.5);
-    for (const author of shuffled.slice(0, 3)) {
-        await exploreAuthor(author);
+    // Charger par mots-clés
+    const shuffled = [...epoque.keywords].sort(() => Math.random() - 0.5);
+    for (const kw of shuffled.slice(0, 3)) {
+        await exploreAuthor(kw); // ExploreAuthor gère aussi les recherches génériques
     }
 }
 
@@ -883,8 +795,7 @@ async function setCourant(courantId) {
             <p class="period-badge">${courant.period}</p>
             <p>${courant.description}</p>
             <div class="ambiance-tags">
-                ${courant.authors.slice(0, 6).map(a => `<span class="ambiance-tag" onclick="exploreFromAmbiance('${a.replace(/'/g, "\\'")}')" title="Explorer ${a}">${a}</span>`).join('')}
-                ${courant.authors.length > 6 ? `<span class="ambiance-tag more-authors" title="${courant.authors.slice(6).join(', ')}">+${courant.authors.length - 6}</span>` : ''}
+                ${courant.keywords.slice(0, 6).map(a => `<span class="ambiance-tag" onclick="exploreFromAmbiance('${a.replace(/'/g, "\\'")}')" title="Explorer ${a}">${a}</span>`).join('')}
             </div>
         `;
         introEl.style.display = 'block';
@@ -898,10 +809,10 @@ async function setCourant(courantId) {
     
     toast(`${courant.icon} ${courant.name}`);
     
-    // Charger des auteurs de ce courant
-    const shuffled = [...courant.authors].sort(() => Math.random() - 0.5);
-    for (const author of shuffled.slice(0, 3)) {
-        await exploreAuthor(author);
+    // Charger par mots-clés
+    const shuffled = [...courant.keywords].sort(() => Math.random() - 0.5);
+    for (const kw of shuffled.slice(0, 3)) {
+        await exploreAuthor(kw);
     }
 }
 
@@ -989,25 +900,36 @@ async function exploreFromAmbiance(author) {
 async function loadAmbianceContent(ambianceId) {
     const ambiance = AMBIANCES[ambianceId];
     
-    // Auteurs classiques par défaut
-    const classicAuthors = ['Victor Hugo', 'Charles Baudelaire', 'Gustave Flaubert', 'Marcel Proust', 'Stendhal', 'Voltaire'];
-    
-    if (ambianceId === 'libre' || !ambiance.authors.length) {
-        // Mode libre : utiliser un auteur classique au hasard
-        await exploreAuthor(classicAuthors[Math.floor(Math.random() * classicAuthors.length)]);
+    // Fallback search term if ambiance is empty or free
+    // Instead of specific authors, we use generic terms or random
+    const genericTerms = ['Poésie', 'Roman', 'Théâtre', 'Philosophie'];
+
+    if (ambianceId === 'libre') {
+        // Mode libre : reset du contexte de recherche pour revenir au drift aléatoire
+        state.activeSearchTerm = null;
+
+        // Mode libre : recherche générique aléatoire
+        const randomTerm = genericTerms[Math.floor(Math.random() * genericTerms.length)];
+        const ws = window.getCurrentWikisource ? window.getCurrentWikisource() : null;
+        if (ws && window.searchByTerm) {
+             await window.searchByTerm(randomTerm, ws);
+        } else {
+             console.warn("Exploration: generic search unavailable");
+        }
         return;
     }
     
-    // Choisir des auteurs/mots-clés de l'ambiance au hasard
-    const shuffledAuthors = [...ambiance.authors].sort(() => Math.random() - 0.5);
-    const shuffledKeywords = [...ambiance.keywords].sort(() => Math.random() - 0.5);
+    // Choisir des mots-clés de l'ambiance au hasard
+    const shuffledKeywords = [...(ambiance.keywords || [])].sort(() => Math.random() - 0.5);
     
-    // Charger 2-3 auteurs + 1-2 mots-clés pour variété
-    const toLoad = [
-        ...shuffledAuthors.slice(0, 2),
-        ...shuffledKeywords.slice(0, 1)
-    ];
+    // Charger 2-3 mots-clés pour variété
+    const toLoad = shuffledKeywords.slice(0, 3);
     
+    // Si pas assez de mots clés, compléter avec generic
+    if (toLoad.length === 0) {
+        toLoad.push(genericTerms[Math.floor(Math.random() * genericTerms.length)]);
+    }
+
     for (const term of toLoad) {
         await exploreAuthor(term);
     }

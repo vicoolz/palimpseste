@@ -18,6 +18,7 @@ let authorConnections = {};
 let state = {
     likes: new Set(), readCount: 0, loading: false, cache: new Map(),
     textPool: [], shownPages: new Set(), cardIdx: 0,
+    activeSearchTerm: null, // Le contexte courant de l'exploration (null = drift)
     authorStats: {}, genreStats: {},
     // Stats basées sur les textes likés/partagés (vos vrais goûts)
     likedGenreStats: {}, likedAuthorStats: {},
@@ -1909,6 +1910,9 @@ function getAuthorsForGenre(genre, excludeAuthor) {
 async function exploreAuthor(author) {
     if (state.loading) return;
     state.loading = true;
+    
+    // Définir le contexte pour la navigation future (infinite scroll pertinent)
+    state.activeSearchTerm = author;
     
     toast(`🔍 Exploration de ${author}...`);
     state.discoveredConnections.add(author);

@@ -7903,28 +7903,70 @@ transition: all 0.2s;
 .collection-item-actions {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     flex-shrink: 0;
+    padding-left: 0.5rem;
+    align-items: center;
+    justify-content: center;
 }
 
+/* Ergonomie "Like-like" : Cercle, sans bordure par défaut, feedback tactile */
 .item-action {
-    width: 32px;
-    height: 32px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    color: var(--text-secondary); /* Visibilité mode nuit corrigée */
     cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0.8;
 }
 
 .item-action:hover {
-    border-color: var(--accent);
+    opacity: 1;
+    background: var(--bg-elevated);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: scale(1.15);
 }
 
-.item-action.danger:hover {
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
+.item-action:active {
+    transform: scale(0.9);
+}
+
+/* Bouton "Texte Complet" (Reload) - Style Hero */
+.item-action.action-load {
+    color: var(--accent);
+    background: rgba(90, 122, 138, 0.08); /* Légère teinte pour l'affordance */
+}
+
+.item-action.action-load:hover {
+    background: var(--accent);
+    color: #fff; /* Contraste fort au survol */
+    transform: rotate(180deg) scale(1.1); /* Animation ludique */
+    box-shadow: 0 0 15px rgba(90, 122, 138, 0.4);
+}
+
+/* Bouton "Ouvrir Source" */
+.item-action.action-open:hover {
+    color: var(--accent-secondary);
+    background: rgba(139, 115, 85, 0.1);
+    transform: translate(3px, -3px);
+}
+
+/* Bouton "Supprimer" */
+.item-action.action-delete {
+    color: var(--muted);
+}
+
+.item-action.action-delete:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+    transform: rotate(90deg) scale(1.1);
 }
 
 /* ====== BOUTON COLLECTION SUR LES CARTES ====== */

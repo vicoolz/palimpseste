@@ -746,9 +746,11 @@ async function openCollection(collectionId) {
                                     ${item.note ? `<div class="collection-item-note"><span class="note-icon">¶</span> ${escapeHtml(item.note)}</div>` : ''}
                                 </div>
                                 <div class="collection-item-actions" onclick="event.stopPropagation()">
-                                    ${url ? `<button class="item-action" onclick="loadTextFromCollectionById('${itemId}')" title="Charger le texte complet">↻</button>` : ''}
-                                    ${url ? `<button class="item-action" onclick="window.open(decodeURIComponent('${safeUrl}'), '_blank')" title="Ouvrir la source">↗</button>` : ''}
-                                    <button class="item-action danger" onclick="removeFromCollection('${collectionId}', '${item.id}')" title="Retirer">×</button>
+                                    ${url ? `<button class="item-action action-load" onclick="loadTextFromCollectionById('${itemId}')" title="Charger le texte complet">
+                                        <span class="icon">↻</span>
+                                    </button>` : ''}
+                                    ${url ? `<button class="item-action action-open" onclick="window.open(decodeURIComponent('${safeUrl}'), '_blank')" title="Ouvrir la source">↗</button>` : ''}
+                                    <button class="item-action action-delete" onclick="removeFromCollection('${collectionId}', '${item.id}')" title="Retirer">×</button>
                                 </div>
                             </div>
                         `;

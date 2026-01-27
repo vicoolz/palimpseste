@@ -23,25 +23,9 @@
 // ═══════════════════════════════════════════════════════════
 
 /**
- * Liste des auteurs "secrets" - trésors littéraires à découvrir
- * Organisés par origine linguistique/culturelle
+ * Liste des auteurs "secrets" supprimée
  */
-const HIDDEN_GEMS = [
-    // Français - Poètes maudits et symbolistes obscurs
-    'Lautréamont', 'Aloysius Bertrand', 'Tristan Corbière', 'Jules Laforgue',
-    // Anglais - Métaphysiques et visionnaires
-    'John Donne', 'George Herbert', 'Thomas Traherne', 'Christopher Smart',
-    // Allemand - Romantiques et expressionnistes
-    'Novalis', 'Hölderlin', 'Rilke', 'Trakl',
-    // Italien - Poètes du sentiment
-    'Leopardi', 'Ungaretti', 'Montale',
-    // Espagnol - Baroques et mystiques
-    'Góngora', 'Quevedo', 'San Juan de la Cruz',
-    // Russe - Âge d'argent
-    'Tyutchev', 'Mandelstam', 'Akhmatova',
-    // Latin - Élégiaques
-    'Catullus', 'Propertius', 'Tibullus'
-];
+const HIDDEN_GEMS = [];
 
 // ═══════════════════════════════════════════════════════════
 // 🎭 MESSAGES FUN - Ambiance immersive
@@ -460,111 +444,85 @@ const ACHIEVEMENTS = {
 
 /**
  * Effectue un saut aléatoire SANS respecter l'ambiance courante
- * Pioche dans tous les auteurs du monde et de toutes les époques
+ * Utilise l'API Random de Wikisource pour une découverte totale
  * @returns {Promise<void>}
  */
 async function pureRandomJump() {
-    // Liste étendue d'auteurs classiques de toutes époques et cultures
-    const classicAuthors = [
-        // Français - Classiques
-        'Victor Hugo', 'Charles Baudelaire', 'Gustave Flaubert', 'Émile Zola',
-        'Marcel Proust', 'Stendhal', 'Honoré de Balzac', 'Guy de Maupassant',
-        'Alexandre Dumas', 'Jules Verne', 'Voltaire', 'Molière', 'Jean Racine',
-        'Arthur Rimbaud', 'Paul Verlaine', 'Gérard de Nerval', 'Alfred de Musset',
-        'François Rabelais', 'Michel de Montaigne', 'Jean de La Fontaine',
-        'Pierre Corneille', 'Denis Diderot', 'Alphonse Daudet', 'Théophile Gautier',
-        // Français - Modernes
-        'Albert Camus', 'Jean-Paul Sartre', 'Simone de Beauvoir', 'Marguerite Duras',
-        'André Gide', 'Colette', 'Anatole France', 'Paul Claudel', 'André Malraux',
-        // Français - Poètes
-        'Stéphane Mallarmé', 'Paul Valéry', 'Guillaume Apollinaire', 'René Char',
-        'Saint-John Perse', 'Francis Ponge', 'Henri Michaux', 'Yves Bonnefoy',
-        // Anglais
-        'Shakespeare', 'Oscar Wilde', 'Edgar Allan Poe', 'Mary Shelley',
-        'Charles Dickens', 'Jane Austen', 'Emily Brontë', 'Charlotte Brontë',
-        'Virginia Woolf', 'James Joyce', 'William Blake', 'John Milton',
-        'Geoffrey Chaucer', 'Lord Byron', 'Percy Shelley', 'John Keats',
-        'William Wordsworth', 'Samuel Taylor Coleridge', 'Alfred Tennyson',
-        // Américains
-        'Herman Melville', 'Nathaniel Hawthorne', 'Mark Twain', 'Walt Whitman',
-        'Emily Dickinson', 'Henry David Thoreau', 'Ralph Waldo Emerson',
-        'F. Scott Fitzgerald', 'Ernest Hemingway', 'William Faulkner',
-        // Allemands
-        'Johann Wolfgang von Goethe', 'Friedrich Schiller', 'Heinrich Heine',
-        'Thomas Mann', 'Franz Kafka', 'Hermann Hesse', 'Rainer Maria Rilke',
-        // Russes
-        'Fiodor Dostoïevski', 'Léon Tolstoï', 'Anton Tchekhov', 'Alexandre Pouchkine',
-        'Nicolas Gogol', 'Ivan Tourgueniev', 'Boris Pasternak', 'Anna Akhmatova',
-        // Italiens
-        'Dante Alighieri', 'Pétrarque', 'Boccace', 'Machiavel', 'Luigi Pirandello',
-        'Giacomo Leopardi', 'Italo Calvino', 'Primo Levi',
-        // Espagnols
-        'Cervantes', 'Federico García Lorca', 'Jorge Luis Borges', 'Pablo Neruda',
-        'Octavio Paz', 'Gabriel García Márquez', 'Julio Cortázar',
-        // Portugais
-        'Fernando Pessoa', 'Luís de Camões', 'José Saramago',
-        // Japonais
-        'Matsuo Bashō', 'Murasaki Shikibu', 'Sei Shōnagon', 'Yukio Mishima',
-        // Autres
-        'Omar Khayyam', 'Rabindranath Tagore', 'Khalil Gibran', 'Rûmî',
-        'Confucius', 'Lao Tseu', 'Li Bai', 'Du Fu',
-        // Antiques
-        'Homère', 'Virgile', 'Ovide', 'Horace', 'Sophocle', 'Euripide',
-        'Eschyle', 'Platon', 'Aristote', 'Cicéron', 'Sénèque', 'Marc Aurèle'
-    ];
+    toast('✧ Saut dans l\'inconnu...');
     
-    const discoveredAuthors = Object.keys(window.state?.authorStats || {});
-    const universalTerms = ['sonnet', 'elegy', 'ode', 'ballade', 'fable', 'nocturne', 'poème', 'conte', 'méditation', 'hymne', 'élégie', 'satire'];
-    const allOptions = [...discoveredAuthors, ...HIDDEN_GEMS, ...universalTerms, ...classicAuthors];
-    const unvisited = allOptions.filter(a => !(window.state?.authorStats?.[a]));
-    const pool = unvisited.length > 3 ? unvisited : allOptions;
-    
-    const chosen = pool[Math.floor(Math.random() * pool.length)];
-    
-    toast('✧ Découverte libre...');
-    
-    if (window.exploreAuthor) {
-        await window.exploreAuthor(chosen);
-    } else {
-        console.error('exploreAuthor non disponible');
-        toast('Chargement en cours, réessayez...');
-        return;
+    // Tente de récupérer une page au hasard via l'API Wikisource
+    try {
+        // Déteciton de la langue active pour l'API
+        let lang = 'fr'; // défaut
+        if (typeof selectedLang !== 'undefined' && selectedLang !== 'all') {
+            lang = selectedLang;
+        }
+        
+        // Construction de l'URL API (utilise le proxy CORS si nécessaire ou jsonp, ici fetch simple sur origine * si configuré)
+        // Note: Sur un vrai domaine, il faudrait gérer le CORS ou utiliser un proxy.
+        // Ici on suppose que sources.js gère la logique de fetch, ou on tente une approche directe.
+        
+        // On va essayer d'utiliser une fonction de sources.js si disponible, sinon fetch direct
+        // Comme nous sommes dans un environnement web local/extension, essayons une approche générique
+        
+        const apiUrl = `https://${lang}.wikisource.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json&origin=*`;
+        
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        
+        if (data.query && data.query.random && data.query.random.length > 0) {
+            const pageTitle = data.query.random[0].title;
+            // Nettoyage basique du titre (retirer les sous-pages genre "/Chapitre 1")
+            // Mais pour l'exploration, on prend tout !
+            
+            toast(`✧ Découverte : ${pageTitle}`);
+            
+            if (window.exploreAuthor) {
+                // On passe le titre complet comme "auteur" ou concept à explorer
+                // exploreAuthor devrait gérer ça (si c'est un titre d'oeuvre, il cherchera le texte)
+                await window.exploreAuthor(pageTitle);
+            }
+        } else {
+            throw new Error("Pas de résultat aléatoire");
+        }
+        
+    } catch (e) {
+        console.error("Erreur saut aléatoire", e);
+        // Fallback sur un terme générique si l'API échoue
+        const fallbacks = ['Poésie', 'Roman', 'Théâtre', 'Philosophie', 'Histoire'];
+        const randomTerm = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+        toast('✧ Navigation aléatoire...');
+        if (window.exploreAuthor) await window.exploreAuthor(randomTerm);
     }
+
     checkAchievements();
     updateFunStat();
 }
 
 // ═══════════════════════════════════════════════════════════
-// 🎯 SAUT ALÉATOIRE THÉMATIQUE (respecte l'ambiance)
+// 🎯 SAUT ALÉATOIRE CONTEXTUEL
 // ═══════════════════════════════════════════════════════════
 
 /**
- * Effectue un saut aléatoire EN RESPECTANT l'ambiance courante
- * Si mode libre, pioche dans les auteurs découverts + hidden gems
+ * Effectue un saut aléatoire basé sur les filtres actifs (s'il y en a)
+ * Sinon, comportement purement aléatoire.
  * @returns {Promise<void>}
  */
 async function randomJump() {
-    const ambiance = AMBIANCES[currentAmbiance];
-    let pool = [];
-    
-    // Si une ambiance spécifique est active, utiliser ses auteurs/mots-clés
-    if (currentAmbiance !== 'libre' && ambiance.authors.length > 0) {
-        pool = [...ambiance.authors, ...ambiance.keywords];
+    // Si des filtres sont actifs dans exploration.js, on les utilise
+    if (window.activeFilters && window.applyFilters && 
+        (!window.activeFilters.forme.includes('all') || 
+         !window.activeFilters.epoque.includes('all') || 
+         !window.activeFilters.ton.includes('all') || 
+         (window.activeFilters.pensee && !window.activeFilters.pensee.includes('all')))) {
+        
+        toast('✧ Saut contextuel (filtres)...');
+        await window.applyFilters();
     } else {
-        // Mode libre : comportement classique
-        const discoveredAuthors = Object.keys(window.state?.authorStats || {});
-        const universalTerms = ['sonnet', 'elegy', 'ode', 'ballade', 'fable', 'hymn', 'nocturne'];
-        const allOptions = [...discoveredAuthors, ...HIDDEN_GEMS, ...universalTerms];
-        const unvisited = allOptions.filter(a => !(window.state?.authorStats?.[a]) && !HIDDEN_GEMS.includes(a) || HIDDEN_GEMS.includes(a));
-        pool = unvisited.length > 3 ? unvisited : allOptions;
+        // Sinon saut aléatoire pur
+        await pureRandomJump();
     }
     
-    const chosen = pool[Math.floor(Math.random() * pool.length)];
-    
-    // Exploration directe sans message mystérieux
-    if (window.exploreAuthor) {
-        await window.exploreAuthor(chosen);
-    }
     checkAchievements();
     updateFunStat();
 }
