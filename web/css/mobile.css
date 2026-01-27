@@ -484,6 +484,82 @@
         color: var(--accent) !important;
     }
     
+    /* ====== DRAWER QUICK ACTIONS REWORKED FOR MOBILE ====== */
+    .drawer-quick-actions {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        padding: 0 !important;
+        margin: 0 0 16px 0 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .drawer-action-btn {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        gap: 6px !important;
+        padding: 12px 6px !important;
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 8px !important;
+        color: var(--text) !important;
+        font-size: 0.8rem !important;
+        min-height: 70px !important;
+        box-shadow: 2px 2px 0 var(--pixel-shadow) !important;
+        white-space: normal !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .drawer-action-btn i,
+    .drawer-action-btn svg {
+        width: 20px !important;
+        height: 20px !important;
+        margin-bottom: 2px !important;
+    }
+
+    /* Style spécifique pour la ligne préférences (langue / settings) */
+    .drawer-preferences-row {
+        grid-column: span 2 !important;
+        display: flex !important;
+        gap: 8px !important;
+        margin-top: 4px !important;
+    }
+
+    .drawer-lang-selector {
+        flex: 1 !important;
+        width: auto !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 0 10px !important;
+        height: 48px !important;
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 8px !important;
+        box-shadow: 2px 2px 0 var(--pixel-shadow) !important;
+    }
+
+    .drawer-icon-btn {
+        width: 48px !important;
+        height: 48px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 8px !important;
+        color: var(--text) !important;
+        box-shadow: 2px 2px 0 var(--pixel-shadow) !important;
+    }
+
     /* ═══════════════════════════════════════════
        ÉLÉMENTS À CACHER COMPLÈTEMENT
        ═══════════════════════════════════════════ */
