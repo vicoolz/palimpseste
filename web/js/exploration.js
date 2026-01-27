@@ -91,36 +91,36 @@ const EPOQUES_FILTER = {
     'category-antiquite': { 
         period: 'Antiquité', 
         keywords: [
-            'Homère', 'Hésiode', 'Pindare', 'Sappho', 'Eschyle', 'Sophocle', 'Euripide', 'Aristophane', 'Hérodote', 'Thucydide', 'Platon', 'Aristote', // Grecs
-            'Virgile', 'Horace', 'Ovide', 'Lucrèce', 'Catulle', 'Properce', 'Tibulle', 'Sénèque', 'Plaute', 'Térence', 'Cicéron', 'Jules César', 'Tite-Live', 'Tacite', 'Pétrone', 'Apulée', 'Martial', 'Juvénal' // Latins
+            'tragédie grecque', 'comédie antique', 'épopée antique', 'rhétorique latine', 'littérature latine', 'mythologie grecque', 'philosophie antique', 'stoïcisme', 'épicurisme', 'poésie lyrique', 
+            'littérature gréco-romaine', 'théâtre antique', 'mythes et légendes', 'dialogues philosophiques', 'poésie élégiaque'
         ] 
     },
     'category-medieval': { 
         period: 'Moyen Âge', 
         keywords: [
-            'Chrétien de Troyes', 'François Villon', 'Marie de France', 'Rutebeuf', 'Charles d\'Orléans', 'Guillaume de Lorris', 'Jean de Meung', 'Roman de la Rose', 'Tristan et Iseut', 'Chanson de Roland', 
-            'Dante Alighieri', 'Pétrarque', 'Boccace', 'Geoffrey Chaucer', 'Christine de Pizan', 'Eustache Deschamps', 'Adam de la Halle', 'Jean Froissart', 'Philippe de Commynes', 'Roman de Renart'
+            'amour courtois', 'chevalerie', 'chanson de geste', 'roman courtois', 'littérature médiévale', 'rondeaux', 'ballades', 'lais', 'fabliaux', 'chroniques', 
+            'poésie médiévale', 'théâtre médiéval', 'mystère', 'farce', 'roman de chevalerie', 'quire', 'manuscrit'
         ] 
     },
     'category-classique-group': { 
         period: 'Siècle classique', 
         keywords: [
-            'Molière', 'Racine', 'Corneille', 'La Fontaine', 'Boileau', 'La Bruyère', 'Pascal', 'La Rochefoucauld', 'Madame de Sévigné', 'Madame de La Fayette', 
-            'Bossuet', 'Fénelon', 'Saint-Simon', 'Perrault', 'Cyrano de Bergerac', 'Scarron', 'Rotrou', 'Malherbe', 'René Descartes'
+            'tragédie classique', 'comédie de caractère', 'fables', 'maximes', 'bienséance', 'vraisemblance', 'règle des trois unités', 'honnête homme', 'moralistes', 
+            'grand siècle', 'littérature classique', 'éloquence sacrée', 'correspondances', 'contes de fées', 'classicisme français'
         ] 
     },
     'category-xixe': { 
         period: 'XIXe siècle', 
         keywords: [
-            'Victor Hugo', 'Charles Baudelaire', 'Gustave Flaubert', 'Émile Zola', 'Arthur Rimbaud', 'Paul Verlaine', 'Stéphan Mallarmé', 'Honoré de Balzac', 'Stendhal', 'Guy de Maupassant', 
-            'George Sand', 'Alfred de Musset', 'Alphonse de Lamartine', 'Gérard de Nerval', 'Théophile Gautier', 'Prosper Mérimée', 'Jules Verne', 'Alexandre Dumas', 'Edmond Rostand', 'Villiers de l\'Isle-Adam'
+            'romantisme', 'réalisme', 'naturalisme', 'symbolisme', 'parnasse', 'poésie lyrique', 'roman-feuilleton', 'littérature fantastique', 'spleen', 'idéal', 
+            'poèmes maudits', 'orientalisme', 'dandysme', 'roman historique', 'drame romantique', 'poésie moderne', 'vers libre'
         ] 
     },
     'category-xxe': { 
         period: 'XXe siècle', 
         keywords: [
-            'Marcel Proust', 'Guillaume Apollinaire', 'Albert Camus', 'Jean-Paul Sartre', 'André Gide', 'Louis-Ferdinand Céline', 'Louis Aragon', 'Paul Éluard', 'André Breton', 
-            'Samuel Beckett', 'Eugène Ionesco', 'Jean Cocteau', 'Colette', 'Marguerite Duras', 'Nathalie Sarraute', 'Alain Robbe-Grillet', 'Claude Simon', 'Boris Vian', 'Romain Gary', 'Jacques Prévert'
+            'surréalisme', 'existentialisme', 'théâtre de l\'absurde', 'nouveau roman', 'poésie contemporaine', 'littérature engagée', 'autofiction', 'oulipo', 
+            'écriture automatique', 'inconscient', 'humanisme', 'roman moderne', 'expérimentation littéraire', 'calligrammes', 'versatilité'
         ] 
     },
 
@@ -129,11 +129,11 @@ const EPOQUES_FILTER = {
     // ═══════════════════════════════════════════════════════════
     'antiquite-grecque': { 
         period: 'Grèce antique', 
-        keywords: ['Homère', 'Iliade', 'Odyssée', 'Hésiode', 'Pindare', 'Sappho', 'Anacréon', 'Eschyle', 'Sophocle', 'Euripide', 'Aristophane', 'Ménandre', 'Théocrite', 'Platon', 'Aristote'] 
+        keywords: ['tragédie grecque', 'comédie ancienne', 'épopée homérique', 'lyrisme grec', 'philosophie socratique', 'dialectique', 'mythes grecs', 'dithyrambe', 'chœur antique'] 
     },
     'antiquite-romaine': { 
         period: 'Rome antique', 
-        keywords: ['Virgile', 'Énéide', 'Horace', 'Ovide', 'Métamorphoses', 'Lucrèce', 'Catulle', 'Properce', 'Tibulle', 'Sénèque', 'Plaute', 'Térence', 'Phèdre', 'Martial', 'Juvénal', 'Pétrone'] 
+        keywords: ['littérature latine', 'épopée virgilienne', 'satire romaine', 'élégie latine', 'rhétorique romaine', 'stoïcisme romain', 'art d\'aimer', 'histoire romaine', 'comédie latine'] 
     },
 
     // ═══════════════════════════════════════════════════════════
@@ -141,11 +141,11 @@ const EPOQUES_FILTER = {
     // ═══════════════════════════════════════════════════════════
     'medieval': { 
         period: 'Moyen Âge', 
-        keywords: ['Chrétien de Troyes', 'François Villon', 'Marie de France', 'Rutebeuf', 'Troubadours', 'Trouvères', 'Chanson de Geste', 'Lancelot', 'Perceval', 'Fabliaux', 'Miracles de Notre Dame'] 
+        keywords: ['fin\'amor', 'roman de chevalerie', 'matière de bretagne', 'cycle arthurien', 'poésie des troubadours', 'trouvères', 'littérature allégorique', 'bestiaires', 'chanson de toile'] 
     },
     'renaissance': { 
         period: 'Renaissance', 
-        keywords: ['Pierre de Ronsard', 'Joachim Du Bellay', 'Michel de Montaigne', 'François Rabelais', 'Clément Marot', 'Louise Labé', 'Maurice Scève', 'Agrippa d\'Aubigné', 'Étienne de La Boétie', 'Marguerite de Navarre'] 
+        keywords: ['humanisme', 'pléiade', 'sonnet', 'pétrarquisme', 'littérature de la renaissance', 'retour à l\'antique', 'imitatio', 'lyrisme amoureux', 'essais philosophiques', 'blason poétique'] 
     },
 
     // ═══════════════════════════════════════════════════════════
@@ -153,11 +153,11 @@ const EPOQUES_FILTER = {
     // ═══════════════════════════════════════════════════════════
     'baroque': { 
         period: 'Baroque', 
-        keywords: ['Agrippa d\'Aubigné', 'Théophile de Viau', 'Saint-Amant', 'Tristan L\'Hermite', 'Pierre Corneille', 'Honoré d\'Urfé', 'Cyrano de Bergerac', 'Jean de Rotrou', 'Paul Scarron'] 
+        keywords: ['poésie baroque', 'inconstance', 'illusion', 'métamorphose', 'vanité', 'memento mori', 'théâtre baroque', 'ornementation', 'prédication', 'roman pastoral'] 
     },
     'classique': { 
         period: 'Classicisme', 
-        keywords: ['Jean Racine', 'Molière', 'Jean de La Fontaine', 'Nicolas Boileau', 'Jacques-Bénigne Bossuet', 'François de La Rochefoucauld', 'Jean de La Bruyère', 'Madame de La Fayette', 'Madame de Sévigné'] 
+        keywords: ['doctrines classiques', 'tragédie pure', 'haute comédie', 'art poétique', 'raison', 'mesure', 'nature humaine', 'jansénisme', 'port-royal', 'éloquence'] 
     },
 
     // ═══════════════════════════════════════════════════════════
@@ -165,7 +165,7 @@ const EPOQUES_FILTER = {
     // ═══════════════════════════════════════════════════════════
     'lumieres': { 
         period: 'Lumières', 
-        keywords: ['Voltaire', 'Jean-Jacques Rousseau', 'Denis Diderot', 'Montesquieu', 'Beaumarchais', 'Marivaux', 'Abbé Prévost', 'Choderlos de Laclos', 'Sade', 'Bernardin de Saint-Pierre', 'André Chénier'] 
+        keywords: ['philosophie des lumières', 'encyclopédie', 'conte philosophique', 'roman épistolaire', 'raison et progrès', 'tolérance', 'libertinage', 'droits de l\'homme', 'théâtre de la foire', 'drame bourgeois'] 
     },
 
     // ═══════════════════════════════════════════════════════════
@@ -173,23 +173,23 @@ const EPOQUES_FILTER = {
     // ═══════════════════════════════════════════════════════════
     'romantisme': { 
         period: 'Romantisme', 
-        keywords: ['François-René de Chateaubriand', 'Alphonse de Lamartine', 'Alfred de Musset', 'Alfred de Vigny', 'Victor Hugo', 'Gérard de Nerval', 'Théophile Gautier', 'Aloysius Bertrand', 'Pétrus Borel'] 
+        keywords: ['mal du siècle', 'lyrisme personnel', 'contemplation de la nature', 'goût des ruines', 'passion', 'exotisme', 'romantisme noir', 'grotesque et sublime', 'engagement politique', 'roman historique'] 
     },
     'realisme': { 
         period: 'Réalisme', 
-        keywords: ['Honoré de Balzac', 'Stendhal', 'Gustave Flaubert', 'Guy de Maupassant', 'Prosper Mérimée', 'Edmond de Goncourt', 'Jules de Goncourt', 'Alphonse Daudet', 'Champfleury'] 
+        keywords: ['roman réaliste', 'description minutieuse', 'mœurs', 'milieu social', 'illusion référentielle', 'types sociaux', 'argent', 'bourgeoisie', 'ambition sociale', 'scènes de la vie'] 
     },
     'naturalisme': { 
         period: 'Naturalisme', 
-        keywords: ['Émile Zola', 'Guy de Maupassant', 'Joris-Karl Huysmans', 'Octave Mirbeau', 'Paul Alexis', 'Léon Hennique', 'Henry Céard'] 
+        keywords: ['roman expérimental', 'déterminisme', 'hérédité', 'milieu ouvrier', 'physiologie', 'pathologie', 'documentaire social', 'lutte des classes', 'instincts'] 
     },
     'symbolisme': { 
         period: 'Symbolisme', 
-        keywords: ['Charles Baudelaire', 'Paul Verlaine', 'Arthur Rimbaud', 'Stéphane Mallarmé', 'Tristan Corbière', 'Jules Laforgue', 'Lautréamont', 'Maurice Maeterlinck', 'Saint-Pol-Roux', 'Émile Verhaeren'] 
+        keywords: ['vers libre', 'correspondances', 'synesthésie', 'musicalité', 'hermétisme', 'monde sensible', 'spleen', 'symboles', 'rêve et inconscient', 'mystère', 'poésie pure'] 
     },
     'decadentisme': { 
         period: 'Décadentisme', 
-        keywords: ['Joris-Karl Huysmans', 'Villiers de l\'Isle-Adam', 'Lautréamont', 'Jules Barbey d\'Aurevilly', 'Jean Lorrain', 'Rachilde', 'Pierre Louÿs'] 
+        keywords: ['esprit décadent', 'fin de siècle', 'pessimisme', 'raffinement', 'artifice', 'névrose', 'esthétisme', 'dandysme', 'satanisme', 'romantisme désespéré'] 
     },
 
     // ═══════════════════════════════════════════════════════════
@@ -197,19 +197,19 @@ const EPOQUES_FILTER = {
     // ═══════════════════════════════════════════════════════════
     'surrealisme': { 
         period: 'Surréalisme', 
-        keywords: ['André Breton', 'Paul Éluard', 'Louis Aragon', 'Robert Desnos', 'René Char', 'Antonin Artaud', 'Philippe Soupault', 'Benjamin Péret', 'Raymond Queneau', 'Jacques Prévert'] 
+        keywords: ['écriture automatique', 'inconscient', 'révolte', 'amour fou', 'hasard objectif', 'cadavre exquis', 'imaginaire', 'liberté', 'merveilleux', 'association libre'] 
     },
     'existentialisme': { 
         period: 'Existentialisme', 
-        keywords: ['Jean-Paul Sartre', 'Albert Camus', 'Simone de Beauvoir', 'Maurice Merleau-Ponty', 'Boris Vian', 'Jean Genet'] 
+        keywords: ['philosophie de l\'existence', 'liberté et responsabilité', 'engagement', 'angoisse', 'contingence', 'situation', 'humanisme', 'roman à thèse', 'théâtre des idées'] 
     },
     'absurde': { 
-        period: 'Théâtre de l\'Absurde', 
-        keywords: ['Eugène Ionesco', 'Samuel Beckett', 'Arthur Adamov', 'Jean Genet', 'Harold Pinter', 'Fernando Arrabal'] 
+        period: 'Absurde', 
+        keywords: ['théâtre de l\'absurde', 'incommunicabilité', 'condition humaine', 'dérision', 'non-sens', 'répétition', 'tragicomique', 'vide existentiel', 'anti-théâtre'] 
     },
     'nouveau-roman': { 
         period: 'Nouveau roman', 
-        keywords: ['Alain Robbe-Grillet', 'Michel Butor', 'Nathalie Sarraute', 'Marguerite Duras', 'Claude Simon', 'Robert Pinget'] 
+        keywords: ['école du regard', 'mort du personnage', 'refus de l\'intrigue', 'roman objectif', 'description géométrique', 'anti-roman', 'structure narrative', 'ère du soupçon', 'labyrinthe'] 
     }
 };
 
