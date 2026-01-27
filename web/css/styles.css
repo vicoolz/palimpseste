@@ -4631,25 +4631,28 @@ color: white;
 /* Profile Tabs */
 .profile-tabs {
 display: flex;
+flex-wrap: wrap;
 border-bottom: 1px solid var(--border);
 position: sticky;
 top: 0;
 background: var(--bg-card);
 z-index: 5;
-overflow-x: auto;
+overflow-x: visible;
 }
 .profile-tab {
-flex: 1;
-padding: 0.85rem 1rem;
+flex: 1 1 33%;
+padding: 0.9rem 0.75rem;
 background: none;
 border: none;
 color: var(--text-secondary);
-font-size: 0.8rem;
+font-size: 0.85rem;
 font-weight: 500;
 cursor: pointer;
 transition: all 0.2s;
 border-bottom: 2px solid transparent;
-min-width: 120px;
+min-width: 0;
+text-align: center;
+touch-action: manipulation;
 }
 .profile-tab:hover {
 color: var(--text);
@@ -4658,6 +4661,14 @@ background: var(--bg-elevated);
 .profile-tab.active {
 color: var(--accent);
 border-bottom-color: var(--accent);
+}
+
+@media screen and (max-width: 520px) {
+    .profile-tab {
+        flex: 1 1 50%;
+        font-size: 0.9rem;
+        padding: 1rem 0.6rem;
+    }
 }
 /* Profile Content */
 .profile-content {
