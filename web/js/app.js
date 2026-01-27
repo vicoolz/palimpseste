@@ -200,9 +200,9 @@ function shareCardExtrait(cardId) {
     const selection = window.getSelection().toString().trim();
     const textToShare = selection.length >= 20 ? selection : fullText;
     
-    // Construire l'URL Wikisource
+    // Construire l'URL (Wikisource ou autre)
     const lang = card.dataset.lang || 'fr';
-    const sourceUrl = `https://${lang}.wikisource.org/wiki/${encodeURIComponent(title)}`;
+    const sourceUrl = card.dataset.url || `https://${lang}.wikisource.org/wiki/${encodeURIComponent(title)}`;
     
     openShareModal(textToShare, author, title, sourceUrl, cardId, tag);
 }
@@ -249,7 +249,8 @@ async function quickShareAndComment(cardId) {
     const author = card.dataset.author || 'Inconnu';
     const title = card.dataset.title || 'Sans titre';
     const lang = card.dataset.lang || 'fr';
-    const sourceUrl = `https://${lang}.wikisource.org/wiki/${encodeURIComponent(title)}`;
+    // Utiliser l'URL stockée dans dataset si disponible (ex: Archive.org)
+    const sourceUrl = card.dataset.url || `https://${lang}.wikisource.org/wiki/${encodeURIComponent(title)}`;
     
     // Récupérer la sélection ou le teaser
     const selection = window.getSelection().toString().trim();
@@ -901,12 +902,19 @@ async function loadNewTextsOnTop() {
         // Si c'est un item pré-chargé
         if (item.isPreloaded && item.text) {
             state.shownPages.add(itemKey);
+            const sourceInfo = {
+               lang: item.lang,
+               url: item.url || 'https://poetrydb.org',
+               name: item.source === 'archive' ? 'Archive.org' : (item.source === 'gutenberg' ? 'Gutenberg' : 'PoetryDB')
+            };
+
             const cardEl = createCardElement({
                 title: item.title,
                 text: item.text,
                 author: item.author,
-                source: item.source
-            }, item.title, { lang: item.lang, url: 'https://poetrydb.org', name: 'PoetryDB' });
+                source: item.source,
+                url: item.url
+            }, item.title, sourceInfo);
             if (cardEl) newCards.push(cardEl);
             loaded++;
             continue;
@@ -1069,7 +1077,8 @@ function createCardElement(result, origTitle, wikisource = getCurrentWikisource(
     const lang = wikisource?.lang || 'fr';
     const author = detectAuthor(title, text, result.author);
     const tag = detectTag(title, text);
-    const url = `${wikisource?.url || 'https://fr.wikisource.org'}/wiki/${encodeURIComponent(origTitle)}`;
+    // Priorité à l'URL fournie dans le résultat (ex: Archive.org), sinon construction Wikisource
+    const url = result.url || `${wikisource?.url || 'https://fr.wikisource.org'}/wiki/${encodeURIComponent(origTitle)}`;
     const cardId = 'card-' + (state.cardIdx++);
     
     let displayTitle = title.split('/').pop() || title.split('/')[0];
@@ -1923,28 +1932,58 @@ async function exploreAuthor(author) {
     const searches = [`${author} poem`, `${author} text`, `${author} sonnet`, author];
     const newCards = [];
     
-    // Utiliser les wikisources actives selon le filtre
-    const activeSources = getActiveWikisources();
-    const shuffledWS = [...activeSources].sort(() => Math.random() - 0.5).slice(0, Math.min(3, activeSources.length));
-    
-    for (const ws of shuffledWS) {
-        for (const query of searches) {
-            if (newCards.length >= 3) break; // Limiter à 3 textes
-            const results = await searchTexts(query, 5, ws);
-            for (const r of results) {
+    // FILTRES DE SOURCES
+    const isArchiveAllowed = !state.activeSourceFilter || state.activeSourceFilter.includes('archive') || state.activeSourceFilter.includes('all');
+    const isWikiAllowed = !state.activeSourceFilter || state.activeSourceFilter.includes('wikisource') || state.activeSourceFilter.includes('all');
+
+    // 1. RECHERCHE ARCHIVE.ORG (si active)
+    if (isArchiveAllowed && (!isWikiAllowed || Math.random() > 0.5)) {
+        if (typeof searchArchiveOrg === 'function') {
+            const archiveResults = await searchArchiveOrg(author);
+            for (const item of archiveResults) {
                 if (newCards.length >= 3) break;
-                if (!state.shownPages.has(r.title) && isValidTitle(r.title)) {
-                    // Charger le texte complet
-                    const result = await fetchText(r.title, 0, ws);
-                    if (result?.text?.length > 150) {
-                        state.shownPages.add(r.title);
-                        const cardEl = createCardElement(result, r.title, ws);
-                        if (cardEl) newCards.push(cardEl);
-                    }
+                // Clé unique pour éviter doublons (on préfixe pour différencier)
+                const itemKey = 'archive:' + item.title; 
+                
+                // Vérifier grossièrement si on a pas déjà ce titre (même sans préfixe)
+                let alreadyShown = false;
+                state.shownPages.forEach(k => { if (k.includes(item.title)) alreadyShown = true; });
+
+                if (!state.shownPages.has(itemKey) && !alreadyShown) {
+                    state.shownPages.add(itemKey);
+                    // createCardElement utilise result.url (passé dans item)
+                    const cardEl = createCardElement(item, item.title, { lang: item.lang || 'en', name: 'Archive.org', url: 'https://archive.org' });
+                    if (cardEl) newCards.push(cardEl);
                 }
             }
         }
-        if (newCards.length >= 3) break;
+    }
+
+    // 2. RECHERCHE WIKISOURCE (si active et qu'on a encore de la place)
+    if (isWikiAllowed && newCards.length < 3) {
+        // Utiliser les wikisources actives selon le filtre
+        const activeSources = getActiveWikisources();
+        const shuffledWS = [...activeSources].sort(() => Math.random() - 0.5).slice(0, Math.min(3, activeSources.length));
+        
+        for (const ws of shuffledWS) {
+            for (const query of searches) {
+                if (newCards.length >= 3) break; // Limiter à 3 textes
+                const results = await searchTexts(query, 5, ws);
+                for (const r of results) {
+                    if (newCards.length >= 3) break;
+                    if (!state.shownPages.has(r.title) && isValidTitle(r.title)) {
+                        // Charger le texte complet
+                        const result = await fetchText(r.title, 0, ws);
+                        if (result?.text?.length > 150) {
+                            state.shownPages.add(r.title);
+                            const cardEl = createCardElement(result, r.title, ws);
+                            if (cardEl) newCards.push(cardEl);
+                        }
+                    }
+                }
+            }
+            if (newCards.length >= 3) break;
+        }
     }
     
     // Supprimer l'indicateur de chargement
@@ -2078,11 +2117,78 @@ async function exploreKeyword(keyword) {
     await exploreAuthor(keyword);
 }
 
+
+// ═══════════════════════════════════════════════════════════
+// ⚙️ GESTION DES SOURCES (PARAMÈTRES)
+// ═══════════════════════════════════════════════════════════
+
+function openSourceSettingsModal() {
+    console.log('Opening source settings modal');
+    const modal = document.getElementById('sourceSettingsModal');
+    if (modal) {
+        modal.classList.add('open');
+        // Force display in case CSS fails
+        modal.style.display = 'flex';
+        updateSourceSettingsUI();
+    } else {
+        console.error('Modal sourceSettingsModal not found');
+    }
+}
+
+function closeSourceSettingsModal() {
+    const modal = document.getElementById('sourceSettingsModal');
+    if (modal) {
+        modal.classList.remove('open');
+        modal.style.display = ''; // Revert to CSS/inline default
+    }
+    saveState();
+    // Recharger le pool si changement drastique
+    if (state.textPool.length < 5) fillPool();
+}
+
+function toggleSourceSetting(source) {
+    if (!state.activeSourceFilter) state.activeSourceFilter = ['wikisource']; // Défaut strict
+    
+    // Logique checkboxes
+    if (state.activeSourceFilter.includes(source)) {
+        // Empêcher de tout désélectionner (garder au moins une source)
+        if (state.activeSourceFilter.length > 1) {
+            state.activeSourceFilter = state.activeSourceFilter.filter(s => s !== source);
+        } else {
+            toast('Il faut au moins une source active !');
+            return;
+        }
+    } else {
+        state.activeSourceFilter.push(source);
+    }
+    
+    updateSourceSettingsUI();
+    // Vider le pool pour purger les anciennes sources non désirées
+    state.textPool = [];
+    toast('Flux mis à jour. Rechargez pour voir les effets immédiats.');
+}
+
+function updateSourceSettingsUI() {
+    ['wikisource', 'archive', 'gutenberg', 'poetrydb'].forEach(s => {
+        const check = document.getElementById(`check-${s}`);
+        if (check) {
+            const isActive = !state.activeSourceFilter || state.activeSourceFilter.includes(s) || state.activeSourceFilter.includes('all');
+            check.classList.toggle('active', isActive);
+            check.textContent = isActive ? '✓' : '';
+        }
+    });
+}
+
+
 document.onkeydown = e => { if (e.key === 'Escape') closeReader(); };
 
 // Exposer les fonctions et variables nécessaires pour les autres modules
 window.state = state;
 window.exploreAuthor = exploreAuthor;
 window.syncLikesFromSupabase = syncLikesFromSupabase;
+window.openSourceSettingsModal = openSourceSettingsModal;
+window.closeSourceSettingsModal = closeSourceSettingsModal;
+window.toggleSourceSetting = toggleSourceSetting;
 
 init();
+

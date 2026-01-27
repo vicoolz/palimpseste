@@ -603,20 +603,167 @@ async function fetchPoetryDB() {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  ARCHIVE.ORG - Internet Archive
+//  ARCHIVE.ORG - Internet Archive (API Recherche Dynamique)
 // ═══════════════════════════════════════════════════════════
 async function fetchArchiveOrg() {
-    // Note: Sans liste d'IDs "Works", Archive.org est difficile à exploiter proprement via API JS simple.
-    // L'utilisateur a demandé de ne pas avoir de listes d'auteurs/oeuvres en dur.
-    return [];
+    try {
+        // 1. Déterminer la langue (Archive.org)
+        let language = '(fre OR eng)';
+        
+        if (selectedLang === 'fr') {
+            language = 'fre';
+        } else if (selectedLang === 'en') {
+            language = 'eng';
+        }
+
+        // 2. Paramètres aléatoires pour varier les résultats à chaque appel
+        // Page aléatoire étendue pour explorer le catalogue en profondeur
+        const page = Math.floor(Math.random() * 100) + 1;
+        
+        // Requête API "Advanced Search" d'Archive.org
+        // mediatype:texts (Tout le catalogue textuel disponible) - Pas de restriction de sujet
+        const query = `mediatype:texts AND language:${language}`;
+        const fields = 'identifier,title,creator,date';
+        
+        // URL de l'API (supporte CORS)
+        const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(query)}&fl=${fields}&rows=3&page=${page}&output=json&sort=random`;
+        
+        const res = await fetch(url);
+        const data = await res.json();
+        const docs = data.response?.docs || [];
+
+        const results = [];
+        
+        // 3. Récupérer le contenu textuel brut pour chaque résultat
+        for (const doc of docs) {
+            // URL du fichier texte brut (format classique Archive.org : identifier_djvu.txt)
+            const textUrl = `https://archive.org/download/${doc.identifier}/${doc.identifier}_djvu.txt`;
+            
+            try {
+                // On tente de récupérer le texte
+                const textRes = await fetch(textUrl);
+                if (textRes.ok) {
+                    let fullText = await textRes.text();
+                    
+                    // 4. Nettoyage et découpage (l'OCR brut est souvent sale)
+                    // On saute le début (souvent des métadonnées) et on prend un gros extrait
+                    if (fullText.length > 2000) {
+                        // Chercher un début de paragraphe propre après le header
+                        const start = Math.floor(Math.random() * (fullText.length / 4));
+                        const cleanStart = fullText.indexOf('\n\n', start);
+                        
+                        let excerpt = fullText.substring(cleanStart > -1 ? cleanStart : start, start + 2500);
+                        
+                        // Nettoyage basique des artefacts OCR
+                        excerpt = excerpt.replace(/_/g, ' ')
+                                         .replace(/[\d+]/g, '') // Numéros de pages
+                                         .replace(/\n{3,}/g, '\n\n') // Trop de sauts
+                                         .trim();
+
+                        if (excerpt.length > 200) {
+                            results.push({
+                                title: doc.title,
+                                text: excerpt + '\n\n[...] (Lire la suite sur Archive.org)',
+                                author: Array.isArray(doc.creator) ? doc.creator[0] : (doc.creator || 'Archive.org'),
+                                source: 'archive', // Identifiant source
+                                url: `https://archive.org/details/${doc.identifier}`,
+                                lang: (doc.language === 'fre' || selectedLang === 'fr') ? 'fr' : 'en'
+                            });
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn(`Archive.org text fetch failed for ${doc.identifier}`, err);
+            }
+        }
+        
+        return results;
+
+    } catch (e) {
+        console.error('Archive.org search error:', e);
+        return [];
+    }
+}
+
+/**
+ * Recherche spécifique sur Archive.org (par auteur/sujet)
+ */
+async function searchArchiveOrg(queryTerm) {
+    // Vérifier si la source est autorisée
+    const isAllowed = !state.activeSourceFilter || state.activeSourceFilter.includes('archive') || state.activeSourceFilter.includes('all');
+    if (!isAllowed) return [];
+
+    try {
+        let language = '(fre OR eng)';
+        if (selectedLang === 'fr') language = 'fre';
+        else if (selectedLang === 'en') language = 'eng';
+
+        // Recherche par créateur ou titre ou sujet
+        const q = `(creator:(${queryTerm}) OR title:(${queryTerm})) AND mediatype:texts AND language:${language}`;
+        const fields = 'identifier,title,creator,date';
+        
+        // Priorité aux résultats les plus pertinents (pas random)
+        const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl=${fields}&rows=5&page=1&output=json`;
+        
+        const res = await fetch(url);
+        const data = await res.json();
+        const docs = data.response?.docs || [];
+        const results = [];
+
+        for (const doc of docs) {
+             const textUrl = `https://archive.org/download/${doc.identifier}/${doc.identifier}_djvu.txt`;
+             try {
+                const textRes = await fetch(textUrl);
+                if (textRes.ok) {
+                    let fullText = await textRes.text();
+                    
+                    if (fullText.length > 500) {
+                        // Pour Archive.org, le texte brut est souvent très long et sale au début
+                        // On essaie de trouver un morceau potable
+                        const start = fullText.indexOf('\n\n', 500); // Sauter le header
+                        let excerpt = fullText.substring(start > -1 ? start : 0, start + 3000);
+                        
+                        // Nettoyage
+                        excerpt = excerpt.replace(/_/g, ' ')
+                                         .replace(/[\d+]/g, '')
+                                         .replace(/\n{3,}/g, '\n\n')
+                                         .trim();
+
+                        results.push({
+                            title: doc.title,
+                            text: excerpt + '\n\n[...] (Lire la suite sur Archive.org)',
+                            author: Array.isArray(doc.creator) ? doc.creator[0] : (doc.creator || 'Archive.org'),
+                            source: 'archive',
+                            url: `https://archive.org/details/${doc.identifier}`,
+                            lang: (doc.language === 'fre' || selectedLang === 'fr') ? 'fr' : 'en',
+                            isPreloaded: true
+                        });
+                    }
+                }
+             } catch (err) { console.warn('Archive text fetch fail', err); }
+        }
+        return results;
+
+    } catch (e) {
+        console.error('Archive search specific error:', e);
+        return [];
+    }
 }
 
 // ═══════════════════════════════════════════════════════════
 // 🌍 ALIMENTER LE POOL - Littérature mondiale
 // ═══════════════════════════════════════════════════════════
 async function fillPool() {
+    // Si aucun filtre n'est défini, on met Wikisource par défaut (sécurité)
+    if (!state.activeSourceFilter || state.activeSourceFilter.length === 0) {
+        state.activeSourceFilter = ['wikisource'];
+    }
+
+    // Helper pour vérifier si la source est autorisée
+    const isSourceAllowed = (s) => state.activeSourceFilter.includes(s) || state.activeSourceFilter.includes('all');
+
     // === 1. POETRYDB (si anglais actif) - Qualité garantie ===
-    if (selectedLang === 'all' || selectedLang === 'en') {
+    if ((selectedLang === 'all' || selectedLang === 'en') && isSourceAllowed('poetrydb')) {
         try {
             const poems = await fetchPoetryDB();
             for (const poem of poems) {
@@ -638,6 +785,7 @@ async function fillPool() {
     }
     
     // === 1.5 PROJECT GUTENBERG - Classiques du domaine public ===
+    if (isSourceAllowed('gutenberg')) {
     try {
         const gutenbergTexts = await fetchGutenberg();
         for (const item of gutenbergTexts) {
@@ -649,8 +797,10 @@ async function fillPool() {
     } catch (e) {
         console.error('Gutenberg fillPool error:', e);
     }
+    }
     
     // === 1.6 ARCHIVE.ORG - Internet Archive ===
+    if (isSourceAllowed('archive')) {
     try {
         const archiveTexts = await fetchArchiveOrg();
         for (const item of archiveTexts) {
@@ -660,8 +810,12 @@ async function fillPool() {
             });
         }
     } catch (e) {
-        console.error('Archive.org fillPool error:', e);
     }
+    }
+    
+    // === 2. WIKISOURCE (sources traditionnelles) ===
+    if (!isSourceAllowed('wikisource')) return;
+
     
     // === 2. WIKISOURCE (sources traditionnelles) ===
     const activeSources = getActiveWikisources();
@@ -695,10 +849,19 @@ async function fillPool() {
             const fallbackTerms = GENERIC_TERMS[ws.lang] || GENERIC_TERMS['fr'];
             
             // 50% de chance d'utiliser l'API Random vs Recherche générique
-            if (Math.random() > 0.5) {
+            // SAUF SI des filtres sont actifs -> on force la recherche
+            const activeKeywords = window.getActiveFilterKeywords ? window.getActiveFilterKeywords() : [];
+            const hasActiveFilters = activeKeywords.length > 0;
+
+            if (!hasActiveFilters && Math.random() > 0.5) {
                 useRandom = true;
             } else {
-                searchTerm = fallbackTerms[Math.floor(Math.random() * fallbackTerms.length)];
+                if (hasActiveFilters) {
+                    // Si filtres actifs, on pioche un mot clé parmi ceux des filtres
+                    searchTerm = activeKeywords[Math.floor(Math.random() * activeKeywords.length)];
+                } else {
+                    searchTerm = fallbackTerms[Math.floor(Math.random() * fallbackTerms.length)];
+                }
             }
         }
             

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -218,19 +218,24 @@
             <button class="drawer-action-btn theme-toggle-drawer" onclick="toggleTheme();">
                 <i data-lucide="sun" class="drawer-icon" id="drawerThemeIcon"></i> <span id="drawerThemeText">Mode clair</span>
             </button>
-            <div class="drawer-lang-selector">
-                <i data-lucide="globe" class="drawer-icon"></i>
-                <select id="drawerLangSelect" onchange="changeLanguage(this.value); closeMobileDrawer();">
-                    <option value="all">Toutes langues</option>
-                    <option value="fr">🇫🇷 Français</option>
-                    <option value="en">🇬🇧 English</option>
-                    <option value="de">🇩🇪 Deutsch</option>
-                    <option value="it">🇮🇹 Italiano</option>
-                    <option value="es">🇪🇸 Español</option>
-                </select>
+            <div class="drawer-preferences-row">
+                 <div class="drawer-lang-selector" style="flex: 1;">
+                    <i data-lucide="globe" class="drawer-icon"></i>
+                    <select id="drawerLangSelect" onchange="changeLanguage(this.value); closeMobileDrawer();">
+                        <option value="all">Langue: Tout</option>
+                        <option value="fr">Français</option>
+                        <option value="en">English</option>
+                        <option value="de">Deutsch</option>
+                        <option value="it">Italiano</option>
+                        <option value="es">Español</option>
+                    </select>
+                </div>
+                <button class="drawer-icon-btn" onclick="openSourceSettingsModal(); closeMobileDrawer();" title="Sources & Bibliothèques">
+                    <i data-lucide="settings"></i>
+                </button>
             </div>
         </div>
-        
+
         <!-- Section Profil Social -->
         <div id="profileSection" class="profile-section">
             <div id="profileLoggedOut" class="login-prompt">
@@ -263,6 +268,15 @@
                     </button>
                 </div>
                 <button class="drawer-logout-btn" onclick="logout(); closeMobileDrawer();">⎋ Déconnexion</button>
+            </div>
+        </div>
+
+        <!-- Section de réglages (Desktop - moved below profile) -->
+        <div class="desktop-settings-section" style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+             <div style="display: flex; gap: 10px; align-items: center;">
+                 <button onclick="openSourceSettingsModal();" class="sources-btn" title="Gérer les sources">
+                    <i data-lucide="settings" style="width: 16px; height: 16px; margin-right: 6px;"></i> Sources
+                 </button>
             </div>
         </div>
         
@@ -442,19 +456,19 @@
                 <!-- Catégories parentes -->
                 <!-- Poesie -->
                 <button class="filter-chip filter-split-main" data-filter="forme" data-value="category-poesie" onclick="toggleFilter('forme', 'category-poesie')">Poésie</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="forme" data-group="poesie" onclick="toggleFilterGroup('forme', 'poesie')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="forme" data-group="poesie" onclick="toggleFilterGroup('forme', 'poesie')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
                 
                 <!-- Recit -->
                 <button class="filter-chip filter-split-main" data-filter="forme" data-value="category-recit" onclick="toggleFilter('forme', 'category-recit')">Récit</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="forme" data-group="recit" onclick="toggleFilterGroup('forme', 'recit')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="forme" data-group="recit" onclick="toggleFilterGroup('forme', 'recit')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
 
                 <!-- Theatre -->
                 <button class="filter-chip filter-split-main" data-filter="forme" data-value="category-theatre" onclick="toggleFilter('forme', 'category-theatre')">Théâtre</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="forme" data-group="theatre" onclick="toggleFilterGroup('forme', 'theatre')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="forme" data-group="theatre" onclick="toggleFilterGroup('forme', 'theatre')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
 
                 <!-- Idees -->
                 <button class="filter-chip filter-split-main" data-filter="forme" data-value="category-idees" onclick="toggleFilter('forme', 'category-idees')">Prose d'idées</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="forme" data-group="idees" onclick="toggleFilterGroup('forme', 'idees')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="forme" data-group="idees" onclick="toggleFilterGroup('forme', 'idees')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
             </div>
             <!-- Sous-catégories (cachées par défaut) -->
             <div class="filter-subchips" id="subchips-forme-poesie" style="display:none;">
@@ -499,23 +513,23 @@
                 <!-- Catégories parentes -->
                 <!-- Antiquite -->
                 <button class="filter-chip filter-split-main" data-filter="epoque" data-value="category-antiquite" onclick="toggleFilter('epoque', 'category-antiquite')">Antiquité</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="epoque" data-group="antiquite" onclick="toggleFilterGroup('epoque', 'antiquite')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="epoque" data-group="antiquite" onclick="toggleFilterGroup('epoque', 'antiquite')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
 
                 <!-- Medieval -->
                 <button class="filter-chip filter-split-main" data-filter="epoque" data-value="category-medieval" onclick="toggleFilter('epoque', 'category-medieval')">Moyen Âge</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="epoque" data-group="medieval" onclick="toggleFilterGroup('epoque', 'medieval')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="epoque" data-group="medieval" onclick="toggleFilterGroup('epoque', 'medieval')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
 
                 <!-- Classique -->
                 <button class="filter-chip filter-split-main" data-filter="epoque" data-value="category-classique-group" onclick="toggleFilter('epoque', 'category-classique-group')">XVIIe-XVIIIe</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="epoque" data-group="classique" onclick="toggleFilterGroup('epoque', 'classique')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="epoque" data-group="classique" onclick="toggleFilterGroup('epoque', 'classique')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
 
                 <!-- XIXe -->
                 <button class="filter-chip filter-split-main" data-filter="epoque" data-value="category-xixe" onclick="toggleFilter('epoque', 'category-xixe')">XIXe siècle</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="epoque" data-group="xixe" onclick="toggleFilterGroup('epoque', 'xixe')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="epoque" data-group="xixe" onclick="toggleFilterGroup('epoque', 'xixe')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
 
                 <!-- XXe -->
                 <button class="filter-chip filter-split-main" data-filter="epoque" data-value="category-xxe" onclick="toggleFilter('epoque', 'category-xxe')">XXe siècle</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="epoque" data-group="xxe" onclick="toggleFilterGroup('epoque', 'xxe')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="epoque" data-group="xxe" onclick="toggleFilterGroup('epoque', 'xxe')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
             </div>
             <!-- Sous-catégories -->
             <div class="filter-subchips" id="subchips-epoque-antiquite" style="display:none;">
@@ -554,23 +568,23 @@
                 <!-- Catégories parentes -->
                 <!-- Emotion -->
                 <button class="filter-chip filter-split-main" data-filter="ton" data-value="category-emotion" onclick="toggleFilter('ton', 'category-emotion')">Émotion</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="ton" data-group="emotion" onclick="toggleFilterGroup('ton', 'emotion')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="ton" data-group="emotion" onclick="toggleFilterGroup('ton', 'emotion')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
 
                 <!-- Heroisme -->
                 <button class="filter-chip filter-split-main" data-filter="ton" data-value="category-heroisme" onclick="toggleFilter('ton', 'category-heroisme')">Héroïsme</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="ton" data-group="heroisme" onclick="toggleFilterGroup('ton', 'heroisme')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="ton" data-group="heroisme" onclick="toggleFilterGroup('ton', 'heroisme')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
 
                 <!-- Imaginaire -->
                 <button class="filter-chip filter-split-main" data-filter="ton" data-value="category-imaginaire" onclick="toggleFilter('ton', 'category-imaginaire')">Imaginaire</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="ton" data-group="imaginaire" onclick="toggleFilterGroup('ton', 'imaginaire')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="ton" data-group="imaginaire" onclick="toggleFilterGroup('ton', 'imaginaire')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
 
                 <!-- Comique -->
                 <button class="filter-chip filter-split-main" data-filter="ton" data-value="category-comique" onclick="toggleFilter('ton', 'category-comique')">Comique</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="ton" data-group="comique" onclick="toggleFilterGroup('ton', 'comique')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="ton" data-group="comique" onclick="toggleFilterGroup('ton', 'comique')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
 
                 <!-- Nature -->
                 <button class="filter-chip filter-split-main" data-filter="ton" data-value="category-nature" onclick="toggleFilter('ton', 'category-nature')">Nature</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="ton" data-group="nature" onclick="toggleFilterGroup('ton', 'nature')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="ton" data-group="nature" onclick="toggleFilterGroup('ton', 'nature')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
             </div>
             <!-- Sous-catégories -->
             <div class="filter-subchips" id="subchips-ton-emotion" style="display:none;">
@@ -613,15 +627,15 @@
                 <!-- Catégories parentes -->
                 <!-- Antique -->
                 <button class="filter-chip filter-split-main" data-filter="pensee" data-value="category-antique" onclick="toggleFilter('pensee', 'category-antique')">Antique</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="pensee" data-group="antique" onclick="toggleFilterGroup('pensee', 'antique')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="pensee" data-group="antique" onclick="toggleFilterGroup('pensee', 'antique')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
 
                 <!-- Moderne -->
                 <button class="filter-chip filter-split-main" data-filter="pensee" data-value="category-moderne" onclick="toggleFilter('pensee', 'category-moderne')">Moderne</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="pensee" data-group="moderne" onclick="toggleFilterGroup('pensee', 'moderne')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="pensee" data-group="moderne" onclick="toggleFilterGroup('pensee', 'moderne')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
 
                 <!-- Ethique -->
                 <button class="filter-chip filter-split-main" data-filter="pensee" data-value="category-ethique" onclick="toggleFilter('pensee', 'category-ethique')">Éthique</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="pensee" data-group="ethique" onclick="toggleFilterGroup('pensee', 'ethique')">▾</button>
+                <button class="filter-chip filter-parent filter-split-arrow" data-filter="pensee" data-group="ethique" onclick="toggleFilterGroup('pensee', 'ethique')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
             </div>
             <!-- Sous-catégories -->
             <div class="filter-subchips" id="subchips-pensee-antique" style="display:none;">
@@ -906,6 +920,88 @@
             <div class="search-results-grid" id="searchResultsGrid"></div>
         </div>
     </div>
+    
+    <!-- MODAL PARAMÈTRES SOURCES -->
+    <div class="favorites-overlay" id="sourceSettingsModal" style="display: none; align-items: center; justify-content: center; z-index: 10000;">
+        <div class="favorites-view" style="max-width: 450px; height: auto; max-height: 85vh; background: var(--bg-elevated); border: 2px solid var(--border); box-shadow: 4px 4px 0 var(--pixel-shadow); padding: 0; display: flex; flex-direction: column; width: 90%; margin: 20px;">
+            <div class="favorites-header" style="padding: 15px 20px; border-bottom: 2px solid var(--border); margin-bottom: 0;">
+                <div class="favorites-title" style="font-size: 1.2rem;">📚 Bibliothèques</div>
+                <button class="reader-close" onclick="closeSourceSettingsModal()" style="position: static; font-size: 1.5rem; line-height: 1;">✕</button>
+            </div>
+            
+            <div style="padding: 20px; overflow-y: auto;">
+                <p style="margin-bottom: 20px; color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;">Sélectionnez les sources utilisées pour générer le palimpseste infini.</p>
+                
+                <div class="source-option-row" onclick="toggleSourceSetting('wikisource')">
+                    <div class="source-checkbox active" id="check-wikisource">✓</div>
+                    <div>
+                        <strong style="display:block; margin-bottom: 2px;">Wikisource</strong>
+                        <div style="font-size: 0.85em; opacity: 0.7;">Bibliothèque libre participative. Meilleure qualité et formatage.</div>
+                    </div>
+                </div>
+
+                <div class="source-option-row" onclick="toggleSourceSetting('archive')">
+                    <div class="source-checkbox" id="check-archive"></div>
+                    <div>
+                        <strong style="display:block; margin-bottom: 2px;">Archive.org</strong>
+                        <div style="font-size: 0.85em; opacity: 0.7;">Scanner de livres anciens. Textes bruts (OCR parfois imparfait).</div>
+                    </div>
+                </div>
+
+                <div class="source-option-row" onclick="toggleSourceSetting('gutenberg')">
+                    <div class="source-checkbox" id="check-gutenberg"></div>
+                    <div>
+                        <strong style="display:block; margin-bottom: 2px;">Project Gutenberg</strong>
+                        <div style="font-size: 0.85em; opacity: 0.7;">Classiques du domaine public.</div>
+                    </div>
+                </div>
+
+                <div class="source-option-row" onclick="toggleSourceSetting('poetrydb')">
+                    <div class="source-checkbox" id="check-poetrydb"></div>
+                    <div>
+                        <strong style="display:block; margin-bottom: 2px;">PoetryDB (Anglais)</strong>
+                        <div style="font-size: 0.85em; opacity: 0.7;">Base de données dédiée à la poésie anglophone.</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="closeSourceSettingsModal()" style="width: 100%; margin-top: 15px; padding: 12px; font-weight: bold; justify-content: center;">Appliquer les changements</button>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .source-option-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .source-option-row:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        .source-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #666;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: transparent;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .source-checkbox.active {
+            border-color: var(--accent);
+            background: rgba(212, 165, 116, 0.2);
+            color: var(--accent);
+        }
+    </style>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
          TOAST NOTIFICATIONS

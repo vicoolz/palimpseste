@@ -1264,3 +1264,8 @@
         transform: translateX(-100%) !important;
     }
 }
+
+/* HIDE DESKTOP SETTINGS ON MOBILE ONLY */
+@media (max-width: 768px) {
+    .desktop-settings-section { display: none !important; }
+}

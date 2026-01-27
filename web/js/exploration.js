@@ -26,7 +26,8 @@ const activeFilters = {
     forme: ['all'],
     epoque: ['all'],
     ton: ['all'],
-    pensee: ['all']
+    pensee: ['all'],
+    source: ['all']
 };
 
 /**
@@ -36,7 +37,8 @@ const openGroups = {
     forme: null,
     epoque: null,
     ton: null,
-    pensee: null
+    pensee: null,
+    source: null
 };
 
 /**
@@ -83,35 +85,132 @@ const FORMES = {
  * Mapping des époques/courants (SANS AUTEURS - Recherche pure)
  */
 const EPOQUES_FILTER = {
-    // Périodes Générales
-    'category-antiquite': { period: 'Antiquité' },
-    'category-medieval': { period: 'Moyen Âge' },
-    'category-classique-group': { period: 'Siècle classique' },
-    'category-xixe': { period: 'XIXe siècle' },
-    'category-xxe': { period: 'XXe siècle' },
+    // ═══════════════════════════════════════════════════════════
+    // Périodes Générales (Les grands siècles)
+    // ═══════════════════════════════════════════════════════════
+    'category-antiquite': { 
+        period: 'Antiquité', 
+        keywords: [
+            'Homère', 'Hésiode', 'Pindare', 'Sappho', 'Eschyle', 'Sophocle', 'Euripide', 'Aristophane', 'Hérodote', 'Thucydide', 'Platon', 'Aristote', // Grecs
+            'Virgile', 'Horace', 'Ovide', 'Lucrèce', 'Catulle', 'Properce', 'Tibulle', 'Sénèque', 'Plaute', 'Térence', 'Cicéron', 'Jules César', 'Tite-Live', 'Tacite', 'Pétrone', 'Apulée', 'Martial', 'Juvénal' // Latins
+        ] 
+    },
+    'category-medieval': { 
+        period: 'Moyen Âge', 
+        keywords: [
+            'Chrétien de Troyes', 'François Villon', 'Marie de France', 'Rutebeuf', 'Charles d\'Orléans', 'Guillaume de Lorris', 'Jean de Meung', 'Roman de la Rose', 'Tristan et Iseut', 'Chanson de Roland', 
+            'Dante Alighieri', 'Pétrarque', 'Boccace', 'Geoffrey Chaucer', 'Christine de Pizan', 'Eustache Deschamps', 'Adam de la Halle', 'Jean Froissart', 'Philippe de Commynes', 'Roman de Renart'
+        ] 
+    },
+    'category-classique-group': { 
+        period: 'Siècle classique', 
+        keywords: [
+            'Molière', 'Racine', 'Corneille', 'La Fontaine', 'Boileau', 'La Bruyère', 'Pascal', 'La Rochefoucauld', 'Madame de Sévigné', 'Madame de La Fayette', 
+            'Bossuet', 'Fénelon', 'Saint-Simon', 'Perrault', 'Cyrano de Bergerac', 'Scarron', 'Rotrou', 'Malherbe', 'René Descartes'
+        ] 
+    },
+    'category-xixe': { 
+        period: 'XIXe siècle', 
+        keywords: [
+            'Victor Hugo', 'Charles Baudelaire', 'Gustave Flaubert', 'Émile Zola', 'Arthur Rimbaud', 'Paul Verlaine', 'Stéphan Mallarmé', 'Honoré de Balzac', 'Stendhal', 'Guy de Maupassant', 
+            'George Sand', 'Alfred de Musset', 'Alphonse de Lamartine', 'Gérard de Nerval', 'Théophile Gautier', 'Prosper Mérimée', 'Jules Verne', 'Alexandre Dumas', 'Edmond Rostand', 'Villiers de l\'Isle-Adam'
+        ] 
+    },
+    'category-xxe': { 
+        period: 'XXe siècle', 
+        keywords: [
+            'Marcel Proust', 'Guillaume Apollinaire', 'Albert Camus', 'Jean-Paul Sartre', 'André Gide', 'Louis-Ferdinand Céline', 'Louis Aragon', 'Paul Éluard', 'André Breton', 
+            'Samuel Beckett', 'Eugène Ionesco', 'Jean Cocteau', 'Colette', 'Marguerite Duras', 'Nathalie Sarraute', 'Alain Robbe-Grillet', 'Claude Simon', 'Boris Vian', 'Romain Gary', 'Jacques Prévert'
+        ] 
+    },
 
+    // ═══════════════════════════════════════════════════════════
     // Antiquité détaillée
-    'antiquite-grecque': { period: 'Grèce antique' },
-    'antiquite-romaine': { period: 'Rome antique' },
+    // ═══════════════════════════════════════════════════════════
+    'antiquite-grecque': { 
+        period: 'Grèce antique', 
+        keywords: ['Homère', 'Iliade', 'Odyssée', 'Hésiode', 'Pindare', 'Sappho', 'Anacréon', 'Eschyle', 'Sophocle', 'Euripide', 'Aristophane', 'Ménandre', 'Théocrite', 'Platon', 'Aristote'] 
+    },
+    'antiquite-romaine': { 
+        period: 'Rome antique', 
+        keywords: ['Virgile', 'Énéide', 'Horace', 'Ovide', 'Métamorphoses', 'Lucrèce', 'Catulle', 'Properce', 'Tibulle', 'Sénèque', 'Plaute', 'Térence', 'Phèdre', 'Martial', 'Juvénal', 'Pétrone'] 
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // Moyen Âge et Renaissance
-    'medieval': { period: 'Moyen Âge' },
-    'renaissance': { period: 'Renaissance' },
+    // ═══════════════════════════════════════════════════════════
+    'medieval': { 
+        period: 'Moyen Âge', 
+        keywords: ['Chrétien de Troyes', 'François Villon', 'Marie de France', 'Rutebeuf', 'Troubadours', 'Trouvères', 'Chanson de Geste', 'Lancelot', 'Perceval', 'Fabliaux', 'Miracles de Notre Dame'] 
+    },
+    'renaissance': { 
+        period: 'Renaissance', 
+        keywords: ['Pierre de Ronsard', 'Joachim Du Bellay', 'Michel de Montaigne', 'François Rabelais', 'Clément Marot', 'Louise Labé', 'Maurice Scève', 'Agrippa d\'Aubigné', 'Étienne de La Boétie', 'Marguerite de Navarre'] 
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // XVIIe siècle
-    'baroque': { period: 'Baroque' },
-    'classique': { period: 'Classicisme' },
+    // ═══════════════════════════════════════════════════════════
+    'baroque': { 
+        period: 'Baroque', 
+        keywords: ['Agrippa d\'Aubigné', 'Théophile de Viau', 'Saint-Amant', 'Tristan L\'Hermite', 'Pierre Corneille', 'Honoré d\'Urfé', 'Cyrano de Bergerac', 'Jean de Rotrou', 'Paul Scarron'] 
+    },
+    'classique': { 
+        period: 'Classicisme', 
+        keywords: ['Jean Racine', 'Molière', 'Jean de La Fontaine', 'Nicolas Boileau', 'Jacques-Bénigne Bossuet', 'François de La Rochefoucauld', 'Jean de La Bruyère', 'Madame de La Fayette', 'Madame de Sévigné'] 
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // XVIIIe siècle
-    'lumieres': { period: 'Lumières' },
+    // ═══════════════════════════════════════════════════════════
+    'lumieres': { 
+        period: 'Lumières', 
+        keywords: ['Voltaire', 'Jean-Jacques Rousseau', 'Denis Diderot', 'Montesquieu', 'Beaumarchais', 'Marivaux', 'Abbé Prévost', 'Choderlos de Laclos', 'Sade', 'Bernardin de Saint-Pierre', 'André Chénier'] 
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // XIXe siècle détaillé
-    'romantisme': { period: 'Romantisme' },
-    'realisme': { period: 'Réalisme' },
-    'naturalisme': { period: 'Naturalisme' },
-    'symbolisme': { period: 'Symbolisme' },
-    'decadentisme': { period: 'Décadentisme' },
+    // ═══════════════════════════════════════════════════════════
+    'romantisme': { 
+        period: 'Romantisme', 
+        keywords: ['François-René de Chateaubriand', 'Alphonse de Lamartine', 'Alfred de Musset', 'Alfred de Vigny', 'Victor Hugo', 'Gérard de Nerval', 'Théophile Gautier', 'Aloysius Bertrand', 'Pétrus Borel'] 
+    },
+    'realisme': { 
+        period: 'Réalisme', 
+        keywords: ['Honoré de Balzac', 'Stendhal', 'Gustave Flaubert', 'Guy de Maupassant', 'Prosper Mérimée', 'Edmond de Goncourt', 'Jules de Goncourt', 'Alphonse Daudet', 'Champfleury'] 
+    },
+    'naturalisme': { 
+        period: 'Naturalisme', 
+        keywords: ['Émile Zola', 'Guy de Maupassant', 'Joris-Karl Huysmans', 'Octave Mirbeau', 'Paul Alexis', 'Léon Hennique', 'Henry Céard'] 
+    },
+    'symbolisme': { 
+        period: 'Symbolisme', 
+        keywords: ['Charles Baudelaire', 'Paul Verlaine', 'Arthur Rimbaud', 'Stéphane Mallarmé', 'Tristan Corbière', 'Jules Laforgue', 'Lautréamont', 'Maurice Maeterlinck', 'Saint-Pol-Roux', 'Émile Verhaeren'] 
+    },
+    'decadentisme': { 
+        period: 'Décadentisme', 
+        keywords: ['Joris-Karl Huysmans', 'Villiers de l\'Isle-Adam', 'Lautréamont', 'Jules Barbey d\'Aurevilly', 'Jean Lorrain', 'Rachilde', 'Pierre Louÿs'] 
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // XXe siècle détaillé
-    'surrealisme': { period: 'Surréalisme' },
-    'existentialisme': { period: 'Existentialisme' },
-    'absurde': { period: 'Absurde' },
-    'nouveau-roman': { period: 'Nouveau roman' }
+    // ═══════════════════════════════════════════════════════════
+    'surrealisme': { 
+        period: 'Surréalisme', 
+        keywords: ['André Breton', 'Paul Éluard', 'Louis Aragon', 'Robert Desnos', 'René Char', 'Antonin Artaud', 'Philippe Soupault', 'Benjamin Péret', 'Raymond Queneau', 'Jacques Prévert'] 
+    },
+    'existentialisme': { 
+        period: 'Existentialisme', 
+        keywords: ['Jean-Paul Sartre', 'Albert Camus', 'Simone de Beauvoir', 'Maurice Merleau-Ponty', 'Boris Vian', 'Jean Genet'] 
+    },
+    'absurde': { 
+        period: 'Théâtre de l\'Absurde', 
+        keywords: ['Eugène Ionesco', 'Samuel Beckett', 'Arthur Adamov', 'Jean Genet', 'Harold Pinter', 'Fernando Arrabal'] 
+    },
+    'nouveau-roman': { 
+        period: 'Nouveau roman', 
+        keywords: ['Alain Robbe-Grillet', 'Michel Butor', 'Nathalie Sarraute', 'Marguerite Duras', 'Claude Simon', 'Robert Pinget'] 
+    }
 };
 
 /**
@@ -258,6 +357,48 @@ function updateFilterUI() {
     });
 }
 
+
+/**
+ * Récupère les termes de recherche pour le scrolling infini (persistent)
+ * Retourne un tableau de mots-clés dérivés des filtres actifs
+ */
+function getActiveFilterKeywords() {
+    const keywords = [];
+    
+    // Forme
+    if (!activeFilters.forme.includes('all')) {
+        activeFilters.forme.forEach(f => {
+            if (FORMES[f]?.keywords) keywords.push(...FORMES[f].keywords);
+        });
+    }
+    
+    // Époque
+    if (!activeFilters.epoque.includes('all')) {
+        activeFilters.epoque.forEach(e => {
+            if (EPOQUES_FILTER[e]?.period) keywords.push(EPOQUES_FILTER[e].period);
+        });
+    }
+    
+    // Ton
+    if (!activeFilters.ton.includes('all')) {
+        activeFilters.ton.forEach(t => {
+            if (TONS[t]?.keywords) keywords.push(...TONS[t].keywords);
+        });
+    }
+    
+    // Pensée
+    if (activeFilters.pensee && !activeFilters.pensee.includes('all')) {
+        activeFilters.pensee.forEach(p => {
+            if (PENSEES[p]?.keywords) keywords.push(...PENSEES[p].keywords);
+        });
+    }
+    
+    return keywords;
+}
+
+// Exposer pour sources.js
+window.getActiveFilterKeywords = getActiveFilterKeywords;
+
 /**
  * Met à jour le résumé des filtres actifs
  */
@@ -280,6 +421,7 @@ function updateFilterSummary() {
     if (activeFilters.pensee && !activeFilters.pensee.includes('all')) {
         parts.push(activeFilters.pensee.join(' + '));
     }
+    // Note: Le filtre source n'est plus affiché ici (via paramètres séparés)
 
     if (parts.length > 0) {
         summaryText.textContent = parts.join(' × ');
@@ -296,6 +438,8 @@ function clearAllFilters() {
     activeFilters.forme = ['all'];
     activeFilters.epoque = ['all'];
     activeFilters.ton = ['all'];
+    activeFilters.pensee = ['all'];
+    // activeFilters.source conservé (paramètre global)
     updateFilterUI();
     updateFilterSummary();
     toast('🔄 Filtres effacés');
@@ -332,6 +476,8 @@ async function applyFilters() {
         pensee: []
     };
     
+    // Le filtre de source est géré globalement via les paramètres, on ne le touche pas ici
+    
     // Récolte Forme
     if (!activeFilters.forme.includes('all')) {
         activeFilters.forme.forEach(f => {
@@ -342,7 +488,15 @@ async function applyFilters() {
     // Récolte Époque (On utilise la période comme ingrédient principal)
     if (!activeFilters.epoque.includes('all')) {
         activeFilters.epoque.forEach(e => {
-            if (EPOQUES_FILTER[e]?.period) ingredients.epoque.push(EPOQUES_FILTER[e].period);
+            const filter = EPOQUES_FILTER[e];
+            if (filter) {
+                // Priorité aux mots-clés spécifiques s'ils existent (évite les recherches génériques pauvres)
+                if (filter.keywords && filter.keywords.length > 0) {
+                    ingredients.epoque.push(...filter.keywords);
+                } else if (filter.period) {
+                    ingredients.epoque.push(filter.period);
+                }
+            }
         });
     }
     

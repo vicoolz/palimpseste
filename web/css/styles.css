@@ -7984,3 +7984,105 @@ transition: all 0.2s;
     color: var(--accent);
     background: rgba(90, 122, 138, 0.1);
 }
+
+/* SIDEBAR SETTINGS */
+.sidebar-settings { padding: 10px 20px; border-bottom: 2px solid var(--border); }
+.sidebar-section-title { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+.sources-btn { width: 100%; justify-content: flex-start; background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 10px; border-radius: 6px; }
+.sources-btn:hover { background: rgba(255,255,255,0.1); }
+
+/* DESKTOP SETTINGS SECTION */
+.desktop-settings-section { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem; margin-bottom: 0.75rem; border-bottom: 2px solid var(--border); }
+
+
+/* Compact Settings Styles */
+.settings-mini-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    font-family: var(--font-pixel);
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    height: 32px;
+}
+.settings-mini-btn:hover {
+    background: var(--accent-secondary);
+    color: white;
+    border-color: var(--accent-secondary);
+}
+
+.compact-desktop-lang select {
+    padding: 4px 24px 4px 6px;
+    font-size: 0.8rem;
+    height: 32px;
+    width: auto;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+}
+.compact-desktop-lang {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    height: 32px;
+}
+.compact-desktop-lang:hover {
+    border-color: var(--text);
+}
+
+.drawer-preferences-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0 1rem;
+}
+.drawer-icon-btn {
+    background: var(--bg-elevated);
+    border: 2px solid var(--border);
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 var(--border);
+}
+.drawer-icon-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+}
+
+/* SIDEBAR SETTINGS */
+.sidebar-settings { padding: 10px 20px; border-bottom: 2px solid var(--border); }
+.sidebar-section-title { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+
+.sources-btn { 
+    display: flex;
+    align-items: center;
+    width: 100%; 
+    justify-content: flex-start; 
+    background: rgba(255,255,255,0.03); 
+    border: 1px solid var(--border); 
+    padding: 10px; 
+    border-radius: 6px; 
+    color: var(--text-main);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+.sources-btn:hover { background: rgba(255,255,255,0.1); }
+
+/* DESKTOP SETTINGS SECTION */
+.desktop-settings-section { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem; margin-bottom: 0.75rem; border-bottom: 2px solid var(--border); }
+
+
+/* Modal fix */
+#sourceSettingsModal.open { display: flex !important; }
