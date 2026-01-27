@@ -619,53 +619,12 @@
             </div>
         </div>
         
-        <!-- Ligne 4: Pensée (hiérarchique) -->
-        <div class="filter-row" id="filterRowPensee">
-            <span class="filter-label">๏ Pensée</span>
-            <div class="filter-chips">
-                <button class="filter-chip active" data-filter="pensee" data-value="all" onclick="toggleFilter('pensee', 'all')">∞ tout</button>
-                <!-- Catégories parentes -->
-                <!-- Antique -->
-                <button class="filter-chip filter-split-main" data-filter="pensee" data-value="category-antique" onclick="toggleFilter('pensee', 'category-antique')">Antique</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="pensee" data-group="antique" onclick="toggleFilterGroup('pensee', 'antique')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
-
-                <!-- Moderne -->
-                <button class="filter-chip filter-split-main" data-filter="pensee" data-value="category-moderne" onclick="toggleFilter('pensee', 'category-moderne')">Moderne</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="pensee" data-group="moderne" onclick="toggleFilterGroup('pensee', 'moderne')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
-
-                <!-- Ethique -->
-                <button class="filter-chip filter-split-main" data-filter="pensee" data-value="category-ethique" onclick="toggleFilter('pensee', 'category-ethique')">Éthique</button>
-                <button class="filter-chip filter-parent filter-split-arrow" data-filter="pensee" data-group="ethique" onclick="toggleFilterGroup('pensee', 'ethique')"><i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
-            </div>
-            <!-- Sous-catégories -->
-            <div class="filter-subchips" id="subchips-pensee-antique" style="display:none;">
-                <button class="filter-chip filter-child" data-filter="pensee" data-value="stoicisme" onclick="toggleFilter('pensee', 'stoicisme')">stoïcisme</button>
-                <button class="filter-chip filter-child" data-filter="pensee" data-value="epicurisme" onclick="toggleFilter('pensee', 'epicurisme')">épicurisme</button>
-                <button class="filter-chip filter-child" data-filter="pensee" data-value="platonisme" onclick="toggleFilter('pensee', 'platonisme')">platonisme</button>
-                <button class="filter-chip filter-child" data-filter="pensee" data-value="scepticisme" onclick="toggleFilter('pensee', 'scepticisme')">scepticisme</button>
-            </div>
-            <div class="filter-subchips" id="subchips-pensee-moderne" style="display:none;">
-                <button class="filter-chip filter-child" data-filter="pensee" data-value="humanisme" onclick="toggleFilter('pensee', 'humanisme')">humanisme</button>
-                <button class="filter-chip filter-child" data-filter="pensee" data-value="rationalisme" onclick="toggleFilter('pensee', 'rationalisme')">rationalisme</button>
-                <button class="filter-chip filter-child" data-filter="pensee" data-value="empirisme" onclick="toggleFilter('pensee', 'empirisme')">empirisme</button>
-                <span class="filter-separator">│</span>
-                <button class="filter-chip filter-child" data-filter="pensee" data-value="idealisme" onclick="toggleFilter('pensee', 'idealisme')">idéalisme</button>
-                <button class="filter-chip filter-child" data-filter="pensee" data-value="nihilisme" onclick="toggleFilter('pensee', 'nihilisme')">nihilisme</button>
-                <button class="filter-chip filter-child" data-filter="pensee" data-value="existentialisme-p" onclick="toggleFilter('pensee', 'existentialisme-p')">existentialisme</button>
-                <button class="filter-chip filter-child" data-filter="pensee" data-value="absurde-p" onclick="toggleFilter('pensee', 'absurde-p')">absurde</button>
-            </div>
-            <div class="filter-subchips" id="subchips-pensee-ethique" style="display:none;">
-                <button class="filter-chip filter-child" data-filter="pensee" data-value="moraliste" onclick="toggleFilter('pensee', 'moraliste')">moraliste</button>
-                <button class="filter-chip filter-child" data-filter="pensee" data-value="utopie" onclick="toggleFilter('pensee', 'utopie')">utopie</button>
-                <button class="filter-chip filter-child" data-filter="pensee" data-value="spiritualite" onclick="toggleFilter('pensee', 'spiritualite')">spiritualité</button>
-            </div>
-        </div>
-        
         <!-- Résumé des filtres actifs -->
-        <div class="filter-summary" id="filterSummary" style="display: none;">
-            <span class="filter-summary-text" id="filterSummaryText"></span>
+        <div class="filter-summary" id="filterSummary">
+            <div class="filter-summary-text" id="filterSummaryText"></div>
+            <input class="filter-free-input" id="explorationFreeInput" type="text" placeholder="Mot-clé libre…" onkeydown="if(event.key==='Enter'){applyFilters();}" />
             <button class="filter-summary-clear" onclick="clearAllFilters()" title="Effacer les filtres">✕</button>
-            <button class="filter-summary-random" onclick="randomizeFilters()" title="Mélanger au hasard">🎲</button>
+            <button class="filter-summary-random" onclick="rollExploration()" title="Relancer">🎲</button>
             <button class="filter-summary-go" onclick="applyFilters()">Lancer →</button>
         </div>
         
@@ -693,7 +652,7 @@
     <!-- Indicateur de chargement -->
     <div class="feed-loading" id="loading">
         <div class="spinner"></div>
-        <span>Exploration de Wikisource...</span>
+        <span>Chargement...</span>
     </div>
     
     <!-- ═══════════════════════════════════════════════════════════════════════

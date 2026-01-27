@@ -361,7 +361,7 @@ async function init() {
     
     // Créer le bouton scroll to top
     createScrollTopButton();
-    
+
     // Pull to refresh - quand on tire vers le haut en étant au sommet (MOBILE)
     let pullStartY = 0;
     let isPulling = false;
@@ -413,37 +413,17 @@ async function init() {
         // Si on est en haut et qu'on scrolle vers le haut (deltaY négatif)
         if (window.scrollY <= 5 && e.deltaY < 0 && !state.loading) {
             wheelUpCount++;
-            
-            // Afficher indicateur après 2 scrolls vers le haut
-            if (wheelUpCount >= 2 && !pullIndicator) {
-                pullIndicator = document.createElement('div');
-                pullIndicator.className = 'pull-indicator';
-                pullIndicator.style.opacity = '1';
-                pullIndicator.innerHTML = '↑ Continuer pour charger...';
-                document.body.appendChild(pullIndicator);
-            }
-            
+
             // Charger après 4 scrolls vers le haut
             if (wheelUpCount >= 4) {
-                if (pullIndicator) {
-                    pullIndicator.textContent = '↻ Chargement...';
-                }
                 wheelUpCount = 0;
                 await loadNewTextsOnTop();
-                if (pullIndicator) {
-                    pullIndicator.remove();
-                    pullIndicator = null;
-                }
             }
             
             // Reset le compteur après 800ms d'inactivité
             clearTimeout(wheelUpTimer);
             wheelUpTimer = setTimeout(() => {
                 wheelUpCount = 0;
-                if (pullIndicator) {
-                    pullIndicator.remove();
-                    pullIndicator = null;
-                }
             }, 800);
         }
     }, { passive: true });
@@ -874,12 +854,16 @@ async function loadNewTextsOnTop() {
     if (state.loading) return;
     state.loading = true;
     
-    // Afficher un indicateur de chargement compact en haut
     const feed = document.getElementById('feed');
+
+    // Afficher un mini-indicateur en haut uniquement pendant le chargement "vers le haut"
+    // (on garde le comportement, mais pas le pop-up "Continuer pour charger...")
+    const existing = document.getElementById('topLoadingIndicator');
+    if (existing) existing.remove();
     const loadingIndicator = document.createElement('div');
     loadingIndicator.className = 'top-loading-indicator';
     loadingIndicator.id = 'topLoadingIndicator';
-    loadingIndicator.innerHTML = '<div class="spinner-small"></div> Chargement...';
+    loadingIndicator.innerHTML = `<div class="spinner-small"></div> ${getContextualLoadingMessage()}`;
     feed.insertBefore(loadingIndicator, feed.firstChild);
     
     try {
@@ -931,9 +915,6 @@ async function loadNewTextsOnTop() {
         }
     }
     
-    // Supprimer l'indicateur de chargement
-    loadingIndicator.remove();
-    
     // Insérer les nouvelles cartes en haut avec animation
     if (newCards.length > 0) {
         // Insérer dans l'ordre inverse pour que la plus récente soit en haut
@@ -959,7 +940,7 @@ async function loadNewTextsOnTop() {
     // hideNewTextsBanner(); // Removed
     } finally {
         state.loading = false;
-        // Nettoyer l'indicateur si encore présent
+
         const indicator = document.getElementById('topLoadingIndicator');
         if (indicator) indicator.remove();
     }
@@ -1011,9 +992,38 @@ function toast(msg) {
     setTimeout(() => t.classList.remove('show'), 2000);
 }
 
+function setMainLoadingMessage(message) {
+    const el = document.querySelector('#loading span');
+    if (el) el.textContent = message;
+}
+
+// Exposer pour sources.js (mise à jour dynamique pendant fillPool)
+window.setMainLoadingMessage = setMainLoadingMessage;
+
+function getContextualLoadingMessage() {
+    const activeKeywords = window.getActiveFilterKeywords ? window.getActiveFilterKeywords() : [];
+    const hasFilters = Array.isArray(activeKeywords) && activeKeywords.length > 0;
+
+    // Priorité: contexte verrouillé (recherche libre / exploreAuthor)
+    const term = state.activeSearchTerm || state.lastSearchTerm;
+
+    if (hasFilters) {
+        // Avec filtres: TOUJOURS en mode recherche (jamais "Chargement..." random)
+        const driftTerm = term || activeKeywords[Math.floor(Math.random() * activeKeywords.length)];
+        return `Recherche de "${driftTerm}"...`;
+    }
+
+    if (term) {
+        return `Recherche de "${term}"...`;
+    }
+
+    return 'Chargement...';
+}
+
 async function loadMore() {
     if (state.loading) return;
     state.loading = true;
+    setMainLoadingMessage(getContextualLoadingMessage());
     document.getElementById('loading').style.display = 'block';
 
     try {
@@ -1105,7 +1115,7 @@ function createCardElement(result, origTitle, wikisource = getCurrentWikisource(
         remaining = text.substring(cutPoint + 1).trim();
     }
     
-    const keywords = extractKeywords(text, title, author, tag);
+    const keywords = extractKeywords(text, title, author, tag, result.categories || []);
     const keywordsHtml = keywords.map(kw => 
         `<span class="keyword-tag" onclick="exploreKeyword('${kw}')" title="Explorer #${kw}">${kw}</span>`
     ).join('');
@@ -1217,7 +1227,7 @@ function renderCard(result, origTitle, wikisource = getCurrentWikisource()) {
     }
     
     // Générer les mots-clés pour ce texte
-    const keywords = extractKeywords(text, title, author, tag);
+    const keywords = extractKeywords(text, title, author, tag, result.categories || []);
     const keywordsHtml = keywords.map(kw => 
         `<span class="keyword-tag" onclick="exploreKeyword('${kw}')" title="Explorer #${kw}">${kw}</span>`
     ).join('');
@@ -1916,19 +1926,16 @@ async function exploreAuthor(author, setContext = true) {
     if (setContext) {
         state.activeSearchTerm = author;
         state.searchOffset = 0;
+        if (Array.isArray(state.textPool)) state.textPool = [];
+        state.loadingMessage = `Recherche de "${author}"...`;
+        if (window.setMainLoadingMessage) window.setMainLoadingMessage(state.loadingMessage);
     }
     
-    toast(`🔍 Exploration de ${author}...`);
+    toast(`Recherche de "${author}"...`);
     state.discoveredConnections.add(author);
     saveState();
-    
-    // Afficher indicateur de chargement en haut
+
     const feed = document.getElementById('feed');
-    const loadingIndicator = document.createElement('div');
-    loadingIndicator.className = 'top-loading-indicator';
-    loadingIndicator.id = 'topLoadingIndicator';
-    loadingIndicator.innerHTML = `<div class="spinner-small"></div> Recherche de ${author}...`;
-    feed.insertBefore(loadingIndicator, feed.firstChild);
     
     // Recherches spécifiques pour cet auteur
     const searches = [`${author} poem`, `${author} text`, `${author} sonnet`, author];
@@ -1987,9 +1994,6 @@ async function exploreAuthor(author, setContext = true) {
             if (newCards.length >= 3) break;
         }
     }
-    
-    // Supprimer l'indicateur de chargement
-    loadingIndicator.remove();
     
     // Insérer les nouvelles cartes en haut avec animation
     if (newCards.length > 0) {
@@ -2069,11 +2073,81 @@ const LITERARY_THEMES = {
 // Mots vides à ignorer
 const STOP_WORDS = new Set(['le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'et', 'ou', 'mais', 'donc', 'car', 'ni', 'que', 'qui', 'quoi', 'dont', 'ce', 'cette', 'ces', 'mon', 'ton', 'son', 'ma', 'ta', 'sa', 'mes', 'tes', 'ses', 'notre', 'votre', 'leur', 'nos', 'vos', 'leurs', 'je', 'tu', 'il', 'elle', 'nous', 'vous', 'ils', 'elles', 'on', 'se', 'ne', 'pas', 'plus', 'moins', 'tout', 'tous', 'toute', 'toutes', 'autre', 'autres', 'bien', 'peu', 'trop', 'aussi', 'encore', 'jamais', 'toujours', 'rien', 'personne', 'chaque', 'quelque', 'aucun', 'sans', 'avec', 'pour', 'par', 'dans', 'sur', 'sous', 'entre', 'vers', 'chez', 'comme', 'ainsi', 'alors', 'puis', 'quand', 'avoir', 'faire', 'dire', 'voir', 'aller', 'venir', 'pouvoir', 'vouloir', 'devoir', 'falloir', 'savoir', 'prendre', 'mettre', 'fait', 'dit', 'sont', 'ont', 'aux', 'the', 'and', 'are', 'was', 'were', 'been', 'being', 'have', 'has', 'had', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'for', 'with', 'from', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'nor', 'not', 'only', 'own', 'same', 'than', 'too', 'very', 'just', 'now', 'its', 'this', 'that', 'these', 'those', 'myself', 'our', 'ours', 'ourselves', 'your', 'yours', 'yourself', 'yourselves', 'him', 'his', 'himself', 'her', 'hers', 'herself', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'whom', 'whose']);
 
-function extractKeywords(text, title, author, tag) {
+function extractKeywords(text, title, author, tag, categories = []) {
     const keywords = new Set();
     const fullText = (text + ' ' + title).toLowerCase();
+
+    // 0) Catégories Wikisource (métadonnées réelles) -> tags prioritaires
+    const normalizeCategoryName = (cat) => {
+        if (!cat) return '';
+        return String(cat)
+            .replace(/^cat[ée]gorie\s*:\s*/i, '')
+            .replace(/^category\s*:\s*/i, '')
+            .replace(/_/g, ' ')
+            .trim();
+    };
+
+    const isBadCategory = (name) => {
+        if (!name) return true;
+        const bad = [
+            /wikisource/i,
+            /pages? (with|containing)/i,
+            /à (relire|corriger|vérifier)/i,
+            /maintenance/i,
+            /index/i,
+            /portail/i,
+            /aide/i,
+            /transclusion/i,
+            /licen[cs]e/i,
+            /domaine public/i,
+            /public domain/i,
+            /commons/i
+        ];
+        return bad.some(r => r.test(name));
+    };
+
+    const informativeCategoryScore = (name) => {
+        const n = name.toLowerCase();
+        let score = 0;
+        // Formes/genres
+        if (/(sonnet|ode|élégie|elegie|ballade|hymne|poème|poeme|roman|nouvelle|conte|fable|légende|legende|mythe|tragédie|tragedie|comédie|comedie|drame|essai|discours|lettre|journal|mémoires|memoires)/i.test(name)) score += 4;
+        // Époques / mouvements
+        if (/(antiquit|moyen âge|renaissance|baroque|classicisme|lumières|romantisme|réalisme|realisme|naturalisme|symbolisme|surréalisme|surrealisme|existentialisme|absurde|nouveau roman)/i.test(name)) score += 3;
+        if (/\b(xvi|xvii|xviii|xix|xx)[eᵉ]*\b/i.test(name)) score += 2;
+        // Catégories “d’auteur” (souvent informatives mais moins précises sur le texte)
+        if (/(textes|poèmes|œuvres|oeuvres)\s+(de|by|von|di)\s+/i.test(name)) score += 1;
+        // Pénaliser les catégories trop longues
+        if (name.length > 60) score -= 2;
+        return score;
+    };
+
+    const cleanedCats = (categories || [])
+        .map(normalizeCategoryName)
+        .filter(name => name.length >= 3 && name.length <= 80)
+        .filter(name => !isBadCategory(name));
+
+    const topCats = cleanedCats
+        .map(name => ({ name, score: informativeCategoryScore(name) }))
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3)
+        .map(x => x.name);
+
+    for (const c of topCats) {
+        keywords.add(c);
+        if (keywords.size >= 3) break;
+    }
+
+    // 1) Indices structurels (prose/vers, théâtre)
+    const lineBreaks = (text.match(/\n/g) || []).length;
+    const shortLines = text.split('\n').filter(l => l.trim().length > 0 && l.trim().length <= 60).length;
+    const verseLikely = lineBreaks > 10 && shortLines / Math.max(1, text.split('\n').filter(l => l.trim().length > 0).length) > 0.55;
+    if (verseLikely) keywords.add('vers');
+    if (/\b(acte|scène|scene|personnages)\b/i.test(text)) keywords.add('dialogue');
+
+    // 2) Chercher les thèmes littéraires présents dans le texte
     
-    // 1. Chercher les thèmes littéraires présents dans le texte
+    // Limiter l'ajout de thèmes si on a déjà des catégories précises
     for (const [category, themes] of Object.entries(LITERARY_THEMES)) {
         for (const theme of themes) {
             if (fullText.includes(theme.toLowerCase())) {
@@ -2094,7 +2168,7 @@ function extractKeywords(text, title, author, tag) {
     const wordCount = {};
     words.forEach(w => wordCount[w] = (wordCount[w] || 0) + 1);
     
-    // Ajouter les mots les plus fréquents
+    // Ajouter des mots fréquents, mais seulement si on manque encore de précision
     const sorted = Object.entries(wordCount)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10);
@@ -2115,7 +2189,7 @@ function extractKeywords(text, title, author, tag) {
 
 // Explorer un mot-clé
 async function exploreKeyword(keyword) {
-    toast(`🏷️ Exploration de #${keyword}...`);
+    toast(`Recherche de "${keyword}"...`);
     await exploreAuthor(keyword);
 }
 

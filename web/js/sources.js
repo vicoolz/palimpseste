@@ -318,6 +318,7 @@ async function fetchText(page, depth = 0, wikisource = currentWikisource) {
                     text: analysis.text, 
                     title: cleanTitle,
                     author: detectedAuthor,
+                    categories: (data.parse.categories || []).map(c => c['*']).filter(Boolean),
                     lang: wikisource.lang,
                     wikisource: wikisource
                 };
@@ -759,11 +760,17 @@ async function fillPool() {
         state.activeSourceFilter = ['wikisource'];
     }
 
+    // Contexte d'exploration (Kaléidoscope) : si des filtres sont actifs, on évite
+    // d'ajouter des contenus "random" non alignés (PoetryDB/Gutenberg/Archive).
+    const filterKeywords = window.getActiveFilterKeywords ? window.getActiveFilterKeywords() : [];
+    const hasExplorationFilters = Array.isArray(filterKeywords) && filterKeywords.length > 0;
+    const hasSearchContext = !!state.activeSearchTerm || hasExplorationFilters;
+
     // Helper pour vérifier si la source est autorisée
     const isSourceAllowed = (s) => state.activeSourceFilter.includes(s) || state.activeSourceFilter.includes('all');
 
     // === 1. POETRYDB (si anglais actif) - Qualité garantie ===
-    if ((selectedLang === 'all' || selectedLang === 'en') && isSourceAllowed('poetrydb')) {
+    if (!hasSearchContext && (selectedLang === 'all' || selectedLang === 'en') && isSourceAllowed('poetrydb')) {
         try {
             const poems = await fetchPoetryDB();
             for (const poem of poems) {
@@ -785,7 +792,7 @@ async function fillPool() {
     }
     
     // === 1.5 PROJECT GUTENBERG - Classiques du domaine public ===
-    if (isSourceAllowed('gutenberg')) {
+    if (!hasSearchContext && isSourceAllowed('gutenberg')) {
     try {
         const gutenbergTexts = await fetchGutenberg();
         for (const item of gutenbergTexts) {
@@ -800,7 +807,7 @@ async function fillPool() {
     }
     
     // === 1.6 ARCHIVE.ORG - Internet Archive ===
-    if (isSourceAllowed('archive')) {
+    if (!hasSearchContext && isSourceAllowed('archive')) {
     try {
         const archiveTexts = await fetchArchiveOrg();
         for (const item of archiveTexts) {
@@ -835,15 +842,16 @@ async function fillPool() {
         let searchTerm = null;
         let useRandom = false;
 
+        const activeKeywords = window.getActiveFilterKeywords ? window.getActiveFilterKeywords() : [];
+        const hasActiveFilters = activeKeywords.length > 0;
+        const freeSuffix = (hasActiveFilters && state.filterFreeTerm) ? ` ${state.filterFreeTerm}` : '';
+
         if (state.activeSearchTerm) {
             searchTerm = state.activeSearchTerm;
             
             // SI UN FILTRE EST ACTIF (Exploration par thème/époque/genre)
             // Alors on veut "dériver" : on ne reste pas bloqué sur le terme initial (ex: "Chrétien de Troyes")
             // On re-pioche un nouveau mot-clé dans le filtre actif pour varier les plaisirs au scroll infinite
-            const activeKeywords = window.getActiveFilterKeywords ? window.getActiveFilterKeywords() : [];
-            const hasActiveFilters = activeKeywords.length > 0;
-            
             if (hasActiveFilters && activeKeywords.includes(state.activeSearchTerm)) {
                  // Le terme actif vient probablement des filtres... on le change pour un autre du même filtre !
                  // C'est l'effet "relancer le dé" à chaque chargement de page
@@ -855,6 +863,16 @@ async function fillPool() {
                      console.log('🎲 Drift: switching to', searchTerm);
                  }
             }
+
+            // Si on est en mode filtres + mot libre, on conserve toujours "filtre + mot" au scroll
+            if (freeSuffix && searchTerm && !searchTerm.includes(state.filterFreeTerm)) {
+                searchTerm = `${searchTerm}${freeSuffix}`;
+            }
+
+            // Message de chargement cohérent pendant le scroll
+            state.loadingMessage = `Recherche de "${searchTerm}"...`;
+            state.lastSearchTerm = searchTerm;
+            if (window.setMainLoadingMessage) window.setMainLoadingMessage(state.loadingMessage);
         } else {
             // Mots-clés génériques par langue
             const GENERIC_TERMS = {
@@ -868,15 +886,12 @@ async function fillPool() {
             
             // 50% de chance d'utiliser l'API Random vs Recherche générique
             // SAUF SI des filtres sont actifs -> on force la recherche
-            const activeKeywords = window.getActiveFilterKeywords ? window.getActiveFilterKeywords() : [];
-            const hasActiveFilters = activeKeywords.length > 0;
-
             if (!hasActiveFilters && Math.random() > 0.5) {
                 useRandom = true;
             } else {
                 if (hasActiveFilters) {
                     // Si filtres actifs, on pioche un mot clé parmi ceux des filtres
-                    searchTerm = activeKeywords[Math.floor(Math.random() * activeKeywords.length)];
+                    searchTerm = activeKeywords[Math.floor(Math.random() * activeKeywords.length)] + freeSuffix;
                 } else {
                     searchTerm = fallbackTerms[Math.floor(Math.random() * fallbackTerms.length)];
                 }
@@ -884,6 +899,9 @@ async function fillPool() {
         }
             
         if (useRandom) {
+             state.loadingMessage = 'Chargement...';
+               state.lastSearchTerm = null;
+             if (window.setMainLoadingMessage) window.setMainLoadingMessage(state.loadingMessage);
              // --- MODE RANDOM (Découverte pure) ---
              try {
                 // Récupérer 5 pages aléatoires
@@ -912,6 +930,9 @@ async function fillPool() {
              // --- MODE RECHERCHE CIBLÉE OU GÉNÉRIQUE ---
              // Si on a un searchTerm (défini par le contexte ou fallback), on l'utilise
              const term = searchTerm || 'Poésie'; // Fallback ultime
+               state.loadingMessage = `Recherche de "${term}"...`;
+                         state.lastSearchTerm = term;
+             if (window.setMainLoadingMessage) window.setMainLoadingMessage(state.loadingMessage);
              
              try {
                 // On cherche plus de résultats pour avoir du choix

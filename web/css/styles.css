@@ -2002,9 +2002,44 @@ margin-top: 0.25rem;
 
 .filter-summary-text {
 flex: 1;
+display: flex;
+flex-wrap: wrap;
+gap: 0.4rem;
+align-items: center;
+min-width: 0;
 font-size: 0.8rem;
 color: var(--accent);
 font-weight: 500;
+}
+
+.filter-tag {
+display: inline-flex;
+align-items: center;
+gap: 0.35rem;
+padding: 0.2rem 0.5rem;
+border-radius: 999px;
+border: 1px solid rgba(212, 165, 116, 0.35);
+background: rgba(212, 165, 116, 0.08);
+color: var(--accent);
+white-space: nowrap;
+}
+
+.filter-free-input {
+flex: 0 0 220px;
+max-width: 40vw;
+min-width: 160px;
+background: rgba(255, 255, 255, 0.06);
+border: 1px solid var(--border);
+color: var(--text);
+border-radius: 10px;
+padding: 0.35rem 0.6rem;
+font-size: 0.85rem;
+outline: none;
+}
+
+.filter-free-input:focus {
+border-color: rgba(212, 165, 116, 0.8);
+box-shadow: 0 0 0 2px rgba(212, 165, 116, 0.2);
 }
 
 .filter-summary-clear,

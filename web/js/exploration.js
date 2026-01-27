@@ -414,28 +414,45 @@ function updateFilterSummary() {
     const summaryText = document.getElementById('filterSummaryText');
     if (!summary || !summaryText) return;
 
-    const parts = [];
-    if (!activeFilters.forme.includes('all')) {
-        parts.push(activeFilters.forme.join(' + '));
-    }
-    if (!activeFilters.epoque.includes('all')) {
-        const epochs = activeFilters.epoque.map(e => EPOQUES_FILTER[e]?.period || e);
-        parts.push(epochs.join(' + '));
-    }
-    if (!activeFilters.ton.includes('all')) {
-        parts.push(activeFilters.ton.join(' + '));
-    }
-    if (activeFilters.pensee && !activeFilters.pensee.includes('all')) {
-        parts.push(activeFilters.pensee.join(' + '));
-    }
-    // Note: Le filtre source n'est plus affiché ici (via paramètres séparés)
+    const getChipLabel = (category, value) => {
+        const el = document.querySelector(`.filter-chip[data-filter="${category}"][data-value="${value}"]`);
+        const label = el ? (el.textContent || '').trim() : '';
+        return label || value;
+    };
 
-    if (parts.length > 0) {
-        summaryText.textContent = parts.join(' × ');
-        summary.style.display = 'flex';
-    } else {
-        summary.style.display = 'none';
+    const addTag = (text) => {
+        const tag = document.createElement('span');
+        tag.className = 'filter-tag';
+        tag.textContent = text;
+        summaryText.appendChild(tag);
+    };
+
+    summaryText.innerHTML = '';
+
+    // Tags Forme
+    if (!activeFilters.forme.includes('all')) {
+        activeFilters.forme.forEach(v => addTag(getChipLabel('forme', v)));
     }
+    // Tags Époque
+    if (!activeFilters.epoque.includes('all')) {
+        activeFilters.epoque.forEach(v => addTag(getChipLabel('epoque', v)));
+    }
+    // Tags Registre
+    if (!activeFilters.ton.includes('all')) {
+        activeFilters.ton.forEach(v => addTag(getChipLabel('ton', v)));
+    }
+    // Tags Pensée (si actif dans l'état)
+    if (activeFilters.pensee && !activeFilters.pensee.includes('all')) {
+        activeFilters.pensee.forEach(v => addTag(getChipLabel('pensee', v)));
+    }
+
+    // Toujours visible pour permettre la saisie libre
+    summary.style.display = 'flex';
+}
+
+function getExplorationFreeTerm() {
+    const input = document.getElementById('explorationFreeInput');
+    return input ? input.value.trim() : '';
 }
 
 /**
@@ -447,6 +464,22 @@ function clearAllFilters() {
     activeFilters.ton = ['all'];
     activeFilters.pensee = ['all'];
     // activeFilters.source conservé (paramètre global)
+
+    // Revenir au mode standard (scroll = chargement générique / random)
+    if (window.state) {
+        window.state.activeSearchTerm = null;
+        window.state.searchOffset = 0;
+        window.state.lastSearchTerm = null;
+        window.state.filterFreeTerm = null;
+        window.state.loadingMessage = 'Chargement...';
+        if (window.setMainLoadingMessage) window.setMainLoadingMessage('Chargement...');
+        if (Array.isArray(window.state.textPool)) window.state.textPool = [];
+    }
+
+    // Si on repasse en mode standard, on efface aussi le mot libre
+    const input = document.getElementById('explorationFreeInput');
+    if (input) input.value = '';
+
     updateFilterUI();
     updateFilterSummary();
     toast('🔄 Filtres effacés');
@@ -482,6 +515,8 @@ async function applyFilters() {
         ton: [],
         pensee: []
     };
+
+    const freeTerm = getExplorationFreeTerm();
     
     // Le filtre de source est géré globalement via les paramètres, on ne le touche pas ici
     
@@ -525,6 +560,14 @@ async function applyFilters() {
     const feed = document.getElementById('feed');
     if (feed) feed.innerHTML = '';
     state.loading = false;
+
+    // IMPORTANT: vider le pool pour que le scroll infini utilise la nouvelle recherche
+    if (state && Array.isArray(state.textPool)) {
+        state.textPool = [];
+    }
+    if (state) {
+        state.searchOffset = 0;
+    }
     
     // 🎲 2. Création des "Chimères" (Combinaisons de recherche)
     // On va générer 3 types de requêtes pour maximiser la chance et le fun
@@ -533,6 +576,8 @@ async function applyFilters() {
     
     // Helper pour piocher un élément au hasard
     const pick = (arr) => arr.length > 0 ? arr[Math.floor(Math.random() * arr.length)] : null;
+
+    const suffix = freeTerm ? ` ${freeTerm}` : '';
 
     // --- STRATÉGIE A : Le "Cadravre Exquis" (Intersection stricte) ---
     // On essaie de combiner un élément de chaque catégorie active
@@ -544,7 +589,7 @@ async function applyFilters() {
     
     if (chimeraParts.length > 1) {
         queries.push({
-            term: chimeraParts.join(' '),
+            term: chimeraParts.join(' ') + suffix,
             type: 'chimera' // Pour le fun
         });
     }
@@ -553,12 +598,12 @@ async function applyFilters() {
     // Souvent plus pertinent historiquement
     if (ingredients.forme.length && ingredients.epoque.length) {
         queries.push({
-            term: `${pick(ingredients.forme)} ${pick(ingredients.epoque)}`,
+            term: `${pick(ingredients.forme)} ${pick(ingredients.epoque)}` + suffix,
             type: 'history'
         });
     } else if (ingredients.ton.length && ingredients.pensee.length) {
          queries.push({
-            term: `${pick(ingredients.ton)} ${pick(ingredients.pensee)}`,
+            term: `${pick(ingredients.ton)} ${pick(ingredients.pensee)}` + suffix,
             type: 'philosophy'
         });
     }
@@ -568,9 +613,15 @@ async function applyFilters() {
     const allKeywords = [...ingredients.forme, ...ingredients.epoque, ...ingredients.ton, ...ingredients.pensee];
     if (allKeywords.length > 0) {
         queries.push({
-            term: pick(allKeywords),
+            term: (pick(allKeywords) || '') + suffix,
             type: 'simple'
         });
+    }
+
+    // Si aucun filtre mais un terme libre, on recherche exactement ce terme
+    if (allKeywords.length === 0 && freeTerm) {
+        queries.length = 0;
+        queries.push({ term: freeTerm, type: 'free' });
     }
     
     // Fallback ultime si aucun filtre
@@ -583,16 +634,58 @@ async function applyFilters() {
     const uniqueQueries = [...new Map(queries.map(q => [q.term, q])).values()].slice(0, 3);
 
     // 🚀 3. Lancement
-    toast(`⚗️ Distillation : ${uniqueQueries.map(q => `"${q.term}"`).join(', ')}...`);
+    if (uniqueQueries.length === 1 && uniqueQueries[0].type === 'free') {
+        toast(`Recherche de "${uniqueQueries[0].term}"...`);
+    } else {
+        toast(`Recherche de ${uniqueQueries.map(q => `"${q.term}"`).join(', ')}...`);
+    }
 
-    // Reset du contexte global pour permettre la dérive (scrolling infini aléatoire dans le filtre)
-    if (state) state.activeSearchTerm = null;
+    // Contexte pour le scroll infini:
+    // - Si recherche libre seule: on garde le contexte = le terme libre (scroll = suite de la recherche)
+    // - Sinon: on ne verrouille pas sur un terme unique (drift via filtres)
+    const hasAnyFilterKeywords =
+        ingredients.forme.length > 0 ||
+        ingredients.epoque.length > 0 ||
+        ingredients.ton.length > 0 ||
+        ingredients.pensee.length > 0;
+
+    if (state) {
+        // Suffixe persistant: si des filtres sont actifs, le scroll doit continuer à chercher "filtre + mot"
+        state.filterFreeTerm = freeTerm || null;
+
+        if (!hasAnyFilterKeywords && freeTerm) {
+            state.activeSearchTerm = freeTerm;
+            state.searchOffset = 0;
+            state.loadingMessage = `Recherche de "${freeTerm}"...`;
+            if (window.setMainLoadingMessage) window.setMainLoadingMessage(state.loadingMessage);
+        } else {
+            state.activeSearchTerm = null;
+            state.searchOffset = 0;
+        }
+    }
+
+    // Si recherche libre seule: une seule requête, et on verrouille le contexte
+    if (!hasAnyFilterKeywords && freeTerm) {
+        await exploreAuthor(freeTerm, true);
+        return;
+    }
 
     for (const q of uniqueQueries) {
         // Petit délai pour l'effet dramatique (et l'API)
         // False = ne pas verrouiller le contexte sur ce terme spécifique
         await exploreAuthor(q.term, false);
     }
+}
+
+// 🎲 Bouton "dés" : si texte libre => lance la recherche, sinon randomize + lance
+function rollExploration() {
+    const freeTerm = getExplorationFreeTerm();
+    if (freeTerm) {
+        applyFilters();
+        return;
+    }
+    randomizeFilters();
+    applyFilters();
 }
 
 // (Sections "genres/époques favorites" supprimées)
@@ -679,6 +772,7 @@ window.toggleExplorationCollapse = toggleExplorationCollapse;
 window.clearAllFilters = clearAllFilters;
 window.randomizeFilters = randomizeFilters;
 window.applyFilters = applyFilters;
+window.rollExploration = rollExploration;
 window.activeFilters = activeFilters;
 
 // ═══════════════════════════════════════════════════════════
