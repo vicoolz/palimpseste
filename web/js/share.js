@@ -130,11 +130,6 @@ async function publishExtrait() {
         
         if (error) throw error;
         
-        // Tracker les stats des textes partagés (vos vrais goûts)
-        if (typeof trackLikedStats === 'function') {
-            trackLikedStats(pendingShare.author, pendingShare.tag, false);
-        }
-        
         closeShareModal();
         toast('🐦 Extrait publié !');
         if (typeof loadUserStats === 'function') loadUserStats();

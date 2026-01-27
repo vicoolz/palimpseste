@@ -573,10 +573,6 @@ function updateStats() {
     // Mettre à jour les barres d'auteurs
     renderAuthorBars();
     
-    // Mettre à jour les barres de territoires (nouveau système)
-    if (typeof renderTerritoryBars === 'function') renderTerritoryBars();
-    if (typeof renderEpochBars === 'function') renderEpochBars();
-    
     // Mettre à jour les statistiques de lecture
     updateReadingStatsUI();
 }
@@ -803,91 +799,6 @@ function trackStats(author, tag) {
     state.authorStats[author] = (state.authorStats[author] || 0) + 1;
     state.genreStats[tag] = (state.genreStats[tag] || 0) + 1;
     saveState();
-}
-
-// Tracker les stats des textes likés/partagés (vos vrais goûts)
-// Utilisé pour "Vos territoires" et "Vos époques"
-function trackLikedStats(author, tag, isUnlike = false) {
-    if (!author && !tag) return;
-    
-    if (isUnlike) {
-        // Décrémenter (unlike)
-        if (author && state.likedAuthorStats[author]) {
-            state.likedAuthorStats[author] = Math.max(0, state.likedAuthorStats[author] - 1);
-            if (state.likedAuthorStats[author] === 0) delete state.likedAuthorStats[author];
-        }
-        if (tag && state.likedGenreStats[tag]) {
-            state.likedGenreStats[tag] = Math.max(0, state.likedGenreStats[tag] - 1);
-            if (state.likedGenreStats[tag] === 0) delete state.likedGenreStats[tag];
-        }
-    } else {
-        // Incrémenter (like/partage)
-        if (author) state.likedAuthorStats[author] = (state.likedAuthorStats[author] || 0) + 1;
-        if (tag) state.likedGenreStats[tag] = (state.likedGenreStats[tag] || 0) + 1;
-    }
-    saveState();
-    // Mettre à jour l'affichage si exploration ouverte
-    if (typeof renderTerritoryBars === 'function') renderTerritoryBars();
-    if (typeof renderEpochBars === 'function') renderEpochBars();
-}
-
-// Migrer les likes existants vers les nouvelles stats likedGenreStats/likedAuthorStats
-async function migrateLikesToStats() {
-    console.log('🔄 Migration des likes vers les stats...');
-    
-    // Si déjà des stats, ne pas re-migrer
-    if (Object.keys(state.likedGenreStats || {}).length > 0) {
-        console.log('✅ Stats déjà présentes, pas de migration nécessaire');
-        return;
-    }
-    
-    // 1. Migrer depuis likedSourcesData (likes locaux)
-    if (likedSourcesData && likedSourcesData.size > 0) {
-        likedSourcesData.forEach((data, url) => {
-            const author = data.author || 'Anonyme';
-            // Estimer le tag depuis l'auteur ou le titre
-            const tag = detectTagFromAuthor(author) || 'Prose';
-            if (author && author !== 'Anonyme') {
-                state.likedAuthorStats[author] = (state.likedAuthorStats[author] || 0) + 1;
-            }
-            if (tag) {
-                state.likedGenreStats[tag] = (state.likedGenreStats[tag] || 0) + 1;
-            }
-        });
-        console.log('📊 Likes locaux migrés:', likedSourcesData.size);
-    }
-    
-    // 2. Migrer depuis les extraits partagés (Supabase)
-    if (supabaseClient && currentUser) {
-        try {
-            const { data, error } = await supabaseClient
-                .from('extraits')
-                .select('source_author, source_title')
-                .eq('user_id', currentUser.id);
-            
-            if (!error && data && data.length > 0) {
-                data.forEach(extrait => {
-                    const author = extrait.source_author || 'Anonyme';
-                    const tag = detectTagFromAuthor(author) || 'Prose';
-                    if (author && author !== 'Anonyme') {
-                        state.likedAuthorStats[author] = (state.likedAuthorStats[author] || 0) + 1;
-                    }
-                    if (tag) {
-                        state.likedGenreStats[tag] = (state.likedGenreStats[tag] || 0) + 1;
-                    }
-                });
-                console.log('📊 Extraits partagés migrés:', data.length);
-            }
-        } catch (e) {
-            console.error('Erreur migration extraits:', e);
-        }
-    }
-    
-    saveState();
-    // Actualiser les barres
-    if (typeof renderTerritoryBars === 'function') renderTerritoryBars();
-    if (typeof renderEpochBars === 'function') renderEpochBars();
-    console.log('✅ Migration terminée:', state.likedGenreStats, state.likedAuthorStats);
 }
 
 // Détecter le tag probable depuis l'auteur (heuristique simple)
@@ -1557,9 +1468,8 @@ function toggleLike(cardId, btn) {
         return;
     }
     
-    // Récupérer les métadonnées pour les stats
+    // Récupérer les métadonnées (auteur) pour enrichir les favoris
     const author = card.dataset.author || 'Anonyme';
-    const tag = card.dataset.tag || '';
     
     // Toggle le like
     if (likedSourceUrls.has(sourceUrl)) {
@@ -1570,8 +1480,6 @@ function toggleLike(cardId, btn) {
         toast('Like retiré');
         // Sync avec Supabase
         removeLikeFromSupabase(sourceUrl);
-        // Décrémenter les stats likées
-        trackLikedStats(author, tag, true);
     } else {
         // LIKE - stocker avec métadonnées
         const metadata = {
@@ -1586,8 +1494,6 @@ function toggleLike(cardId, btn) {
         toast('❤ Liké !');
         // Sync avec Supabase
         addLikeToSupabase(sourceUrl, metadata);
-        // Incrémenter les stats likées
-        trackLikedStats(author, tag, false);
     }
     
     // Sauvegarder localement
@@ -1623,8 +1529,6 @@ function isSourceLiked(sourceUrl) {
 document.addEventListener('DOMContentLoaded', async () => {
     await loadLikedSources();
     updateLikeCount();
-    // Migrer les likes existants vers les nouvelles stats
-    setTimeout(() => migrateLikesToStats(), 500);
 });
 
 // Double-tap pour liker (style Instagram)

@@ -158,106 +158,10 @@ function toggleFilter(category, value) {
     }
     
     const filters = activeFilters[category];
-    
-    if (value === 'all') {
-        // Cliquer sur "tout" réinitialise cette catégorie
-        activeFilters[category] = ['all'];
-    } else {
-        // Retirer 'all' si on sélectionne autre chose
-        const allIndex = filters.indexOf('all');
-        if (allIndex > -1) {
-            filters.splice(allIndex, 1);
-        }
-        
-        // Toggle la valeur
-        const index = filters.indexOf(value);
-        if (index > -1) {
-            filters.splice(index, 1);
-            // Si plus rien, remettre 'all'
-            if (filters.length === 0) {
-                filters.push('all');
-            }
-        } else {
-            filters.push(value);
-        }
-    }
-    
-    // Mettre à jour l'UI
-    updateFilterUI();
-    updateFilterSummary();
 }
 
-/**
- * État des groupes ouverts
- */
-const openGroups = {
-    forme: null,
-    epoque: null,
-    ton: null,
-    pensee: null
-};
-
-/**
- * Toggle l'ouverture/fermeture d'un groupe de filtres
- * @param {string} category - La catégorie (forme, epoque, ton, pensee)
- * @param {string} group - Le groupe à ouvrir/fermer
- */
-function toggleFilterGroup(category, group) {
-    const subchipsId = `subchips-${category}-${group}`;
-    const subchips = document.getElementById(subchipsId);
-    const parentBtn = document.querySelector(`.filter-parent[data-filter="${category}"][data-group="${group}"]`);
-    
-    // Si ce groupe est déjà ouvert, le fermer
-    if (openGroups[category] === group) {
-        subchips.style.display = 'none';
-        parentBtn.classList.remove('expanded');
-        openGroups[category] = null;
-    } else {
-        // Fermer l'ancien groupe ouvert de cette catégorie
-        if (openGroups[category]) {
-            const oldSubchips = document.getElementById(`subchips-${category}-${openGroups[category]}`);
-            const oldParent = document.querySelector(`.filter-parent[data-filter="${category}"][data-group="${openGroups[category]}"]`);
-            if (oldSubchips) oldSubchips.style.display = 'none';
-            if (oldParent) oldParent.classList.remove('expanded');
-        }
-        
-        // Ouvrir le nouveau groupe
-        subchips.style.display = 'flex';
-        parentBtn.classList.add('expanded');
-        openGroups[category] = group;
-    }
-}
-
-/**
- * Met à jour l'affichage des chips de filtres
- */
-function updateFilterUI() {
-    ['forme', 'epoque', 'ton', 'pensee'].forEach(category => {
         const chips = document.querySelectorAll(`.filter-chip[data-filter="${category}"]`);
         chips.forEach(chip => {
-            const value = chip.dataset.value;
-            if (value) { // Seulement les chips avec data-value (pas les parents)
-                const isActive = activeFilters[category] && activeFilters[category].includes(value);
-                chip.classList.toggle('active', isActive);
-            }
-        });
-    });
-}
-
-/**
- * Met à jour le résumé des filtres actifs
- */
-function updateFilterSummary() {
-    const summary = document.getElementById('filterSummary');
-    const summaryText = document.getElementById('filterSummaryText');
-    
-    const hasActiveFilters = 
-        !activeFilters.forme.includes('all') ||
-        !activeFilters.epoque.includes('all') ||
-        !activeFilters.ton.includes('all') ||
-        (activeFilters.pensee && !activeFilters.pensee.includes('all'));
-    
-    if (hasActiveFilters) {
         const parts = [];
         if (!activeFilters.forme.includes('all')) {
             parts.push(activeFilters.forme.join(' + '));
@@ -390,94 +294,7 @@ async function applyFilters() {
     }
 }
 
-/**
- * Rendu des barres de territoires dans la sidebar
- * Basé sur les textes likés/partagés (vos vrais goûts)
- */
-function renderTerritoryBars() {
-    const container = document.getElementById('territoryBars');
-    if (!container) return;
-    
-    // Utiliser likedGenreStats (textes aimés) au lieu de genreStats (tous les textes vus)
-    const entries = Object.entries(state.likedGenreStats || {});
-    if (entries.length === 0) {
-        container.innerHTML = '<div class="territory-empty">Likez des textes pour voir vos genres favoris ❤️</div>';
-        return;
-    }
-    
-    const total = entries.reduce((sum, [_, count]) => sum + count, 0);
-    const sorted = entries.sort((a, b) => b[1] - a[1]).slice(0, 5);
-    
-    container.innerHTML = sorted.map(([genre, count]) => {
-        const percent = Math.round((count / total) * 100);
-        return `
-            <div class="territory-bar" onclick="filterByTerritory('forme', '${genre}')" title="Explorer ${genre}">
-                <span class="territory-bar-label">${genre}</span>
-                <div class="territory-bar-track">
-                    <div class="territory-bar-fill" style="width: ${percent}%"></div>
-                </div>
-                <span class="territory-bar-value">${percent}%</span>
-            </div>
-        `;
-    }).join('');
-}
-
-/**
- * Rendu des barres d'époques dans la sidebar
- * Basé sur les auteurs des textes likés/partagés
- */
-function renderEpochBars() {
-    const container = document.getElementById('epochBars');
-    if (!container) return;
-    
-    // Utiliser likedAuthorStats (textes aimés) au lieu de authorStats (tous les textes vus)
-    const epochCounts = {};
-    Object.entries(state.likedAuthorStats || {}).forEach(([author, count]) => {
-        // Trouver l'époque de cet auteur
-        for (const [epochId, epoch] of Object.entries(EPOQUES_FILTER)) {
-            if (epoch.authors.some(a => a.toLowerCase().includes(author.toLowerCase()) || author.toLowerCase().includes(a.toLowerCase()))) {
-                epochCounts[epoch.period] = (epochCounts[epoch.period] || 0) + count;
-            }
-        }
-    });
-    
-    const entries = Object.entries(epochCounts);
-    if (entries.length === 0) {
-        container.innerHTML = '<div class="territory-empty">Likez des textes pour voir vos époques favorites ❤️</div>';
-        return;
-    }
-    
-    const total = entries.reduce((sum, [_, count]) => sum + count, 0);
-    const sorted = entries.sort((a, b) => b[1] - a[1]).slice(0, 4);
-    
-    container.innerHTML = sorted.map(([epoch, count]) => {
-        const percent = Math.round((count / total) * 100);
-        const epochId = Object.keys(EPOQUES_FILTER).find(k => EPOQUES_FILTER[k].period === epoch) || '';
-        return `
-            <div class="territory-bar" onclick="filterByTerritory('epoque', '${epochId}')" title="Explorer ${epoch}">
-                <span class="territory-bar-label">${epoch}</span>
-                <div class="territory-bar-track">
-                    <div class="territory-bar-fill" style="width: ${percent}%"></div>
-                </div>
-                <span class="territory-bar-value">${percent}%</span>
-            </div>
-        `;
-    }).join('');
-}
-
-/**
- * Filtre depuis la sidebar (clic sur une barre)
- */
-function filterByTerritory(category, value) {
-    if (category === 'forme' && FORMES[value]) {
-        activeFilters.forme = [value];
-    } else if (category === 'epoque' && value) {
-        activeFilters.epoque = [value];
-    }
-    updateFilterUI();
-    updateFilterSummary();
-    applyFilters();
-}
+// (Sections "genres/époques favorites" supprimées)
 
 // ═══════════════════════════════════════════════════════════
 // 📐 RÉTRACTION AUTOMATIQUE AU SCROLL
@@ -561,9 +378,6 @@ window.toggleExplorationCollapse = toggleExplorationCollapse;
 window.clearAllFilters = clearAllFilters;
 window.randomizeFilters = randomizeFilters;
 window.applyFilters = applyFilters;
-window.renderTerritoryBars = renderTerritoryBars;
-window.renderEpochBars = renderEpochBars;
-window.filterByTerritory = filterByTerritory;
 window.activeFilters = activeFilters;
 
 // ═══════════════════════════════════════════════════════════
