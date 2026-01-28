@@ -122,8 +122,13 @@ function renderCommentItem(comment, profileMap, likesCountMap, userLikedMap, ext
                 <div class="comment-header">
                     <span class="comment-username" onclick="openUserProfile('${comment.user_id}', '${escapeHtml(username)}')">${escapeHtml(username)}</span>
                     <span class="comment-time">${timeAgo}${editedLabel}</span>
-                    ${canEdit ? `<button class="comment-edit" onclick="startEditComment('${comment.id}', '${extraitId}')">✎</button>` : ''}
-                    ${canDelete ? `<button class="comment-delete" onclick="deleteComment('${comment.id}', '${extraitId}')">🗑️</button>` : ''}
+                    <div class="comment-actions-inline">
+                        <button class="comment-actions-toggle" title="Actions" onclick="toggleCommentActions('${comment.id}')">⋯</button>
+                        <div class="comment-actions-menu">
+                            ${canEdit ? `<button class="comment-edit" onclick="startEditComment('${comment.id}', '${extraitId}')">✎</button>` : ''}
+                            ${canDelete ? `<button class="comment-delete" onclick="deleteComment('${comment.id}', '${extraitId}')">🗑️</button>` : ''}
+                        </div>
+                    </div>
                 </div>
                 <div class="comment-text" id="commentText-${comment.id}">${escapeHtml(comment.content)}</div>
                 <div class="comment-actions">
@@ -135,6 +140,26 @@ function renderCommentItem(comment, profileMap, likesCountMap, userLikedMap, ext
             </div>
         </div>
     `;
+}
+
+let commentActionsInstalled = false;
+function ensureCommentActionsInstalled() {
+    if (commentActionsInstalled) return;
+    commentActionsInstalled = true;
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.comment-item')) {
+            document.querySelectorAll('.comment-item.show-actions').forEach(el => el.classList.remove('show-actions'));
+        }
+    });
+}
+
+function toggleCommentActions(commentId) {
+    ensureCommentActionsInstalled();
+    const item = document.querySelector(`.comment-item[data-id="${commentId}"]`);
+    if (!item) return;
+    const willShow = !item.classList.contains('show-actions');
+    document.querySelectorAll('.comment-item.show-actions').forEach(el => el.classList.remove('show-actions'));
+    if (willShow) item.classList.add('show-actions');
 }
 
 function formatHourMinute(dateString) {
@@ -149,6 +174,9 @@ function formatHourMinute(dateString) {
 function startEditComment(commentId, extraitId) {
     const textEl = document.getElementById(`commentText-${commentId}`);
     if (!textEl) return;
+
+    const item = document.querySelector(`.comment-item[data-id="${commentId}"]`);
+    if (item) item.classList.add('editing');
 
     const original = textEl.textContent || '';
     textEl.dataset.original = original;
@@ -189,6 +217,9 @@ function cancelEditComment(commentId) {
     if (!textEl) return;
     const original = textEl.dataset.original || '';
     textEl.textContent = original;
+
+    const item = document.querySelector(`.comment-item[data-id="${commentId}"]`);
+    if (item) item.classList.remove('editing');
 }
 
 async function saveEditComment(commentId, extraitId) {
@@ -214,6 +245,8 @@ async function saveEditComment(commentId, extraitId) {
         if (error) throw error;
         toast('✅ Commentaire modifié');
         await loadComments(extraitId);
+        const item = document.querySelector(`.comment-item[data-id="${commentId}"]`);
+        if (item) item.classList.remove('editing');
     } catch (err) {
         console.error('Erreur edit_comment:', err);
         toast('Erreur modification');

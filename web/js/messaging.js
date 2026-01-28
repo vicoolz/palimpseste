@@ -299,20 +299,22 @@ async function loadMessages(otherUserId) {
             const reactionsHtml = renderMessageReactions(msg.id, reactionsByMessage, myReactionByMessage);
             const actionButtons = `
                 <div class="msg-actions">
-                    <button class="msg-react-btn" title="Réagir" onclick="openMessageReactionPicker('${msg.id}', this)">😊</button>
-                    ${isSent ? `<button class="msg-edit-btn" title="Modifier" onclick="startEditMessage('${msg.id}')">✎</button>` : ''}
+                    <button class="msg-action-btn msg-react-btn" title="Réagir" onclick="openMessageReactionPicker('${msg.id}', this)">😊</button>
+                    ${isSent ? `<button class="msg-action-btn msg-edit-btn" title="Modifier" onclick="startEditMessage('${msg.id}')">✎</button>` : ''}
                 </div>
-                <button class="msg-mobile-toggle" title="Actions" onclick="toggleMessageActions('${msg.id}')">＋</button>
+                <button class="msg-menu-btn" title="Actions" onclick="toggleMessageActions('${msg.id}')">⋯</button>
             `;
 
             msgEl.innerHTML = `
                 <div class="msg-body">${escapeHtml(msg.content)}</div>
-                ${actionButtons}
                 ${reactionsHtml}
-                <div class="chat-message-time">
-                    ${editedHtml}
-                    ${timeHtml}
-                    ${readIndicator}
+                <div class="msg-footer">
+                    <div class="chat-message-time">
+                        ${editedHtml}
+                        ${timeHtml}
+                        ${readIndicator}
+                    </div>
+                    ${actionButtons}
                 </div>
             `;
             container.appendChild(msgEl);
@@ -610,17 +612,32 @@ async function setMessageReaction(messageId, emoji) {
     if (!supabaseClient) return;
 
     try {
-        // Upsert (1 réaction par user/message)
-        const { error } = await supabaseClient
+        const { data: existing } = await supabaseClient
             .from('message_reactions')
-            .upsert({
-                message_id: messageId,
-                user_id: currentUser.id,
-                emoji,
-                created_at: new Date().toISOString()
-            }, { onConflict: 'message_id,user_id' });
+            .select('emoji')
+            .eq('message_id', messageId)
+            .eq('user_id', currentUser.id)
+            .maybeSingle();
 
-        if (error) throw error;
+        if (existing?.emoji === emoji) {
+            const { error } = await supabaseClient
+                .from('message_reactions')
+                .delete()
+                .eq('message_id', messageId)
+                .eq('user_id', currentUser.id);
+            if (error) throw error;
+        } else {
+            const { error } = await supabaseClient
+                .from('message_reactions')
+                .upsert({
+                    message_id: messageId,
+                    user_id: currentUser.id,
+                    emoji,
+                    created_at: new Date().toISOString()
+                }, { onConflict: 'message_id,user_id' });
+            if (error) throw error;
+        }
+
         closeReactionPicker();
         if (currentConversationUserId) await loadMessages(currentConversationUserId);
     } catch (err) {
