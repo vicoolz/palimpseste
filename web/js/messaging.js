@@ -302,6 +302,7 @@ async function loadMessages(otherUserId) {
                     <button class="msg-react-btn" title="Réagir" onclick="openMessageReactionPicker('${msg.id}', this)">😊</button>
                     ${isSent ? `<button class="msg-edit-btn" title="Modifier" onclick="startEditMessage('${msg.id}')">✎</button>` : ''}
                 </div>
+                <button class="msg-mobile-toggle" title="Actions" onclick="toggleMessageActions('${msg.id}')">＋</button>
             `;
 
             msgEl.innerHTML = `
@@ -553,6 +554,14 @@ function openMessageReactionPicker(messageId, anchorEl) {
 
 function clearAllMessageActions() {
     document.querySelectorAll('.chat-message.show-actions').forEach(el => el.classList.remove('show-actions'));
+}
+
+function toggleMessageActions(messageId) {
+    const msgEl = document.querySelector(`.chat-message[data-message-id="${messageId}"]`);
+    if (!msgEl) return;
+    const willShow = !msgEl.classList.contains('show-actions');
+    clearAllMessageActions();
+    if (willShow) msgEl.classList.add('show-actions');
 }
 
 function attachMessageInteractions(msgContainerEl, messageId, isSent) {

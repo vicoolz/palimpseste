@@ -5227,6 +5227,27 @@ cursor: not-allowed;
     opacity: 0.75;
 }
 
+.msg-mobile-toggle {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    border: 1px solid var(--border);
+    background: rgba(0,0,0,0.2);
+    color: var(--text);
+    border-radius: 999px;
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+@media (hover: none) {
+    .msg-mobile-toggle { display: flex; }
+}
+
 /* ═══════════════════════════════════════════════════════════
    💬 COMMENTAIRES - Édition (bouton discret)
    ═══════════════════════════════════════════════════════════ */
@@ -5236,6 +5257,13 @@ cursor: not-allowed;
     background: transparent;
     cursor: pointer;
     color: var(--muted);
+    opacity: 0.85;
+}
+
+.comment-edited-label {
+    font-size: 0.7em;
+    font-style: italic;
+    color: var(--text-secondary);
     opacity: 0.85;
 }
 
