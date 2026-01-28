@@ -222,24 +222,25 @@
 .drawer-close-btn {
     display: none;
     position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    width: 36px;
-    height: 36px;
-    background: var(--bg-elevated);
-    border: 2px solid var(--border);
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: 1px solid var(--border);
     border-radius: 50%;
-    color: var(--text);
-    font-size: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
     cursor: pointer;
     z-index: 20;
-    box-shadow: 2px 2px 0 var(--pixel-shadow);
     transition: all 0.15s;
+    opacity: 0.7;
 }
 
 .drawer-close-btn:active {
     transform: scale(0.95);
-    box-shadow: 0 0 0 var(--pixel-shadow);
+    opacity: 1;
+    background: var(--bg-elevated);
 }
 
 /* ====== DRAWER QUICK ACTIONS ====== */
@@ -5373,6 +5374,7 @@ color: white;
 background: var(--accent-tertiary);
 }
 .btn-close-profile {
+display: none;
 background: var(--bg-elevated);
 color: var(--text-secondary);
 border: 1px solid var(--border) !important;
@@ -5391,16 +5393,18 @@ width: 100%;
 background: var(--bg-card);
 border: none;
 border-top: 1px solid var(--border);
-color: var(--text);
-padding: 1rem;
-font-size: 0.9rem;
-font-weight: 500;
+color: var(--text-secondary);
+padding: 0.6rem;
+font-size: 0.75rem;
+font-weight: 400;
 cursor: pointer;
 transition: all 0.2s;
+opacity: 0.7;
 }
 .profile-floating-close:hover {
-background: var(--accent);
-color: white;
+background: var(--bg-elevated);
+color: var(--text);
+opacity: 1;
 }
 
 /* Profile Tabs */
