@@ -762,6 +762,111 @@ async function openCollection(collectionId) {
 }
 
 /**
+ * Ouvrir une collection par ID (utile pour ouvrir une collection publique depuis la recherche)
+ */
+async function openCollectionById(collectionId) {
+    if (!supabaseClient) return;
+
+    try {
+        const { data: collection, error } = await supabaseClient
+            .from('collections')
+            .select('*')
+            .eq('id', collectionId)
+            .single();
+
+        if (error) throw error;
+        if (!collection) {
+            toast('Collection introuvable');
+            return;
+        }
+
+        currentViewingCollection = collection;
+
+        // Charger les items
+        const items = await loadCollectionItems(collectionId);
+
+        const overlay = document.getElementById('favoritesOverlay');
+        const grid = document.getElementById('favoritesGrid');
+        const title = overlay?.querySelector('.favorites-title');
+
+        if (!overlay || !grid) return;
+
+        if (title) title.innerHTML = `${collection.emoji || '❧'} ${escapeHtml(collection.name)}`;
+
+        grid.innerHTML = `
+            <div class="collection-view">
+                <div class="collection-view-header">
+                    <button class="btn-back-collections" onclick="${currentUser ? 'openCollectionsView()' : 'closeFavoritesView()'}">← ${currentUser ? 'Collections' : 'Fermer'}</button>
+                    ${collection.description ? `<p class="collection-description">${escapeHtml(collection.description)}</p>` : ''}
+                </div>
+                
+                <div class="collection-items" id="collectionItemsView">
+                    ${items.length === 0 
+                        ? `<div class="collection-empty">
+                            <div class="collection-empty-icon">○</div>
+                            <div class="collection-empty-title">Collection vide</div>
+                            <div class="collection-empty-text">Cette collection ne contient pas encore de textes</div>
+                           </div>`
+                        : items.map(item => {
+                            // Déterminer les données de l'item
+                            let itemTitle, itemAuthor, preview, url;
+                            if (item.extraits) {
+                                itemTitle = item.extraits.source_title;
+                                itemAuthor = item.extraits.source_author;
+                                preview = item.extraits.texte;
+                                url = item.extraits.source_url;
+                            } else if (item.source_likes) {
+                                itemTitle = item.source_likes.title;
+                                itemAuthor = item.source_likes.author;
+                                preview = item.source_likes.preview;
+                                url = item.source_likes.source_url;
+                            } else {
+                                itemTitle = item.local_title;
+                                itemAuthor = item.local_author;
+                                preview = item.local_preview;
+                                url = item.local_url;
+                            }
+
+                            const itemId = item.id;
+                            const previewText = preview ? preview.substring(0, 300) : '';
+                            const hasMore = preview && preview.length > 300;
+
+                            // Encoder l'URL pour éviter les problèmes de quotes
+                            const safeUrl = url ? encodeURIComponent(url) : '';
+                            const safeTitle = itemTitle ? encodeURIComponent(itemTitle) : '';
+                            const safeAuthor = itemAuthor ? encodeURIComponent(itemAuthor) : '';
+
+                            return `
+                                <div class="collection-item-card" id="coll-item-${itemId}" data-expanded="false"
+                                     data-url="${safeUrl}" data-title="${safeTitle}" data-author="${safeAuthor}">
+                                    <div class="collection-item-content" onclick="toggleCollectionItemText('${itemId}')">
+                                        <div class="collection-item-header">
+                                            <div class="collection-item-title">${escapeHtml(itemTitle || 'Sans titre')}</div>
+                                            <div class="collection-item-author">${escapeHtml(itemAuthor || 'Auteur inconnu')}</div>
+                                        </div>
+                                        <div class="collection-item-text" id="coll-text-${itemId}">
+                                            ${escapeHtml(previewText)}${hasMore ? '...' : ''}
+                                        </div>
+                                    </div>
+                                    <div class="collection-item-actions">
+                                        ${url ? `<button class="btn-collection-open" onclick="event.stopPropagation(); openCollectionItemReader('${itemId}', '${safeTitle}', '${safeAuthor}', '${safeUrl}')">📖 Lire</button>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')
+                    }
+                </div>
+            </div>
+        `;
+
+        overlay.classList.add('open');
+    } catch (err) {
+        console.error('Erreur ouverture collection par ID:', err);
+        toast('Erreur lors de l’ouverture');
+    }
+}
+
+/**
  * Afficher le modal de création de collection
  */
 function showCreateCollectionModal() {
@@ -1176,6 +1281,7 @@ window.selectCollectionEmoji = selectCollectionEmoji;
 window.createNewCollectionFromPicker = createNewCollectionFromPicker;
 window.openCollectionsView = openCollectionsView;
 window.openCollection = openCollection;
+window.openCollectionById = openCollectionById;
 window.showCreateCollectionModal = showCreateCollectionModal;
 window.closeCreateCollectionModal = closeCreateCollectionModal;
 window.selectCreateEmoji = selectCreateEmoji;

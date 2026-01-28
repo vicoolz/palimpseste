@@ -880,7 +880,7 @@ async function loadNewTextsOnTop() {
         if (state.textPool.length === 0) break;
         
         const item = state.textPool.shift();
-        const itemKey = (item.source === 'poetrydb' ? 'poetrydb:' : '') + item.title;
+        const itemKey = (item.source ? (item.source + ':') : '') + item.title;
         if (state.shownPages.has(itemKey)) continue;
         
         // Si c'est un item pré-chargé
@@ -1001,6 +1001,16 @@ function setMainLoadingMessage(message) {
 window.setMainLoadingMessage = setMainLoadingMessage;
 
 function getContextualLoadingMessage() {
+    // Si l'utilisateur force une source unique "API" (pas Wikisource),
+    // on évite d'afficher des messages de recherche Wikisource (ex: "Roman").
+    const activeSources = Array.isArray(state.activeSourceFilter) ? state.activeSourceFilter : [];
+    if (activeSources.length === 1) {
+        const s = activeSources[0];
+        if (s === 'gutenberg') return 'Chargement Gutenberg...';
+        if (s === 'poetrydb') return 'Chargement PoetryDB...';
+        if (s === 'archive') return 'Chargement Archive.org...';
+    }
+
     const activeKeywords = window.getActiveFilterKeywords ? window.getActiveFilterKeywords() : [];
     const hasFilters = Array.isArray(activeKeywords) && activeKeywords.length > 0;
 
@@ -1037,18 +1047,23 @@ async function loadMore() {
         if (state.textPool.length === 0) break;
         
         const item = state.textPool.shift();
-        const itemKey = (item.source === 'poetrydb' ? 'poetrydb:' : '') + item.title;
+        const itemKey = (item.source ? (item.source + ':') : '') + item.title;
         if (state.shownPages.has(itemKey)) continue;
         
-        // Si c'est un item pré-chargé (PoetryDB), on l'affiche directement
+        // Si c'est un item pré-chargé, on l'affiche directement
         if (item.isPreloaded && item.text) {
             state.shownPages.add(itemKey);
+            const sourceInfo = {
+                lang: item.lang,
+                url: item.url || (item.source === 'archive' ? 'https://archive.org' : (item.source === 'gutenberg' ? 'https://www.gutenberg.org' : 'https://poetrydb.org')),
+                name: item.source === 'archive' ? 'Archive.org' : (item.source === 'gutenberg' ? 'Gutenberg' : 'PoetryDB')
+            };
             renderCard({
                 title: item.title,
                 text: item.text,
                 author: item.author,
                 source: item.source
-            }, item.title, { lang: item.lang, url: 'https://poetrydb.org', name: 'PoetryDB' });
+            }, item.title, sourceInfo);
             loaded++;
             continue;
         }

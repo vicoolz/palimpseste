@@ -1,13 +1,12 @@
 /**
  * search.js - Module de recherche unifiée pour Palimpseste
- * 
- * Gère la recherche multi-sources :
- * - Wikisource (littérature multilingue)
- * - PoetryDB (poésie anglaise)
- * - Project Gutenberg (livres du domaine public)
- * - Utilisateurs Palimpseste
- * 
- * Dépendances: utils.js, followers.js (pour renderUserCard, toggleFollow, loadUserFollowing)
+ *
+ * Recherche interne (Supabase) :
+ * - Utilisateurs (profiles)
+ * - Textes (extraits)
+ * - Collections (collections)
+ *
+ * Dépendances: utils.js, followers.js (renderUserCard, toggleFollow, loadUserFollowing)
  */
 
 // ═══════════════════════════════════════════════════════════
@@ -15,13 +14,18 @@
 // ═══════════════════════════════════════════════════════════
 
 let searchResults = {
+    texts: [],
+    collections: [],
+    users: [],
+    // Sources externes ("bases" comme avant)
     wikisource: [],
     poetrydb: [],
-    gutenberg: [],
-    users: []
+    gutenberg: []
 };
 let currentSearchTab = 'all';
 let currentSearchQuery = '';
+
+let searchRequestId = 0;
 
 // ═══════════════════════════════════════════════════════════
 // 🎯 INITIALISATION
@@ -85,6 +89,8 @@ async function performSearch() {
     }
     
     currentSearchQuery = query;
+
+    const requestId = ++searchRequestId;
     
     // Afficher l'overlay avec loading
     const overlay = document.getElementById('searchResultsOverlay');
@@ -98,21 +104,46 @@ async function performSearch() {
     tabs.innerHTML = '';
     
     // Réinitialiser les résultats
-    searchResults = { wikisource: [], poetrydb: [], gutenberg: [], users: [] };
+    searchResults = { texts: [], collections: [], users: [], wikisource: [], poetrydb: [], gutenberg: [] };
     
     // Lancer les recherches en parallèle
     toast('🔍 Recherche...');
     
     await Promise.all([
-        searchWikisource(query),
-        searchPoetryDB(query),
-        searchGutenberg(query),
-        searchUsers(query)
+        // Interne
+        searchUsers(query, requestId),
+        searchPalimpsesteTexts(query, requestId),
+        searchCollections(query, requestId),
+        // Externe (bases)
+        searchWikisource(query, requestId),
+        searchPoetryDB(query, requestId),
+        searchGutenberg(query, requestId)
     ]);
+
+    // Si une autre recherche a démarré pendant celle-ci, ne pas écraser l'UI
+    if (requestId !== searchRequestId) return;
     
     // Afficher les résultats
     renderSearchTabs();
     renderSearchResults('all');
+}
+
+function getAllNonUserResults() {
+    return [
+        ...((searchResults.texts || []).map(r => ({ ...r, _kind: 'texts' }))),
+        ...((searchResults.collections || []).map(r => ({ ...r, _kind: 'collections' }))),
+        ...((searchResults.wikisource || []).map(r => ({ ...r, _kind: 'wikisource' }))),
+        ...((searchResults.poetrydb || []).map(r => ({ ...r, _kind: 'poetrydb' }))),
+        ...((searchResults.gutenberg || []).map(r => ({ ...r, _kind: 'gutenberg' })))
+    ];
+}
+
+function getExternalSourceResults() {
+    return [
+        ...((searchResults.wikisource || []).map(r => ({ ...r, _kind: 'wikisource' }))),
+        ...((searchResults.poetrydb || []).map(r => ({ ...r, _kind: 'poetrydb' }))),
+        ...((searchResults.gutenberg || []).map(r => ({ ...r, _kind: 'gutenberg' })))
+    ];
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -135,9 +166,14 @@ async function searchUsers(query) {
         if (users && users.length > 0) {
             // Charger qui on suit
             await loadUserFollowing();
+
+            if (arguments.length >= 2) {
+                const requestId = arguments[1];
+                if (requestId !== searchRequestId) return;
+            }
             
             // Compter les extraits pour chaque user
-            searchResults.users = await Promise.all(users.map(async (u) => {
+            const enriched = await Promise.all(users.map(async (u) => {
                 const { count } = await supabaseClient
                     .from('extraits')
                     .select('*', { count: 'exact', head: true })
@@ -148,9 +184,98 @@ async function searchUsers(query) {
                     source: 'users'
                 };
             }));
+
+            if (arguments.length >= 2) {
+                const requestId = arguments[1];
+                if (requestId !== searchRequestId) return;
+            }
+
+            searchResults.users = enriched;
         }
     } catch (e) {
         console.error('User search error:', e);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// 📜 RECHERCHE TEXTES (EXTRAITS)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Recherche dans les extraits (aperçus) stockés dans Supabase
+ */
+async function searchPalimpsesteTexts(query, requestId) {
+    if (!supabaseClient) return;
+
+    // Supabase .or() utilise des virgules comme séparateurs
+    const safeQuery = String(query || '').replace(/,/g, ' ').trim();
+    if (!safeQuery) return;
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('extraits')
+            .select('id, texte, source_title, source_author, source_url, created_at, user_id, profiles(username)')
+            .or(`texte.ilike.%${safeQuery}%,source_title.ilike.%${safeQuery}%,source_author.ilike.%${safeQuery}%`)
+            .order('created_at', { ascending: false })
+            .limit(30);
+
+        if (error) throw error;
+
+        if (requestId !== searchRequestId) return;
+
+        searchResults.texts = (data || []).map(e => ({
+            id: e.id,
+            preview: e.texte,
+            title: e.source_title,
+            author: e.source_author,
+            url: e.source_url,
+            created_at: e.created_at,
+            sharedBy: e.profiles?.username || null,
+            source: 'palimpseste_text'
+        }));
+    } catch (e) {
+        console.error('Texts search error:', e);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// 📚 RECHERCHE COLLECTIONS
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Recherche dans les collections (publiques + les vôtres si connecté)
+ */
+async function searchCollections(query, requestId) {
+    if (!supabaseClient) return;
+
+    const safeQuery = String(query || '').replace(/,/g, ' ').trim();
+    if (!safeQuery) return;
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('collections')
+            .select('id, name, description, emoji, color, is_public, items_count, user_id')
+            .or(`name.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`)
+            .order('updated_at', { ascending: false })
+            .limit(30);
+
+        if (error) throw error;
+
+        if (requestId !== searchRequestId) return;
+
+        searchResults.collections = (data || []).map(c => ({
+            id: c.id,
+            name: c.name,
+            description: c.description,
+            emoji: c.emoji,
+            color: c.color,
+            is_public: !!c.is_public,
+            items_count: c.items_count || 0,
+            user_id: c.user_id,
+            source: 'collections'
+        }));
+    } catch (e) {
+        console.error('Collections search error:', e);
     }
 }
 
@@ -161,7 +286,7 @@ async function searchUsers(query) {
 /**
  * Recherche sur Wikisource (multi-langues)
  */
-async function searchWikisource(query) {
+async function searchWikisource(query, requestId) {
     try {
         const wikisources = getActiveWikisources();
         const allResults = [];
@@ -273,6 +398,7 @@ async function searchWikisource(query) {
             allResults.push(...unique);
         }
         
+        if (requestId !== searchRequestId) return;
         searchResults.wikisource = allResults;
     } catch (e) {
         console.error('Wikisource search error:', e);
@@ -286,7 +412,7 @@ async function searchWikisource(query) {
 /**
  * Recherche sur PoetryDB (poésie anglaise)
  */
-async function searchPoetryDB(query) {
+async function searchPoetryDB(query, requestId) {
     try {
         // Recherche par auteur
         const authorRes = await fetch(`https://poetrydb.org/author/${encodeURIComponent(query)}`);
@@ -325,6 +451,8 @@ async function searchPoetryDB(query) {
         // Combiner et dédupliquer
         const combined = [...authorData, ...titleData];
         const seen = new Set();
+        if (requestId !== searchRequestId) return;
+
         searchResults.poetrydb = combined.filter(p => {
             const key = p.title + p.author;
             if (seen.has(key)) return false;
@@ -343,11 +471,13 @@ async function searchPoetryDB(query) {
 /**
  * Recherche sur Project Gutenberg
  */
-async function searchGutenberg(query) {
+async function searchGutenberg(query, requestId) {
     try {
         const res = await fetch(`https://gutendex.com/books?search=${encodeURIComponent(query)}`);
         const data = await res.json();
         
+        if (requestId !== searchRequestId) return;
+
         searchResults.gutenberg = (data.results || []).slice(0, 15).map(book => ({
             title: book.title,
             author: book.authors?.map(a => a.name).join(', ') || 'Inconnu',
@@ -371,24 +501,30 @@ async function searchGutenberg(query) {
  */
 function renderSearchTabs() {
     const tabs = document.getElementById('searchResultsTabs');
-    const totalAll = searchResults.wikisource.length + searchResults.poetrydb.length + searchResults.gutenberg.length;
     const usersCount = searchResults.users?.length || 0;
-    
+    const textsCount = searchResults.texts?.length || 0;
+    const collectionsCount = searchResults.collections?.length || 0;
+    const wikisourceCount = searchResults.wikisource?.length || 0;
+    const poetryCount = searchResults.poetrydb?.length || 0;
+    const gutenbergCount = searchResults.gutenberg?.length || 0;
+    const sourcesCount = wikisourceCount + poetryCount + gutenbergCount;
+    const allCount = textsCount + collectionsCount + wikisourceCount + poetryCount + gutenbergCount;
+
     tabs.innerHTML = `
+        <button class="search-tab ${currentSearchTab === 'all' ? 'active' : ''}" onclick="switchSearchTab('all')">
+            Tout <span class="count">${allCount}</span>
+        </button>
         <button class="search-tab ${currentSearchTab === 'users' ? 'active' : ''}" onclick="switchSearchTab('users')">
             Utilisateurs <span class="count">${usersCount}</span>
         </button>
-        <button class="search-tab ${currentSearchTab === 'all' ? 'active' : ''}" onclick="switchSearchTab('all')">
-            Textes <span class="count">${totalAll}</span>
+        <button class="search-tab ${currentSearchTab === 'texts' ? 'active' : ''}" onclick="switchSearchTab('texts')">
+            Extraits partagés <span class="count">${textsCount}</span>
         </button>
-        <button class="search-tab ${currentSearchTab === 'wikisource' ? 'active' : ''}" onclick="switchSearchTab('wikisource')">
-            Wikisource <span class="count">${searchResults.wikisource.length}</span>
+        <button class="search-tab ${currentSearchTab === 'collections' ? 'active' : ''}" onclick="switchSearchTab('collections')">
+            Collections <span class="count">${collectionsCount}</span>
         </button>
-        <button class="search-tab ${currentSearchTab === 'poetrydb' ? 'active' : ''}" onclick="switchSearchTab('poetrydb')">
-            Poésie <span class="count">${searchResults.poetrydb.length}</span>
-        </button>
-        <button class="search-tab ${currentSearchTab === 'gutenberg' ? 'active' : ''}" onclick="switchSearchTab('gutenberg')">
-            Gutenberg <span class="count">${searchResults.gutenberg.length}</span>
+        <button class="search-tab ${currentSearchTab === 'sources' ? 'active' : ''}" onclick="switchSearchTab('sources')" title="Wikisource • PoetryDB (EN) • Gutenberg">
+            Sources <span class="count">${sourcesCount}</span>
         </button>
     `;
 }
@@ -451,17 +587,12 @@ function renderSearchResults(tab) {
         `;
         return;
     }
-    
-    let results = [];
-    if (tab === 'all') {
-        results = [
-            ...searchResults.wikisource,
-            ...searchResults.poetrydb,
-            ...searchResults.gutenberg
-        ];
-    } else {
-        results = searchResults[tab] || [];
-    }
+
+    const results = tab === 'all'
+        ? getAllNonUserResults()
+        : tab === 'sources'
+            ? getExternalSourceResults()
+            : (searchResults[tab] || []);
     
     if (results.length === 0) {
         grid.innerHTML = `
@@ -473,28 +604,158 @@ function renderSearchResults(tab) {
         `;
         return;
     }
+
+    // Onglet Tout : affichage mixte (extraits + collections + sources externes)
+    if (tab === 'all') {
+        const queryRegex = new RegExp(`(${escapeRegex(currentSearchQuery)})`, 'gi');
+
+        grid.innerHTML = results.map((r, idx) => {
+            const kind = r._kind || r.source;
+
+            if (kind === 'collections') {
+                const emoji = r.emoji || '❧';
+                const color = r.color || '#5a7a8a';
+                const subtitle = `${r.items_count || 0} texte${(r.items_count || 0) > 1 ? 's' : ''}${r.is_public ? ' • public' : ''}`;
+                const desc = r.description ? escapeHtml(r.description) : '';
+                return `
+                    <div class="search-result-card" onclick="openSearchResult(${idx}, 'all')">
+                        <div class="search-result-title">${emoji} ${escapeHtml(r.name || 'Sans titre')}</div>
+                        <div class="search-result-author">${escapeHtml(subtitle)}</div>
+                        ${desc ? `<div class="search-result-snippet">${desc}</div>` : ''}
+                        <div class="search-result-meta">
+                            <span class="search-result-source" style="border-color:${color}55;">❧ Collections</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (kind === 'wikisource' || kind === 'poetrydb' || kind === 'gutenberg') {
+                const sourceIcon = kind === 'wikisource' ? '§' : kind === 'poetrydb' ? '❧' : '¶';
+                const sourceName = kind === 'wikisource' ? 'Wikisource' : kind === 'poetrydb' ? 'PoetryDB' : 'Gutenberg';
+                const authorFromTitle = (typeof extractAuthorFromTitle === 'function')
+                    ? extractAuthorFromTitle(r.title)
+                    : extractAuthorFromTitleLocal(r.title);
+                const author = r.author || authorFromTitle || '';
+
+                let snippet = r.snippet || '';
+                snippet = snippet.replace(/<[^>]*>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+                snippet = escapeHtml(snippet).replace(queryRegex, '<mark>$1</mark>');
+
+                return `
+                    <div class="search-result-card" onclick="openSearchResult(${idx}, 'all')">
+                        <div class="search-result-title">${escapeHtml(r.title)}</div>
+                        ${author ? `<div class="search-result-author">${escapeHtml(author)}</div>` : ''}
+                        <div class="search-result-snippet">${snippet}</div>
+                        <div class="search-result-meta">
+                            <span class="search-result-source">${sourceIcon} ${sourceName}</span>
+                            ${r.lang ? `<span>🌐 ${String(r.lang).toUpperCase()}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Par défaut : extrait interne
+            const fallbackTitle = (r.preview || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+            const title = (r.title && String(r.title).trim()) ? r.title : (fallbackTitle || 'Extrait');
+            const author = (r.author && String(r.author).trim()) ? r.author : '';
+            const bylineParts = [];
+            if (author) bylineParts.push(escapeHtml(author));
+            if (r.sharedBy) bylineParts.push(`partagé par ${escapeHtml(r.sharedBy)}`);
+            const byline = bylineParts.length ? bylineParts.join(' • ') : 'Extrait partagé';
+
+            let snippet = r.preview || '';
+            snippet = escapeHtml(snippet).replace(queryRegex, '<mark>$1</mark>');
+
+            return `
+                <div class="search-result-card" onclick="openSearchResult(${idx}, 'all')">
+                    <div class="search-result-title">${escapeHtml(title)}</div>
+                    <div class="search-result-author">${byline}</div>
+                    <div class="search-result-snippet">${snippet}</div>
+                    <div class="search-result-meta">
+                        <span class="search-result-source">¶ Extraits partagés</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        return;
+    }
     
+
+    if (tab === 'collections') {
+        grid.innerHTML = results.map((c, idx) => {
+            const emoji = c.emoji || '❧';
+            const color = c.color || '#5a7a8a';
+            const subtitle = `${c.items_count || 0} texte${(c.items_count || 0) > 1 ? 's' : ''}${c.is_public ? ' • public' : ''}`;
+            const desc = c.description ? escapeHtml(c.description) : '';
+
+            return `
+                <div class="search-result-card" onclick="openSearchResult(${idx}, 'collections')">
+                    <div class="search-result-title">${emoji} ${escapeHtml(c.name || 'Sans titre')}</div>
+                    <div class="search-result-author">${escapeHtml(subtitle)}</div>
+                    ${desc ? `<div class="search-result-snippet">${desc}</div>` : ''}
+                    <div class="search-result-meta">
+                        <span class="search-result-source" style="border-color:${color}55;">❧ Collections</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        return;
+    }
+
+    // Onglet sources externes (bases)
+    if (tab === 'sources') {
+        grid.innerHTML = results.map((r, idx) => {
+            const kind = r._kind || r.source;
+            const sourceIcon = kind === 'wikisource' ? '§' : kind === 'poetrydb' ? '❧' : '¶';
+            const sourceName = kind === 'wikisource' ? 'Wikisource' : kind === 'poetrydb' ? 'PoetryDB' : 'Gutenberg';
+            const authorFromTitle = (typeof extractAuthorFromTitle === 'function')
+                ? extractAuthorFromTitle(r.title)
+                : extractAuthorFromTitleLocal(r.title);
+            const author = r.author || authorFromTitle || '';
+
+            let snippet = r.snippet || '';
+            snippet = snippet.replace(/<[^>]*>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+
+            const queryRegex = new RegExp(`(${escapeRegex(currentSearchQuery)})`, 'gi');
+            snippet = escapeHtml(snippet).replace(queryRegex, '<mark>$1</mark>');
+
+            return `
+                <div class="search-result-card" onclick="openSearchResult(${idx}, 'sources')">
+                    <div class="search-result-title">${escapeHtml(r.title)}</div>
+                    ${author ? `<div class="search-result-author">${escapeHtml(author)}</div>` : ''}
+                    <div class="search-result-snippet">${snippet}</div>
+                    <div class="search-result-meta">
+                        <span class="search-result-source">${sourceIcon} ${sourceName}</span>
+                        ${r.lang ? `<span>🌐 ${String(r.lang).toUpperCase()}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+        return;
+    }
+
+    // Onglet textes (extraits internes)
     grid.innerHTML = results.map((r, idx) => {
-        const sourceIcon = r.source === 'wikisource' ? '§' : r.source === 'poetrydb' ? '❧' : '¶';
-        const sourceName = r.source === 'wikisource' ? 'Wikisource' : r.source === 'poetrydb' ? 'PoetryDB' : 'Gutenberg';
-        const author = r.author || extractAuthorFromTitle(r.title) || '';
-        
-        // Nettoyer le snippet HTML
-        let snippet = r.snippet || '';
-        snippet = snippet.replace(/<[^>]*>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-        
+        const fallbackTitle = (r.preview || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+        const title = (r.title && String(r.title).trim()) ? r.title : (fallbackTitle || 'Extrait');
+        const author = (r.author && String(r.author).trim()) ? r.author : '';
+        const bylineParts = [];
+        if (author) bylineParts.push(escapeHtml(author));
+        if (r.sharedBy) bylineParts.push(`partagé par ${escapeHtml(r.sharedBy)}`);
+        const byline = bylineParts.length ? bylineParts.join(' • ') : 'Extrait partagé';
+        let snippet = r.preview || '';
+
         // Highlight query dans le snippet
         const queryRegex = new RegExp(`(${escapeRegex(currentSearchQuery)})`, 'gi');
-        snippet = snippet.replace(queryRegex, '<mark>$1</mark>');
-        
+        snippet = escapeHtml(snippet).replace(queryRegex, '<mark>$1</mark>');
+
         return `
-            <div class="search-result-card" onclick="openSearchResult(${idx}, '${r.source}')">
-                <div class="search-result-title">${escapeHtml(r.title)}</div>
-                ${author ? `<div class="search-result-author">${escapeHtml(author)}</div>` : ''}
+            <div class="search-result-card" onclick="openSearchResult(${idx}, 'texts')">
+                <div class="search-result-title">${escapeHtml(title)}</div>
+                <div class="search-result-author">${byline}</div>
                 <div class="search-result-snippet">${snippet}</div>
                 <div class="search-result-meta">
-                    <span class="search-result-source">${sourceIcon} ${sourceName}</span>
-                    ${r.lang ? `<span>🌐 ${r.lang.toUpperCase()}</span>` : ''}
+                    <span class="search-result-source">¶ Extraits partagés</span>
                 </div>
             </div>
         `;
@@ -542,26 +803,44 @@ function extractAuthorFromTitleLocal(title) {
 /**
  * Ouvre un résultat de recherche
  */
-async function openSearchResult(idx, source) {
+async function openSearchResult(idx, tab) {
     let result;
-    if (currentSearchTab === 'all') {
-        const allResults = [
-            ...searchResults.wikisource,
-            ...searchResults.poetrydb,
-            ...searchResults.gutenberg
-        ];
-        result = allResults[idx];
+    if (tab === 'all') {
+        result = getAllNonUserResults()[idx];
+    } else if (tab === 'sources') {
+        result = getExternalSourceResults()[idx];
     } else {
-        result = searchResults[currentSearchTab]?.[idx];
+        result = searchResults[tab]?.[idx];
     }
     
     if (!result) return;
     
     closeSearchResults();
     toast('Chargement...');
-    
-    if (result.source === 'wikisource') {
-        // Charger le texte depuis Wikisource
+
+    if (tab === 'texts' || result._kind === 'texts') {
+        if (typeof viewExtraitById === 'function') {
+            await viewExtraitById(result.id);
+        } else {
+            toast("Impossible d'ouvrir ce texte");
+        }
+        return;
+    }
+
+    if (tab === 'collections' || result._kind === 'collections') {
+        if (typeof openCollectionById === 'function') {
+            await openCollectionById(result.id);
+        } else if (typeof openCollectionsView === 'function') {
+            await openCollectionsView();
+        } else {
+            toast("Impossible d'ouvrir cette collection");
+        }
+        return;
+    }
+
+    // Externe (bases)
+    const kind = result._kind || tab;
+    if (kind === 'wikisource' || result.source === 'wikisource') {
         const text = await fetchText(result.title, 0, result.wikisource);
         if (text) {
             document.getElementById('feed').innerHTML = '';
@@ -571,8 +850,10 @@ async function openSearchResult(idx, source) {
         } else {
             toast('Impossible de charger ce texte');
         }
-    } else if (result.source === 'poetrydb') {
-        // Afficher directement le poème
+        return;
+    }
+
+    if (kind === 'poetrydb' || result.source === 'poetrydb') {
         document.getElementById('feed').innerHTML = '';
         state.cardIdx = 0;
         renderCard({
@@ -582,9 +863,11 @@ async function openSearchResult(idx, source) {
             source: 'poetrydb'
         }, result.title, { lang: 'en', url: 'https://poetrydb.org', name: 'PoetryDB' });
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (result.source === 'gutenberg') {
-        // Ouvrir le livre sur Gutenberg
-        const readUrl = `https://www.gutenberg.org/ebooks/${result.id}`;
+        return;
+    }
+
+    if (kind === 'gutenberg' || result.source === 'gutenberg') {
+        const readUrl = result.id ? `https://www.gutenberg.org/ebooks/${result.id}` : (result.url || 'https://www.gutenberg.org');
         window.open(readUrl, '_blank');
         toast('Ouverture sur Project Gutenberg');
     }

@@ -561,10 +561,120 @@ function analyzeContentQuality(text, links, title) {
 // 📚 PROJECT GUTENBERG
 // ═══════════════════════════════════════════════════════════
 async function fetchGutenberg() {
-    // Note: Sans liste d'IDs "Works", Gutenberg est difficile à exploiter proprement via API JS simple.
-    // L'utilisateur a demandé de ne pas avoir de listes d'auteurs/oeuvres en dur.
-    // Pour l'instant on retourne vide, sauf si on implémente une recherche miroir (complexe sans backend).
-    return [];
+    try {
+        const fetchTextWithCorsFallback = async (rawUrl) => {
+            if (!rawUrl) return null;
+            // 1) tentative directe
+            try {
+                const res = await fetch(rawUrl);
+                if (res.ok) return await res.text();
+            } catch (_) {
+                // Souvent un blocage CORS -> on tentera le fallback
+            }
+
+            // 2) fallback via proxy CORS (r.jina.ai)
+            // Format attendu : https://r.jina.ai/http(s)://...
+            try {
+                const proxied = `https://r.jina.ai/${rawUrl}`;
+                const res2 = await fetch(proxied);
+                if (res2.ok) return await res2.text();
+            } catch (_) {
+                return null;
+            }
+            return null;
+        };
+
+        // Source API (CORS OK) : Gutendex (wrapper Gutenberg)
+        // Objectif: récupérer quelques livres aléatoires sans listes en dur.
+        const page = Math.floor(Math.random() * 50) + 1;
+        const langParam = (selectedLang === 'en') ? 'en' : (selectedLang === 'fr' ? 'fr' : 'en');
+        const url = `https://gutendex.com/books?languages=${encodeURIComponent(langParam)}&page=${page}`;
+
+        const res = await fetch(url);
+        if (!res.ok) return [];
+        const data = await res.json();
+        const books = Array.isArray(data.results) ? data.results : [];
+        if (books.length === 0) return [];
+
+        // Prendre 2-3 livres au hasard
+        const shuffled = books.sort(() => Math.random() - 0.5).slice(0, 3);
+        const results = [];
+
+        for (const book of shuffled) {
+            const id = book.id;
+            const title = book.title;
+            const author = book.authors?.map(a => a.name).join(', ') || 'Inconnu';
+
+            // Tenter de trouver un format texte brut
+            const formats = book.formats || {};
+            const txtUrl =
+                formats['text/plain; charset=utf-8'] ||
+                formats['text/plain; charset=us-ascii'] ||
+                formats['text/plain'] ||
+                null;
+
+            let excerpt = '';
+            let finalUrl = `https://www.gutenberg.org/ebooks/${id}`;
+
+            if (txtUrl) {
+                try {
+                    const full = await fetchTextWithCorsFallback(txtUrl);
+                    if (full) {
+
+                        // Nettoyage Gutenberg header/footer si présent
+                        const startMarker = /\*\*\*\s*START OF(.*?)\*\*\*/is;
+                        const endMarker = /\*\*\*\s*END OF(.*?)\*\*\*/is;
+                        let body = full;
+                        const startMatch = body.match(startMarker);
+                        if (startMatch) {
+                            body = body.slice(startMatch.index + startMatch[0].length);
+                        }
+                        const endMatch = body.match(endMarker);
+                        if (endMatch) {
+                            body = body.slice(0, endMatch.index);
+                        }
+
+                        // Prendre un extrait lisible (pas trop court)
+                        const clean = body.replace(/\r\n/g, '\n').trim();
+                        const start = Math.min(clean.length - 1, Math.floor(Math.random() * Math.max(1, clean.length / 3)));
+                        const paraStart = clean.lastIndexOf('\n\n', start);
+                        const from = paraStart > 0 ? paraStart : 0;
+                        excerpt = clean.slice(from, from + 2200).trim();
+
+                        // Fallback si extrait trop court
+                        if (excerpt.length < 300) {
+                            excerpt = clean.slice(0, 2200).trim();
+                        }
+                    }
+                } catch (e) {
+                    // CORS ou autres erreurs: on garde un fallback sans bloquer le flux
+                    excerpt = '';
+                }
+            }
+
+            // Si le texte n'a pas pu être récupéré (CORS/format), on affiche une carte “lien”
+            if (!excerpt) {
+                excerpt = `Texte non chargé automatiquement.\n\nOuvrir sur Project Gutenberg → ${finalUrl}`;
+            } else {
+                excerpt = `${excerpt}\n\n[...] (Lire la suite sur Project Gutenberg)\n${finalUrl}`;
+            }
+
+            results.push({
+                title,
+                text: excerpt,
+                author,
+                source: 'gutenberg',
+                lang: (book.languages && book.languages[0]) ? book.languages[0] : langParam,
+                url: finalUrl,
+                isPreloaded: true
+            });
+        }
+
+        return results;
+    } catch (e) {
+        console.error('Gutenberg error:', e);
+        return [];
+    }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -572,30 +682,70 @@ async function fetchGutenberg() {
 // ═══════════════════════════════════════════════════════════
 async function fetchPoetryDB() {
     try {
+        const fetchJsonWithCorsFallback = async (rawUrl) => {
+            if (!rawUrl) return null;
+
+            const tryFetch = async (url) => {
+                const res = await fetch(url);
+                if (!res.ok) return null;
+                const text = await res.text();
+                try {
+                    return JSON.parse(text);
+                } catch (_) {
+                    return null;
+                }
+            };
+
+            // 1) direct
+            try {
+                const direct = await tryFetch(rawUrl);
+                if (direct) return direct;
+            } catch (_) {
+                // potentiellement CORS
+            }
+
+            // 2) fallbacks CORS (services tiers) - utilisés uniquement si le direct échoue.
+            const proxies = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(rawUrl)}`
+            ];
+
+            for (const proxied of proxies) {
+                try {
+                    const viaProxy = await tryFetch(proxied);
+                    if (viaProxy) return viaProxy;
+                } catch (_) {
+                    // continuer
+                }
+            }
+
+            return null;
+        };
+
         // 1. Récupérer la liste de TOUS les auteurs disponibles (dynamique)
-        const authorsRes = await fetch('https://poetrydb.org/author');
-        const authorsData = await authorsRes.json();
+        const authorsData = await fetchJsonWithCorsFallback('https://poetrydb.org/author');
         
-        if (!authorsData || !authorsData.authors || authorsData.authors.length === 0) return [];
-        
-        // 2. Choisir un auteur au hasard
-        const randomAuthor = authorsData.authors[Math.floor(Math.random() * authorsData.authors.length)];
-        
-        // 3. Récupérer ses poèmes
-        const res = await fetch(`https://poetrydb.org/author/${encodeURIComponent(randomAuthor)}/title,author,lines`);
-        const poems = await res.json();
-        
-        if (Array.isArray(poems) && poems.length > 0) {
-            // Prendre quelques poèmes au hasard
-            const shuffled = poems.sort(() => Math.random() - 0.5).slice(0, 5);
-            
-            return shuffled.map(poem => ({
-                title: poem.title,
-                text: Array.isArray(poem.lines) ? poem.lines.join('\n') : poem.lines,
-                author: poem.author,
-                source: 'poetrydb',
-                lang: 'en'
-            }));
+        const authors = Array.isArray(authorsData?.authors)
+            ? authorsData.authors
+            : (Array.isArray(authorsData) ? authorsData : []);
+
+        if (!authors || authors.length === 0) return [];
+
+        // 2. Essayer quelques auteurs au hasard (PoetryDB peut renvoyer vide/erreur selon proxy)
+        for (let attempt = 0; attempt < 5; attempt++) {
+            const randomAuthor = authors[Math.floor(Math.random() * authors.length)];
+            const poems = await fetchJsonWithCorsFallback(`https://poetrydb.org/author/${encodeURIComponent(randomAuthor)}/title,author,lines`);
+
+            if (Array.isArray(poems) && poems.length > 0) {
+                const shuffled = poems.sort(() => Math.random() - 0.5).slice(0, 5);
+                return shuffled.map(poem => ({
+                    title: poem.title,
+                    text: Array.isArray(poem.lines) ? poem.lines.join('\n') : poem.lines,
+                    author: poem.author,
+                    source: 'poetrydb',
+                    lang: 'en'
+                }));
+            }
         }
     } catch (e) {
         console.error('PoetryDB error:', e);
@@ -769,8 +919,15 @@ async function fillPool() {
     // Helper pour vérifier si la source est autorisée
     const isSourceAllowed = (s) => state.activeSourceFilter.includes(s) || state.activeSourceFilter.includes('all');
 
+    // Si l'utilisateur force une source unique "API" (PoetryDB/Gutenberg/Archive),
+    // on ne bloque pas ces sources même si un contexte de recherche/filtres est actif.
+    const strictAltSourceMode = Array.isArray(state.activeSourceFilter)
+        && state.activeSourceFilter.length === 1
+        && ['poetrydb', 'gutenberg', 'archive'].includes(state.activeSourceFilter[0]);
+
     // === 1. POETRYDB (si anglais actif) - Qualité garantie ===
-    if (!hasSearchContext && (selectedLang === 'all' || selectedLang === 'en') && isSourceAllowed('poetrydb')) {
+    const poetryLangOk = (selectedLang === 'all' || selectedLang === 'en') || (strictAltSourceMode && state.activeSourceFilter[0] === 'poetrydb');
+    if ((!hasSearchContext || strictAltSourceMode) && poetryLangOk && isSourceAllowed('poetrydb')) {
         try {
             const poems = await fetchPoetryDB();
             for (const poem of poems) {
@@ -792,7 +949,7 @@ async function fillPool() {
     }
     
     // === 1.5 PROJECT GUTENBERG - Classiques du domaine public ===
-    if (!hasSearchContext && isSourceAllowed('gutenberg')) {
+    if ((!hasSearchContext || strictAltSourceMode) && isSourceAllowed('gutenberg')) {
     try {
         const gutenbergTexts = await fetchGutenberg();
         for (const item of gutenbergTexts) {
@@ -807,7 +964,7 @@ async function fillPool() {
     }
     
     // === 1.6 ARCHIVE.ORG - Internet Archive ===
-    if (!hasSearchContext && isSourceAllowed('archive')) {
+    if ((!hasSearchContext || strictAltSourceMode) && isSourceAllowed('archive')) {
     try {
         const archiveTexts = await fetchArchiveOrg();
         for (const item of archiveTexts) {
