@@ -1,7 +1,7 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/web/$1" }
+    { "source": "/api/:match*", "destination": "/api/:match*" },
+    { "source": "/:match((?!api/.*).*)", "destination": "/web/:match*" }
   ],
   "headers": [
     {
