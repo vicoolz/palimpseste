@@ -54,11 +54,15 @@ const COLLECTION_COLORS = [
 /**
  * Charger les collections de l'utilisateur
  */
-async function loadUserCollections() {
+async function loadUserCollections(forceReload = false) {
     if (!currentUser || !supabaseClient) {
         userCollections = [];
         collectionsLoaded = false;
         return [];
+    }
+
+    if (collectionsLoaded && !forceReload) {
+        return userCollections;
     }
     
     try {
@@ -407,9 +411,7 @@ async function openCollectionPicker(item) {
     pendingCollectionItem = item;
     
     // Charger les collections si nécessaire
-    if (!collectionsLoaded) {
-        await loadUserCollections();
-    }
+    await loadUserCollections(true);
     
     // Vérifier dans quelles collections l'item est déjà
     const existingCollections = await getItemCollections(item);
