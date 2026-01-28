@@ -5440,9 +5440,23 @@ border-bottom-color: var(--accent);
 
 @media screen and (max-width: 520px) {
     .profile-tab {
-        flex: 1 1 50%;
-        font-size: 0.9rem;
-        padding: 1rem 0.6rem;
+        flex: 1 1 20%;
+        font-size: 1.5rem;
+        padding: 1.2rem 0.3rem;
+        line-height: 1;
+    }
+    /* Masquer le texte, garder uniquement les émojis */
+    #tabProfileExtraits::after { content: '📝'; }
+    #tabProfileLikes::after { content: '❤️'; }
+    #tabProfileCollections::after { content: '📚'; }
+    #tabProfileFollowers::after { content: '👥'; }
+    #tabProfileFollowing::after { content: '📤'; }
+    
+    .profile-tab {
+        font-size: 0 !important;
+    }
+    .profile-tab::after {
+        font-size: 1.5rem;
     }
 }
 /* Profile Content */
