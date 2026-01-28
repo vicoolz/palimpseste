@@ -805,12 +805,18 @@ async function loadProfileCollections(userId) {
     if (!container || !supabaseClient) return;
 
     try {
-        const { data: collections, error } = await supabaseClient
+        const isOwnProfile = currentUser && userId === currentUser.id;
+        let collectionsQuery = supabaseClient
             .from('collections')
             .select('id, user_id, name, description, emoji, color, is_public, position, items_count, created_at')
             .eq('user_id', userId)
-            .eq('is_public', true)
             .order('position', { ascending: true });
+
+        if (!isOwnProfile) {
+            collectionsQuery = collectionsQuery.eq('is_public', true);
+        }
+
+        const { data: collections, error } = await collectionsQuery;
 
         if (error) throw error;
 
@@ -821,7 +827,7 @@ async function loadProfileCollections(userId) {
             container.innerHTML = `
                 <div class="profile-empty">
                     <div class="profile-empty-icon">📚</div>
-                    <div class="profile-empty-text">Aucune collection publique</div>
+                    <div class="profile-empty-text">${isOwnProfile ? 'Aucune collection' : 'Aucune collection publique'}</div>
                 </div>
             `;
             return;
@@ -846,11 +852,19 @@ async function loadProfileCollections(userId) {
         container.innerHTML = `
             <div class="collections-view">
                 <div class="collections-list" id="profileCollectionsList">
-                    ${publicCollections.map(c => `
+                    ${publicCollections.map(c => {
+                        const isPublic = !!c.is_public;
+                        const badge = isOwnProfile
+                            ? `<div class="collection-card-badges">
+                                <span class="collection-card-badge ${isPublic ? 'public' : 'private'}">${isPublic ? 'Publique' : 'Privée'}</span>
+                               </div>`
+                            : '';
+                        return `
                         <div class="collection-card" onclick="openProfileCollection('${c.id}')">
                             <div class="collection-card-emoji" style="background: ${(c.color || '#5a7a8a')}15; color: ${c.color || '#5a7a8a'}">${c.emoji || '📚'}</div>
                             <div class="collection-card-info">
                                 <div class="collection-card-name">${escapeHtml(c.name || 'Sans titre')}</div>
+                                ${badge}
                                 <div class="collection-card-count">${c.items_count || 0} texte${(c.items_count || 0) > 1 ? 's' : ''}</div>
                                 ${c.description ? `<div class="collection-card-desc">${escapeHtml(c.description)}</div>` : ''}
                             </div>
@@ -858,7 +872,7 @@ async function loadProfileCollections(userId) {
                                 <button class="collection-card-action" onclick="event.stopPropagation(); openProfileCollection('${c.id}')" title="Ouvrir">↗</button>
                             </div>
                         </div>
-                    `).join('')}
+                    `;}).join('')}
                 </div>
             </div>
         `;

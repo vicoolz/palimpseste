@@ -2461,6 +2461,37 @@ margin-left: 0.5rem;
 .lang-badge.es { background: rgba(198,11,30,0.2); color: #e57373; }
 .lang-badge.pt { background: rgba(0,102,0,0.2); color: #66bb6a; }
 .lang-badge.ru { background: rgba(0,57,166,0.2); color: #7986cb; }
+
+/* Badge publique/privée pour les collections */
+.collection-card-badges {
+    margin-top: 4px;
+    margin-bottom: 2px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.collection-card-badge {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.06);
+    color: var(--text-muted);
+    letter-spacing: 0.2px;
+}
+
+.collection-card-badge.public {
+    background: rgba(46, 204, 113, 0.15);
+    border-color: rgba(46, 204, 113, 0.35);
+    color: #7be9a6;
+}
+
+.collection-card-badge.private {
+    background: rgba(231, 76, 60, 0.12);
+    border-color: rgba(231, 76, 60, 0.35);
+    color: #ff9a8c;
+}
 .lang-badge.la { background: rgba(139,90,43,0.2); color: #bcaaa4; }
 .lang-badge.zh { background: rgba(222,41,16,0.2); color: #ef5350; }
 .lang-badge.ja { background: rgba(188,0,45,0.2); color: #f06292; }
