@@ -498,6 +498,27 @@ async function init() {
 async function showSourceLikers(sourceUrl) {
     if (!supabaseClient || !sourceUrl) return;
 
+    try {
+        const { data } = await supabaseClient
+            .from('extraits')
+            .select('id')
+            .eq('source_url', sourceUrl)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        const extraitId = data?.[0]?.id || null;
+        if (extraitId && typeof showLikers === 'function') {
+            showLikers(extraitId);
+            return;
+        }
+    } catch (err) {
+        console.warn('Impossible de résoudre l\'extrait pour showSourceLikers:', err);
+    }
+
+    openLikersModalWithMessage('Aucun like pour le moment');
+}
+
+function openLikersModalWithMessage(message) {
     let modal = document.getElementById('likersModal');
     if (!modal) {
         modal = document.createElement('div');
@@ -520,47 +541,23 @@ async function showSourceLikers(sourceUrl) {
 
     modal.classList.add('open');
     const listContainer = document.getElementById('likersList');
-    listContainer.innerHTML = '<div class="likers-loading">Chargement...</div>';
-
-    try {
-        const { data: likes, error } = await supabaseClient
-            .from('source_likes')
-            .select('user_id, created_at')
-            .eq('source_url', sourceUrl)
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        if (!likes || likes.length === 0) {
-            listContainer.innerHTML = '<div class="likers-empty">Aucun like pour le moment</div>';
-            return;
-        }
-
-        const userIds = likes.map(l => l.user_id);
-        const { data: profiles } = await supabaseClient
-            .from('profiles')
-            .select('id, username')
-            .in('id', userIds);
-        const profileMap = new Map((profiles || []).map(p => [p.id, p]));
-
-        listContainer.innerHTML = likes.map(like => {
-            const profile = profileMap.get(like.user_id);
-            const username = profile?.username || 'Anonyme';
-            const avatarSymbol = getAvatarSymbol(username);
-            const timeAgo = formatTimeAgo(new Date(like.created_at));
-            return `
-                <div class="liker-item">
-                    <div class="liker-avatar" onclick="openUserProfile('${like.user_id}', '${escapeHtml(username)}'); closeLikersModal();">${avatarSymbol}</div>
-                    <div class="liker-info" onclick="openUserProfile('${like.user_id}', '${escapeHtml(username)}'); closeLikersModal();">
-                        <div class="liker-name">${escapeHtml(username)}</div>
-                        <div class="liker-time">${timeAgo}</div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    } catch (err) {
-        console.error('Erreur chargement likers source:', err);
-        listContainer.innerHTML = '<div class="likers-empty">Erreur de chargement</div>';
+    if (listContainer) {
+        listContainer.innerHTML = `<div class="likers-empty">${message}</div>`;
     }
+}
+
+async function showCardLikers(cardId) {
+    if (!supabaseClient) return;
+    const card = document.getElementById(cardId);
+    if (!card) return;
+
+    const extraitId = await resolveExtraitIdForCard(card, false);
+    if (extraitId && typeof showLikers === 'function') {
+        showLikers(extraitId);
+        return;
+    }
+
+    openLikersModalWithMessage('Aucun like pour le moment');
 }
 
 function loadState() {
@@ -1239,7 +1236,7 @@ function createCardElement(result, origTitle, wikisource = getCurrentWikisource(
             <span class="tag ${tag}" onclick="event.stopPropagation(); exploreCategory('${tag}')" title="Explorer ce genre">${tag}</span>
         </div>
         <div class="card-body" ondblclick="doubleTapLike('${cardId}', event)">
-            <span class="like-heart-overlay" id="heart-${cardId}">❤️</span>
+            <span class="like-heart-overlay" id="heart-${cardId}">♥</span>
             <div class="text-teaser">${esc(teaser)}</div>
             <div class="text-full" id="full-${cardId}"></div>
             ${remaining ? `<button class="btn-suite" onclick="showMore('${cardId}')" id="suite-${cardId}">Lire la suite<span class="arrow">→</span></button>` : ''}
@@ -1249,8 +1246,10 @@ function createCardElement(result, origTitle, wikisource = getCurrentWikisource(
             <div class="card-keywords">${keywordsHtml}</div>
             <div class="actions">
                 <div class="like-with-count">
-                    <button class="btn btn-like ${isSourceLiked(url) ? 'active' : ''}" onclick="toggleLike('${cardId}',this)" title="Ajouter aux favoris">♥ <span class="btn-text">J'aime</span></button>
-                    <span class="like-count clickable" id="likeCount-${cardId}" data-source-url="${safeUrl}" onclick="event.stopPropagation(); showSourceLikers('${safeUrl}')" style="display:none;">0</span>
+                    <button class="btn btn-like" onclick="toggleLike('${cardId}',this)" title="J'aime">
+                        <span class="like-icon">♥</span>
+                        <span class="like-count clickable" id="likeCount-${cardId}" data-card-id="${cardId}" onclick="event.stopPropagation(); showCardLikers('${cardId}')">0</span>
+                    </button>
                 </div>
                 <button class="btn btn-share" onclick="shareCardExtrait('${cardId}')" title="Partager">📤 <span class="btn-text">Partager</span></button>
                 <button class="btn btn-comment" onclick="openCardComments('${cardId}')" title="Commenter">
@@ -1291,92 +1290,40 @@ async function loadCardCommentCount(cardId, title, author, url) {
     if (!supabaseClient) return;
     
     try {
-        let extraits = null;
-        let error = null;
-
         const card = document.getElementById(cardId);
-        const cardText = card?.dataset?.text || '';
-        const teaserText = cardText.substring(0, 500);
-        const { textHash } = buildExtraitKey(teaserText, title, author, url);
+        const extraitId = await resolveExtraitIdForCard(card, false);
 
-        let byKeyQuery = supabaseClient
-            .from('extraits')
-            .select('id')
-            .eq('source_title', title)
-            .eq('source_author', author);
+        if (!extraitId) return;
 
-        if (url) byKeyQuery = byKeyQuery.eq('source_url', url);
-        if (textHash) byKeyQuery = byKeyQuery.eq('text_hash', textHash);
+        const { count, error: countError } = await supabaseClient
+            .from('comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('extrait_id', extraitId);
 
-        const byKey = await byKeyQuery
-            .order('created_at', { ascending: false })
-            .limit(1);
-
-        extraits = byKey.data;
-        error = byKey.error;
-
-        // Fallback: sans text_hash si aucun résultat
-        if (!error && (!extraits || extraits.length === 0)) {
-            let fallbackQuery = supabaseClient
-                .from('extraits')
-                .select('id')
-                .eq('source_title', title)
-                .eq('source_author', author);
-            if (url) fallbackQuery = fallbackQuery.eq('source_url', url);
-
-            const fallback = await fallbackQuery
-                .order('created_at', { ascending: false })
-                .limit(1);
-            extraits = fallback.data;
-            error = fallback.error;
-        }
-
-        // Fallback: chercher par URL source si aucun résultat
-        if ((!extraits || extraits.length === 0) && url) {
-            let byUrlQuery = supabaseClient
-                .from('extraits')
-                .select('id')
-                .eq('source_url', url);
-            const byUrl = await byUrlQuery.order('created_at', { ascending: false }).limit(1);
-            extraits = byUrl.data;
-            error = byUrl.error;
-        }
-
-        if (error) {
-            console.log(`Erreur chargement compteur pour "${title}":`, error);
+        if (countError) {
+            console.log(`Erreur comptage commentaires pour "${title}":`, countError);
             return;
         }
 
-        if (extraits && extraits.length > 0) {
-            const extrait = extraits[0];
-
-            const { count, error: countError } = await supabaseClient
-                .from('comments')
-                .select('*', { count: 'exact', head: true })
-                .eq('extrait_id', extrait.id);
-
-            if (countError) {
-                console.log(`Erreur comptage commentaires pour "${title}":`, countError);
-                return;
-            }
-
-            // Stocker l'ID pour usage ultérieur
-            if (card) {
-                card.dataset.extraitId = extrait.id;
-                if (typeof syncCardCommentCountId === 'function') {
-                    syncCardCommentCountId(card, extrait.id);
-                } else {
-                    const countEl = document.getElementById(`commentCount-${cardId}`);
-                    if (countEl) {
-                        countEl.dataset.extraitId = extrait.id;
-                        countEl.id = `commentCount-${extrait.id}`;
-                    }
+        // Stocker l'ID pour usage ultérieur
+        if (card) {
+            card.dataset.extraitId = extraitId;
+            if (typeof syncCardCommentCountId === 'function') {
+                syncCardCommentCountId(card, extraitId);
+                if (typeof syncCardLikeCountId === 'function') {
+                    syncCardLikeCountId(card, extraitId);
+                }
+            } else {
+                const countEl = document.getElementById(`commentCount-${cardId}`);
+                if (countEl) {
+                    countEl.dataset.extraitId = extraitId;
+                    countEl.id = `commentCount-${extraitId}`;
                 }
             }
-
-            // Mettre à jour le compteur
-            updateCardCommentCount(cardId, count || 0);
         }
+
+        // Mettre à jour le compteur
+        updateCardCommentCount(cardId, count || 0);
     } catch (err) {
         console.log('Impossible de charger le nombre de commentaires:', err);
     }
@@ -1412,22 +1359,123 @@ function updateCardCommentCount(cardId, count) {
     }
 }
 
-function updateCardLikeCount(cardId, count) {
+function syncCardLikeCountId(card, extraitId) {
+    if (!card || !extraitId) return;
+    const cardId = card.id;
     const countEl = document.getElementById(`likeCount-${cardId}`);
+    if (countEl) {
+        countEl.dataset.extraitId = extraitId;
+        countEl.id = `likeCount-${extraitId}`;
+    }
+}
+
+async function resolveExtraitIdForCard(card, createIfMissing = false) {
+    if (!card || !supabaseClient) return null;
+    if (card.dataset.extraitId) return card.dataset.extraitId;
+
+    if (typeof resolveExtraitForCard === 'function') {
+        try {
+            const resolved = await resolveExtraitForCard(card, createIfMissing);
+            if (resolved) {
+                card.dataset.extraitId = resolved;
+                syncCardLikeCountId(card, resolved);
+                return resolved;
+            }
+        } catch (err) {
+            console.warn('resolveExtraitForCard indisponible:', err);
+        }
+    }
+
+    const title = card.dataset.title || 'Sans titre';
+    const author = card.dataset.author || 'Inconnu';
+    const sourceUrl = card.dataset.url || '';
+    const text = card.dataset.text || '';
+    const lang = card.dataset.lang || 'fr';
+    const textToStore = text.substring(0, 500);
+    const { textHash, textLength } = buildExtraitKey(textToStore, title, author, sourceUrl);
+
+    let query = supabaseClient
+        .from('extraits')
+        .select('id')
+        .eq('source_title', title)
+        .eq('source_author', author);
+    if (sourceUrl) query = query.eq('source_url', sourceUrl);
+    if (textHash) query = query.eq('text_hash', textHash);
+
+    const { data: byKey } = await query.order('created_at', { ascending: false }).limit(1);
+    let extraitId = byKey?.[0]?.id || null;
+
+    if (!extraitId && createIfMissing && currentUser) {
+        const { data: newExtrait, error } = await supabaseClient
+            .from('extraits')
+            .insert({
+                user_id: currentUser.id,
+                texte: textToStore,
+                source_title: title,
+                source_author: author,
+                source_url: sourceUrl || `https://${lang}.wikisource.org/wiki/${encodeURIComponent(title)}`,
+                text_hash: textHash || null,
+                text_length: textLength || null,
+                likes_count: 0
+            })
+            .select()
+            .single();
+        if (!error) extraitId = newExtrait?.id || null;
+    }
+
+    if (extraitId) {
+        card.dataset.extraitId = extraitId;
+        syncCardLikeCountId(card, extraitId);
+    }
+
+    return extraitId;
+}
+
+function updateCardLikeCount(cardId, count) {
+    let countEl = document.getElementById(`likeCount-${cardId}`);
+    if (!countEl) {
+        const card = document.getElementById(cardId);
+        const extraitId = card?.dataset?.extraitId;
+        if (extraitId) {
+            countEl = document.getElementById(`likeCount-${extraitId}`) || card.querySelector(`[data-extrait-id="${extraitId}"]`);
+        }
+    }
     if (!countEl) return;
     countEl.textContent = count || 0;
-    countEl.style.display = count > 0 ? 'inline' : 'none';
+    countEl.style.display = count > 0 ? 'inline-flex' : 'none';
 }
 
 async function loadCardLikeCount(cardId, url) {
-    if (!supabaseClient || !url) return;
+    if (!supabaseClient) return;
+    const card = document.getElementById(cardId);
+    if (!card) return;
+
     try {
+        const extraitId = await resolveExtraitIdForCard(card, false);
+        if (!extraitId) {
+            updateCardLikeCount(cardId, 0);
+            return;
+        }
+
+        if (currentUser && typeof loadUserLikesCache === 'function' && typeof likesLoaded !== 'undefined' && !likesLoaded) {
+            await loadUserLikesCache();
+        }
+
         const { count, error } = await supabaseClient
-            .from('source_likes')
+            .from('likes')
             .select('*', { count: 'exact', head: true })
-            .eq('source_url', url);
+            .eq('extrait_id', extraitId);
         if (error) return;
-        updateCardLikeCount(cardId, count);
+
+        if (typeof likesCountCache !== 'undefined') {
+            likesCountCache[extraitId] = count || 0;
+        }
+        updateCardLikeCount(cardId, count || 0);
+
+        const btn = card.querySelector('.btn-like');
+        if (btn && typeof isExtraitLiked === 'function') {
+            btn.classList.toggle('active', isExtraitLiked(extraitId));
+        }
     } catch (e) {
         // ignore
     }
@@ -1507,7 +1555,7 @@ function renderCard(result, origTitle, wikisource = getCurrentWikisource(), allo
             <span class="tag ${tag}" onclick="event.stopPropagation(); exploreCategory('${tag}')" title="Explorer ce genre">${tag}</span>
         </div>
         <div class="card-body" ondblclick="doubleTapLike('${cardId}', event)">
-            <span class="like-heart-overlay" id="heart-${cardId}">❤️</span>
+            <span class="like-heart-overlay" id="heart-${cardId}">♥</span>
             <div class="text-teaser">${esc(teaser)}</div>
             <div class="text-full" id="full-${cardId}"></div>
             ${remaining ? `<button class="btn-suite" onclick="showMore('${cardId}')" id="suite-${cardId}">Lire la suite<span class="arrow">→</span></button>` : ''}
@@ -1517,8 +1565,10 @@ function renderCard(result, origTitle, wikisource = getCurrentWikisource(), allo
             <div class="card-keywords">${keywordsHtml}</div>
             <div class="actions">
                 <div class="like-with-count">
-                    <button class="btn btn-like ${isSourceLiked(url) ? 'active' : ''}" onclick="toggleLike('${cardId}',this)" title="Ajouter aux favoris">♥ <span class="btn-text">J'aime</span></button>
-                    <span class="like-count clickable" id="likeCount-${cardId}" data-source-url="${safeUrl}" onclick="event.stopPropagation(); showSourceLikers('${safeUrl}')" style="display:none;">0</span>
+                    <button class="btn btn-like" onclick="toggleLike('${cardId}',this)" title="J'aime">
+                        <span class="like-icon">♥</span>
+                        <span class="like-count clickable" id="likeCount-${cardId}" data-card-id="${cardId}" onclick="event.stopPropagation(); showCardLikers('${cardId}')">0</span>
+                    </button>
                 </div>
                 <button class="btn btn-share" onclick="shareCardExtrait('${cardId}')" title="Partager">📤 <span class="btn-text">Partager</span></button>
                 <button class="btn btn-comment" onclick="openCardComments('${cardId}')" title="Commenter">
@@ -1743,63 +1793,126 @@ async function removeLikeFromSupabase(sourceUrl) {
     }
 }
 
-// Toggle like sur une carte (simple et instantané)
-function toggleLike(cardId, btn) {
-    const card = document.getElementById(cardId);
-    if (!card) return;
-    
-    const sourceUrl = card.dataset?.url || '';
-    if (!sourceUrl) {
-        toast('URL source manquante');
+// Toggle like sur une carte (global, basé sur extraits)
+async function toggleLike(cardId, btn, forceLike = false) {
+    if (!currentUser) {
+        if (typeof openAuthModal === 'function') openAuthModal('login');
+        toast('📝 Connectez-vous pour liker');
         return;
     }
+    if (!supabaseClient) return;
 
-    const likeCountEl = document.getElementById(`likeCount-${cardId}`);
-    const currentCount = parseInt(likeCountEl?.textContent) || 0;
-    const wasLiked = likedSourceUrls.has(sourceUrl);
-    
-    // Récupérer les métadonnées (auteur) pour enrichir les favoris
-    const author = card.dataset.author || 'Anonyme';
-    
-    // Toggle le like
-    if (wasLiked) {
-        // UNLIKE
-        likedSourceUrls.delete(sourceUrl);
-        likedSourcesData.delete(sourceUrl);
-        btn?.classList?.remove('active');
-        toast('Like retiré');
-        // Sync avec Supabase
-        removeLikeFromSupabase(sourceUrl);
-    } else {
-        // LIKE - stocker avec métadonnées
-        const metadata = {
-            timestamp: Date.now(),
-            title: card.dataset.title || extractPageTitleFromUrl(sourceUrl),
-            author: author,
-            preview: card.querySelector('.text-preview')?.textContent?.substring(0, 300) || ''
-        };
-        likedSourceUrls.add(sourceUrl);
-        likedSourcesData.set(sourceUrl, metadata);
-        btn?.classList?.add('active');
-        toast('❤ Liké !');
-        // Sync avec Supabase
-        addLikeToSupabase(sourceUrl, metadata);
+    const card = document.getElementById(cardId);
+    if (!card) return;
+
+    const pending = (typeof pendingLikeOperations !== 'undefined') ? pendingLikeOperations : (window.pendingCardLikeOperations || (window.pendingCardLikeOperations = {}));
+    const pendingKey = card.dataset.extraitId || cardId;
+    if (pending[pendingKey]) return;
+    pending[pendingKey] = true;
+
+    const likeBtn = btn || card.querySelector('.btn-like');
+
+    try {
+        const extraitId = await resolveExtraitIdForCard(card, true);
+        if (!extraitId) {
+            toast('Impossible de liker cet extrait');
+            return;
+        }
+
+        const likeCountEl = document.getElementById(`likeCount-${extraitId}`) || document.getElementById(`likeCount-${cardId}`);
+        const currentCount = parseInt(likeCountEl?.textContent) || 0;
+
+        if (typeof loadUserLikesCache === 'function' && typeof likesLoaded !== 'undefined' && !likesLoaded) {
+            await loadUserLikesCache();
+        }
+
+        let wasLiked = false;
+        if (typeof isExtraitLiked === 'function') {
+            wasLiked = isExtraitLiked(extraitId);
+        } else {
+            const { data: existingLike } = await supabaseClient
+                .from('likes')
+                .select('id')
+                .eq('user_id', currentUser.id)
+                .eq('extrait_id', extraitId)
+                .maybeSingle();
+            wasLiked = !!existingLike;
+        }
+
+        if (forceLike && wasLiked) return;
+
+        const newCount = wasLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
+
+        if (typeof userLikesCache !== 'undefined') {
+            if (wasLiked) userLikesCache.delete(extraitId);
+            else userLikesCache.add(extraitId);
+        }
+        if (typeof likesCountCache !== 'undefined') {
+            likesCountCache[extraitId] = newCount;
+        }
+
+        if (likeBtn) {
+            likeBtn.classList.toggle('active', !wasLiked);
+            likeBtn.classList.add('like-animating');
+            setTimeout(() => likeBtn.classList.remove('like-animating'), 300);
+        }
+        if (likeCountEl) {
+            likeCountEl.textContent = newCount;
+            likeCountEl.style.display = newCount > 0 ? 'inline-flex' : 'none';
+        }
+
+        if (wasLiked) {
+            const { error } = await supabaseClient
+                .from('likes')
+                .delete()
+                .eq('user_id', currentUser.id)
+                .eq('extrait_id', extraitId);
+            if (error) throw error;
+            const { error: rpcError } = await supabaseClient.rpc('decrement_likes', { extrait_id: extraitId });
+            if (rpcError) console.warn('RPC decrement_likes échoué:', rpcError);
+        } else {
+            const { error } = await supabaseClient
+                .from('likes')
+                .insert({ user_id: currentUser.id, extrait_id: extraitId });
+            if (error) throw error;
+            const { error: rpcError } = await supabaseClient.rpc('increment_likes', { extrait_id: extraitId });
+            if (rpcError) console.warn('RPC increment_likes échoué:', rpcError);
+
+            const extrait = socialExtraits?.find?.(e => e.id === extraitId);
+            if (extrait && extrait.user_id !== currentUser.id && typeof createNotification === 'function') {
+                await createNotification(extrait.user_id, 'like', extraitId);
+            }
+        }
+
+        if (typeof loadUserStats === 'function') loadUserStats();
+    } catch (err) {
+        console.error('Erreur like:', err);
+
+        if (typeof loadUserLikesCache === 'function') await loadUserLikesCache();
+        if (typeof loadLikesCountForExtraits === 'function') {
+            const extraitId = card.dataset.extraitId;
+            if (extraitId) await loadLikesCountForExtraits([extraitId]);
+        }
+
+        const extraitId = card.dataset.extraitId;
+        const isNowLiked = extraitId && typeof isExtraitLiked === 'function' ? isExtraitLiked(extraitId) : false;
+        const countEl = extraitId ? document.getElementById(`likeCount-${extraitId}`) : document.getElementById(`likeCount-${cardId}`);
+        const realCount = extraitId && typeof getLikeCount === 'function' ? getLikeCount(extraitId) : (parseInt(countEl?.textContent) || 0);
+
+        if (likeBtn) likeBtn.classList.toggle('active', isNowLiked);
+        if (countEl) {
+            countEl.textContent = realCount || 0;
+            countEl.style.display = (realCount || 0) > 0 ? 'inline-flex' : 'none';
+        }
+        toast('Erreur de synchronisation');
+    } finally {
+        delete pending[pendingKey];
     }
-
-    // Mettre à jour le compteur local sur la carte
-    const newCount = wasLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
-    updateCardLikeCount(cardId, newCount);
-    
-    // Sauvegarder localement
-    saveLikedSources();
-    
-    // Mettre à jour le compteur dans la sidebar
-    updateLikeCount();
 }
 
 // Mettre à jour le compteur de likes
 function updateLikeCount() {
-    const count = likedSourceUrls.size;
+    const count = (currentUser && typeof userLikesCache !== 'undefined') ? userLikesCache.size : 0;
     
     // Sidebar desktop
     const myLikesCount = document.getElementById('myLikesCount');
@@ -1814,24 +1927,26 @@ function updateLikeCount() {
     if (mobileLikes) mobileLikes.textContent = count;
 }
 
-// Vérifier si une URL est likée (pour l'affichage initial des boutons)
-function isSourceLiked(sourceUrl) {
-    return likedSourceUrls.has(sourceUrl);
+function isCardLiked(card) {
+    const extraitId = card?.dataset?.extraitId;
+    if (!extraitId || typeof isExtraitLiked !== 'function') return false;
+    return isExtraitLiked(extraitId);
 }
 
 // Initialiser les likes au chargement
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadLikedSources();
+    if (currentUser && typeof loadUserLikesCache === 'function') {
+        await loadUserLikesCache();
+    }
     updateLikeCount();
 });
 
 // Double-tap pour liker (style Instagram)
-function doubleTapLike(id, event) {
+async function doubleTapLike(id, event) {
     event.preventDefault();
     const card = document.getElementById(id);
     const heart = document.getElementById('heart-' + id);
     const likeBtn = card?.querySelector('.card-foot .btn-like');
-    const sourceUrl = card?.dataset?.url || '';
     
     // Afficher l'animation du coeur
     if (heart) {
@@ -1841,8 +1956,8 @@ function doubleTapLike(id, event) {
     }
     
     // Si pas encore liké, liker. Sinon juste l'animation
-    if (!isSourceLiked(sourceUrl)) {
-        toggleLike(id, likeBtn);
+    if (!isCardLiked(card)) {
+        await toggleLike(id, likeBtn, true);
     }
 }
 

@@ -309,8 +309,8 @@ async function renderSocialFeed() {
                 <div class="extrait-actions">
                     <button class="extrait-action like-btn ${isLiked ? 'liked' : ''}" id="likeBtn-${extrait.id}" onclick="toggleLikeExtrait('${extrait.id}')" data-extrait-id="${extrait.id}">
                         <span class="like-icon">${isLiked ? '❤️' : '🤍'}</span>
+                        <span class="like-count clickable" id="likeCount-${extrait.id}" onclick="event.stopPropagation(); showLikers('${extrait.id}')" style="display:${likeCount > 0 ? 'inline-flex' : 'none'};">${likeCount}</span>
                     </button>
-                    <span class="like-count clickable" id="likeCount-${extrait.id}" onclick="event.stopPropagation(); showLikers('${extrait.id}')">${likeCount}</span>
                     <button class="extrait-action" onclick="copyExtrait('${extrait.id}')">
                         <span class="icon">📋</span>
                         <span>Copier</span>
@@ -392,6 +392,7 @@ async function toggleLikeExtrait(extraitId) {
         }
         if (likeCountEl) {
             likeCountEl.textContent = newCount;
+            likeCountEl.style.display = newCount > 0 ? 'inline-flex' : 'none';
         }
         
         // ═══════════════════════════════════════════════════════════
@@ -460,6 +461,7 @@ async function toggleLikeExtrait(extraitId) {
         }
         if (likeCountEl) {
             likeCountEl.textContent = realCount;
+            likeCountEl.style.display = realCount > 0 ? 'inline-flex' : 'none';
         }
         
         toast('Erreur de synchronisation');

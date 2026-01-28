@@ -124,7 +124,7 @@ async function loadTrendingFeed() {
                     </div>
                     <div class="trending-card-footer">
                         <div class="trending-stats">
-                            <div class="trending-stat ${isHot ? 'hot' : ''}">
+                            <div class="trending-stat ${isHot ? 'hot' : ''} clickable" onclick="event.stopPropagation(); showLikers('${extrait.id}')">
                                 <span>${isHot ? '🔥' : '❤️'}</span>
                                 <span>${likesCount}</span>
                             </div>

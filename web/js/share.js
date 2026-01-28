@@ -216,16 +216,31 @@ async function resolveExtraitForCard(card, createIfMissing = false) {
     const textToStore = text.substring(0, 500);
     const { textHash, textLength } = buildExtraitKey(textToStore, title, author, sourceUrl);
 
-    let query = supabaseClient
-        .from('extraits')
-        .select('id')
-        .eq('source_title', title)
-        .eq('source_author', author);
-    if (sourceUrl) query = query.eq('source_url', sourceUrl);
-    if (textHash) query = query.eq('text_hash', textHash);
+    // Recherche prioritaire: URL + hash (clé stable)
+    let extraitId = null;
+    if (sourceUrl && textHash) {
+        const { data: byStable } = await supabaseClient
+            .from('extraits')
+            .select('id')
+            .eq('source_url', sourceUrl)
+            .eq('text_hash', textHash)
+            .order('created_at', { ascending: false })
+            .maybeSingle();
+        extraitId = byStable?.id || null;
+    }
 
-    const { data: existingByHash } = await query.order('created_at', { ascending: false }).maybeSingle();
-    let extraitId = existingByHash?.id || null;
+    if (!extraitId) {
+        let query = supabaseClient
+            .from('extraits')
+            .select('id')
+            .eq('source_title', title)
+            .eq('source_author', author);
+        if (sourceUrl) query = query.eq('source_url', sourceUrl);
+        if (textHash) query = query.eq('text_hash', textHash);
+
+        const { data: existingByHash } = await query.order('created_at', { ascending: false }).maybeSingle();
+        extraitId = existingByHash?.id || null;
+    }
 
     if (!extraitId) {
         let fallbackQuery = supabaseClient

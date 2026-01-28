@@ -565,10 +565,8 @@ async function onUserLoggedIn() {
     }
     
     // Charger le cache des likes de l'utilisateur
-    if (typeof loadUserLikesCache === 'function') loadUserLikesCache();
-    
-    // Synchroniser les likes de sources depuis Supabase
-    if (typeof syncLikesFromSupabase === 'function') syncLikesFromSupabase();
+    if (typeof loadUserLikesCache === 'function') await loadUserLikesCache();
+    if (typeof updateLikeCount === 'function') updateLikeCount();
     
     // Load user stats (défini dans app.js)
     if (typeof loadUserStats === 'function') loadUserStats();
@@ -603,6 +601,7 @@ function onUserLoggedOut() {
     
     // Réinitialiser le cache des likes
     if (typeof resetLikesCache === 'function') resetLikesCache();
+    if (typeof updateLikeCount === 'function') updateLikeCount();
     
     // Mettre à jour le panneau profil mobile
     if (typeof updateMobileProfilePanel === 'function') updateMobileProfilePanel();

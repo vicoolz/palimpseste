@@ -858,14 +858,9 @@ async function openSearchResult(idx, tab) {
             return true;
         };
 
-        const text = await fetchText(result.title, 0, result.wikisource);
-        if (text?.text) {
-            if (renderSearchTextCard(text.text, text.author || null)) return;
-        }
-
-        // Fallback: chargement direct sans filtres stricts
+        // Chargement exact de la page (éviter les redirections heuristiques)
         try {
-            const rawUrl = `${result.wikisource.url}/w/api.php?action=parse&page=${encodeURIComponent(result.title)}&prop=text|displaytitle&format=json&origin=*&redirects=true`;
+            const rawUrl = `${result.wikisource.url}/w/api.php?action=parse&page=${encodeURIComponent(result.title)}&prop=text|displaytitle|links|categories&format=json&origin=*&redirects=true`;
             const res = await fetch(rawUrl);
             const data = await res.json();
             const html = data.parse?.text?.['*'] || '';
@@ -877,7 +872,7 @@ async function openSearchResult(idx, tab) {
                 }
             }
         } catch (e) {
-            // ignore fallback errors
+            // ignore parse errors
         }
 
         toast('Impossible de charger ce texte');

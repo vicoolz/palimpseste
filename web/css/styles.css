@@ -602,9 +602,72 @@
     }
 
     .like-with-count {
+        display: contents;
+    }
+
+    .like-with-count .btn-like {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        padding: 0 1rem;
+        border-radius: 0;
+        font-size: 0.65rem;
+        height: 2.4rem;
+        transition: all 0.15s ease;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 0.5rem;
+    }
+
+    .like-with-count .btn-like .like-icon {
+        font-size: 1.2rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        color: currentColor;
+        text-shadow:
+            1px 0 var(--border),
+            -1px 0 var(--border),
+            0 1px var(--border),
+            0 -1px var(--border);
+    }
+
+    .like-with-count .btn-like:hover {
+        color: var(--text);
+        border-color: var(--accent);
+        background: rgba(212, 165, 116, 0.08);
+    }
+
+    .like-with-count .btn-like.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    .like-with-count .btn-like .like-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        font-size: 0.8rem;
+        line-height: 1;
+        color: var(--text-secondary);
+        background: rgba(255,255,255,0.03);
+    }
+
+    .like-with-count .btn-like .like-count.clickable:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(212, 165, 116, 0.08);
+    }
+
+    .like-with-count .btn-like.active .like-count {
+        border-color: rgba(255,255,255,0.5);
+        color: #fff;
+        background: rgba(255,255,255,0.15);
     }
 
     .like-count {
@@ -2418,11 +2481,12 @@ position: absolute;
 top: 50%;
 left: 50%;
 transform: translate(-50%, -50%) scale(0);
-font-size: 4rem;
+font-size: 2.6rem;
+color: var(--accent-secondary);
 pointer-events: none;
 opacity: 0;
 z-index: 10;
-filter: drop-shadow(0 0 10px rgba(255,69,58,0.5));
+filter: drop-shadow(0 0 8px rgba(107, 58, 58, 0.45));
 }
 .card-body .like-heart-overlay.animate {
 animation: likeHeartPop 0.8s ease-out forwards;
@@ -2545,6 +2609,44 @@ position: relative;
 z-index: 5; /* Toujours au-dessus pour être cliquable */
 }
 
+/* Like button (desktop/global) - cœur plus grand et aligné avec le compteur */
+.card-foot .actions .btn-like {
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0;
+    font-size: 0.65rem;
+    min-height: 32px;
+}
+
+.card-foot .actions .btn-like .like-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    color: currentColor;
+    text-shadow:
+        1px 0 var(--border),
+        -1px 0 var(--border),
+        0 1px var(--border),
+        0 -1px var(--border);
+}
+
+.btn-like.active .like-icon {
+    color: #fff;
+    text-shadow:
+        1px 0 rgba(0,0,0,0.35),
+        -1px 0 rgba(0,0,0,0.35),
+        0 1px rgba(0,0,0,0.35),
+        0 -1px rgba(0,0,0,0.35);
+}
+
+.card-foot .actions .btn-like .like-count {
+    font-size: 0.8rem;
+    min-width: 22px;
+    padding: 0.15rem 0.5rem;
+}
+
 /* Boutons d'action individuels */
 .btn-like { transition: all 0.2s ease; }
 .btn-like.active {
@@ -2568,7 +2670,8 @@ z-index: 5; /* Toujours au-dessus pour être cliquable */
 background: transparent;
 border: 1px solid var(--border);
 color: var(--muted);
-padding: 0.5rem 1rem;
+padding: 0 1rem;
+height: 2.4rem;
 border-radius: 0;
 cursor: pointer;
 font-family: inherit;
@@ -3350,19 +3453,20 @@ color: var(--muted);
 }
 .trending-card {
 background: var(--bg-card);
-border: 1px solid var(--border);
-border-radius: 8px;
+border: 2px solid var(--border);
+border-radius: 0;
 overflow: hidden;
 transition: all 0.3s ease;
+box-shadow: 2px 2px 0 var(--pixel-shadow);
 }
 .trending-card:hover {
-border-color: var(--accent);
+border-color: var(--accent-secondary);
 transform: translateY(-2px);
-box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+box-shadow: 4px 6px 0 var(--pixel-shadow), 0 10px 20px rgba(0,0,0,0.25);
 }
 .trending-card-header {
 padding: 1rem 1.25rem;
-background: linear-gradient(135deg, rgba(255,69,58,0.05), rgba(191,90,242,0.05));
+background: linear-gradient(135deg, rgba(90,122,138,0.12), rgba(107,58,58,0.10));
 border-bottom: 1px solid var(--border);
 display: flex;
 justify-content: space-between;
@@ -3402,6 +3506,7 @@ color: var(--muted);
 .trending-rank {
 font-size: 1.5rem;
 opacity: 0.3;
+color: var(--accent-secondary);
 }
 .trending-card-body {
 padding: 1.25rem;
@@ -3426,7 +3531,7 @@ color: var(--text-secondary);
 }
 .trending-card-footer {
 padding: 0.75rem 1.25rem;
-background: rgba(0,0,0,0.2);
+background: rgba(255,255,255,0.03);
 display: flex;
 justify-content: space-between;
 align-items: center;
@@ -3442,8 +3547,15 @@ gap: 0.4rem;
 font-size: 0.85rem;
 color: var(--muted);
 }
+.trending-stat.clickable {
+cursor: pointer;
+transition: color 0.2s ease;
+}
+.trending-stat.clickable:hover {
+color: var(--text);
+}
 .trending-stat.hot {
-color: #ff6b6b;
+color: var(--accent-tertiary);
 }
 .trending-actions {
 display: flex;
@@ -3454,19 +3566,19 @@ background: transparent;
 border: 1px solid var(--border);
 color: var(--muted);
 padding: 0.4rem 0.8rem;
-border-radius: 4px;
+border-radius: 0;
 font-size: 0.75rem;
 cursor: pointer;
 transition: all 0.2s;
 }
 .trending-action-btn:hover {
-background: var(--accent);
-border-color: var(--accent);
+background: var(--accent-secondary);
+border-color: var(--accent-secondary);
 color: white;
 }
 .trending-action-btn.liked {
-background: var(--accent);
-border-color: var(--accent);
+background: var(--accent-secondary);
+border-color: var(--accent-secondary);
 color: white;
 }
 .trending-empty {
@@ -4372,6 +4484,59 @@ transition: color 0.2s;
 .comments-container {
 display: none;
 margin-top: 0.75rem;
+}
+.extrait-actions {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+flex-wrap: wrap;
+}
+.extrait-action.like-btn {
+background: transparent;
+border: 1px solid var(--border);
+color: var(--muted);
+padding: 0.2rem 0.5rem;
+border-radius: 999px;
+cursor: pointer;
+display: inline-flex;
+align-items: center;
+gap: 0.25rem;
+transition: all 0.2s;
+}
+.extrait-action.like-btn .like-icon {
+font-size: 0.95rem;
+line-height: 1;
+}
+.extrait-action.like-btn:hover {
+border-color: var(--accent);
+color: var(--accent);
+background: rgba(212, 165, 116, 0.08);
+}
+.extrait-action.like-btn.liked {
+color: white;
+background: var(--accent);
+border-color: var(--accent);
+}
+.extrait-actions .like-btn .like-count {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+min-width: 20px;
+padding: 0.1rem 0.45rem;
+border-radius: 999px;
+border: 1px solid var(--border);
+font-size: 0.75rem;
+line-height: 1;
+}
+.extrait-actions .like-btn .like-count.clickable:hover {
+border-color: var(--accent);
+color: var(--accent);
+background: rgba(212, 165, 116, 0.08);
+}
+.extrait-action.like-btn.liked .like-count {
+border-color: rgba(255,255,255,0.5);
+color: #fff;
+background: rgba(255,255,255,0.15);
 }
 .comments-container.open { display: block; }
 .comments-list {
