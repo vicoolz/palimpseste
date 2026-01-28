@@ -600,6 +600,36 @@
         background: var(--accent) !important;
         color: white !important;
     }
+
+    .like-with-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .like-count {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.1rem 0.45rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 18px;
+    }
+
+    .like-count.clickable {
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .like-count.clickable:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+        background: rgba(212, 165, 116, 0.08);
+    }
     
     /* Masquer les mots-cl?s sur mobile (trop encombrant) */
     .card-keywords {
@@ -2095,13 +2125,15 @@ border: none;
 font-size: 1rem;
 cursor: pointer;
 padding: 0.3rem;
-opacity: 0.6;
+opacity: 0.85;
+color: var(--text);
 transition: opacity 0.2s;
 }
 
 .filter-summary-clear:hover,
 .filter-summary-random:hover {
 opacity: 1;
+color: var(--accent);
 }
 
 .filter-summary-go {

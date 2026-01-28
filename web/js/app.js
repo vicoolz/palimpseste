@@ -495,6 +495,73 @@ async function init() {
         lastScrollY = scrollY;
     };
 }
+async function showSourceLikers(sourceUrl) {
+    if (!supabaseClient || !sourceUrl) return;
+
+    let modal = document.getElementById('likersModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'likersModal';
+        modal.className = 'likers-modal';
+        modal.innerHTML = `
+            <div class="likers-content">
+                <div class="likers-header">
+                    <h3>❤️ Aimé par</h3>
+                    <button class="likers-close" onclick="closeLikersModal()">✕</button>
+                </div>
+                <div class="likers-list" id="likersList">
+                    <div class="likers-loading">Chargement...</div>
+                </div>
+            </div>
+        `;
+        modal.onclick = (e) => { if (e.target === modal) closeLikersModal(); };
+        document.body.appendChild(modal);
+    }
+
+    modal.classList.add('open');
+    const listContainer = document.getElementById('likersList');
+    listContainer.innerHTML = '<div class="likers-loading">Chargement...</div>';
+
+    try {
+        const { data: likes, error } = await supabaseClient
+            .from('source_likes')
+            .select('user_id, created_at')
+            .eq('source_url', sourceUrl)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        if (!likes || likes.length === 0) {
+            listContainer.innerHTML = '<div class="likers-empty">Aucun like pour le moment</div>';
+            return;
+        }
+
+        const userIds = likes.map(l => l.user_id);
+        const { data: profiles } = await supabaseClient
+            .from('profiles')
+            .select('id, username')
+            .in('id', userIds);
+        const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+
+        listContainer.innerHTML = likes.map(like => {
+            const profile = profileMap.get(like.user_id);
+            const username = profile?.username || 'Anonyme';
+            const avatarSymbol = getAvatarSymbol(username);
+            const timeAgo = formatTimeAgo(new Date(like.created_at));
+            return `
+                <div class="liker-item">
+                    <div class="liker-avatar" onclick="openUserProfile('${like.user_id}', '${escapeHtml(username)}'); closeLikersModal();">${avatarSymbol}</div>
+                    <div class="liker-info" onclick="openUserProfile('${like.user_id}', '${escapeHtml(username)}'); closeLikersModal();">
+                        <div class="liker-name">${escapeHtml(username)}</div>
+                        <div class="liker-time">${timeAgo}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('Erreur chargement likers source:', err);
+        listContainer.innerHTML = '<div class="likers-empty">Erreur de chargement</div>';
+    }
+}
 
 function loadState() {
     try {
@@ -575,7 +642,6 @@ function updateStats() {
     // Section favoris locale cachée
     const favoritesSection = document.getElementById('favoritesSection');
     if (favoritesSection) favoritesSection.style.display = 'none';
-    
     // Titre dynamique selon le contexte
     updateDynamicHeader();
     
@@ -586,8 +652,6 @@ function updateStats() {
     updateReadingStatsUI();
 }
 
-// ═══════════════════════════════════════════════════════════
-// 📊 STATISTIQUES DE LECTURE
 // ═══════════════════════════════════════════════════════════
 
 function getTodayKey() {
@@ -1131,6 +1195,7 @@ function createCardElement(result, origTitle, wikisource = getCurrentWikisource(
     const tag = detectTag(title, text);
     // Priorité à l'URL fournie dans le résultat (ex: Archive.org), sinon construction Wikisource
     const url = result.url || `${wikisource?.url || 'https://fr.wikisource.org'}/wiki/${encodeURIComponent(origTitle)}`;
+    const safeUrl = (url || '').replace(/'/g, "\\'");
     const cardId = 'card-' + (state.cardIdx++);
     
     let displayTitle = title.split('/').pop() || title.split('/')[0];
@@ -1183,9 +1248,12 @@ function createCardElement(result, origTitle, wikisource = getCurrentWikisource(
         <div class="card-foot">
             <div class="card-keywords">${keywordsHtml}</div>
             <div class="actions">
-                <button class="btn btn-like" onclick="toggleLike('${cardId}',this)" title="Ajouter aux favoris">♥ <span class="btn-text">J'aime</span></button>
+                <div class="like-with-count">
+                    <button class="btn btn-like ${isSourceLiked(url) ? 'active' : ''}" onclick="toggleLike('${cardId}',this)" title="Ajouter aux favoris">♥ <span class="btn-text">J'aime</span></button>
+                    <span class="like-count clickable" id="likeCount-${cardId}" data-source-url="${safeUrl}" onclick="event.stopPropagation(); showSourceLikers('${safeUrl}')" style="display:none;">0</span>
+                </div>
                 <button class="btn btn-share" onclick="shareCardExtrait('${cardId}')" title="Partager">📤 <span class="btn-text">Partager</span></button>
-                <button class="btn btn-comment" onclick="showInlineComment('${cardId}')" title="Commenter">
+                <button class="btn btn-comment" onclick="openCardComments('${cardId}')" title="Commenter">
                     💬 <span id="commentCount-${cardId}" class="comment-count" style="display:none;">0</span> <span class="btn-text">commentaire<span class="comment-plural">s</span></span>
                 </button>
                 <button class="btn btn-collection card-btn-collection" onclick="openCollectionPickerFromCard('${cardId}')" title="Ajouter à une collection">+ <span class="btn-text">Collection</span></button>
@@ -1214,6 +1282,7 @@ function createCardElement(result, origTitle, wikisource = getCurrentWikisource(
     
     // Charger le nombre de commentaires existants de façon asynchrone
     loadCardCommentCount(cardId, title, author, url);
+    loadCardLikeCount(cardId, url);
     
     return card;
 }
@@ -1292,7 +1361,18 @@ async function loadCardCommentCount(cardId, title, author, url) {
             }
 
             // Stocker l'ID pour usage ultérieur
-            if (card) card.dataset.extraitId = extrait.id;
+            if (card) {
+                card.dataset.extraitId = extrait.id;
+                if (typeof syncCardCommentCountId === 'function') {
+                    syncCardCommentCountId(card, extrait.id);
+                } else {
+                    const countEl = document.getElementById(`commentCount-${cardId}`);
+                    if (countEl) {
+                        countEl.dataset.extraitId = extrait.id;
+                        countEl.id = `commentCount-${extrait.id}`;
+                    }
+                }
+            }
 
             // Mettre à jour le compteur
             updateCardCommentCount(cardId, count || 0);
@@ -1303,7 +1383,14 @@ async function loadCardCommentCount(cardId, title, author, url) {
 }
 
 function updateCardCommentCount(cardId, count) {
-    const countEl = document.getElementById(`commentCount-${cardId}`);
+    let countEl = document.getElementById(`commentCount-${cardId}`);
+    if (!countEl) {
+        const card = document.getElementById(cardId);
+        const extraitId = card?.dataset?.extraitId;
+        if (extraitId) {
+            countEl = document.getElementById(`commentCount-${extraitId}`) || card.querySelector(`[data-extrait-id="${extraitId}"]`);
+        }
+    }
     if (!countEl) return;
     
     countEl.textContent = count;
@@ -1322,6 +1409,27 @@ function updateCardCommentCount(cardId, count) {
         if (pluralEl) {
             pluralEl.style.display = count === 1 ? 'none' : 'inline';
         }
+    }
+}
+
+function updateCardLikeCount(cardId, count) {
+    const countEl = document.getElementById(`likeCount-${cardId}`);
+    if (!countEl) return;
+    countEl.textContent = count || 0;
+    countEl.style.display = count > 0 ? 'inline' : 'none';
+}
+
+async function loadCardLikeCount(cardId, url) {
+    if (!supabaseClient || !url) return;
+    try {
+        const { count, error } = await supabaseClient
+            .from('source_likes')
+            .select('*', { count: 'exact', head: true })
+            .eq('source_url', url);
+        if (error) return;
+        updateCardLikeCount(cardId, count);
+    } catch (e) {
+        // ignore
     }
 }
 
@@ -1346,6 +1454,7 @@ function renderCard(result, origTitle, wikisource = getCurrentWikisource(), allo
     const author = detectAuthor(title, text, result.author);
     const tag = detectTag(title, text);
     const url = `${wikisource?.url || 'https://fr.wikisource.org'}/wiki/${encodeURIComponent(origTitle)}`;
+    const safeUrl = (url || '').replace(/'/g, "\\'");
     const cardId = 'card-' + (state.cardIdx++);
     
     // Extraire un titre propre pour l'affichage
@@ -1407,9 +1516,12 @@ function renderCard(result, origTitle, wikisource = getCurrentWikisource(), allo
         <div class="card-foot">
             <div class="card-keywords">${keywordsHtml}</div>
             <div class="actions">
-                <button class="btn btn-like" onclick="toggleLike('${cardId}',this)" title="Ajouter aux favoris">♥ <span class="btn-text">J'aime</span></button>
+                <div class="like-with-count">
+                    <button class="btn btn-like ${isSourceLiked(url) ? 'active' : ''}" onclick="toggleLike('${cardId}',this)" title="Ajouter aux favoris">♥ <span class="btn-text">J'aime</span></button>
+                    <span class="like-count clickable" id="likeCount-${cardId}" data-source-url="${safeUrl}" onclick="event.stopPropagation(); showSourceLikers('${safeUrl}')" style="display:none;">0</span>
+                </div>
                 <button class="btn btn-share" onclick="shareCardExtrait('${cardId}')" title="Partager">📤 <span class="btn-text">Partager</span></button>
-                <button class="btn btn-comment" onclick="showInlineComment('${cardId}')" title="Commenter">
+                <button class="btn btn-comment" onclick="openCardComments('${cardId}')" title="Commenter">
                     💬 <span id="commentCount-${cardId}" class="comment-count" style="display:none;">0</span> <span class="btn-text">commentaire<span class="comment-plural">s</span></span>
                 </button>
                 <button class="btn btn-collection card-btn-collection" onclick="openCollectionPickerFromCard('${cardId}')" title="Ajouter à une collection">+ <span class="btn-text">Collection</span></button>
@@ -1432,6 +1544,7 @@ function renderCard(result, origTitle, wikisource = getCurrentWikisource(), allo
     
     // Charger le nombre de commentaires existants de façon asynchrone
     loadCardCommentCount(cardId, title, author, url);
+    loadCardLikeCount(cardId, url);
     
     // Tracker ce texte comme lu
     state.readCount++;
@@ -1640,12 +1753,16 @@ function toggleLike(cardId, btn) {
         toast('URL source manquante');
         return;
     }
+
+    const likeCountEl = document.getElementById(`likeCount-${cardId}`);
+    const currentCount = parseInt(likeCountEl?.textContent) || 0;
+    const wasLiked = likedSourceUrls.has(sourceUrl);
     
     // Récupérer les métadonnées (auteur) pour enrichir les favoris
     const author = card.dataset.author || 'Anonyme';
     
     // Toggle le like
-    if (likedSourceUrls.has(sourceUrl)) {
+    if (wasLiked) {
         // UNLIKE
         likedSourceUrls.delete(sourceUrl);
         likedSourcesData.delete(sourceUrl);
@@ -1668,6 +1785,10 @@ function toggleLike(cardId, btn) {
         // Sync avec Supabase
         addLikeToSupabase(sourceUrl, metadata);
     }
+
+    // Mettre à jour le compteur local sur la carte
+    const newCount = wasLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
+    updateCardLikeCount(cardId, newCount);
     
     // Sauvegarder localement
     saveLikedSources();

@@ -191,6 +191,142 @@ function showInlineComment(cardId) {
     loadInlineComments(cardId);
 }
 
+// ═══════════════════════════════════════════════════════════
+// 💬 COMMENTAIRES COMPLETS - Cartes du feed (exploration)
+// ═══════════════════════════════════════════════════════════
+
+function syncCardCommentCountId(card, extraitId) {
+    if (!card || !extraitId) return;
+    const cardId = card.id;
+    const countEl = document.getElementById(`commentCount-${cardId}`);
+    if (countEl) {
+        countEl.dataset.extraitId = extraitId;
+        countEl.id = `commentCount-${extraitId}`;
+    }
+}
+
+async function resolveExtraitForCard(card, createIfMissing = false) {
+    if (!card || !supabaseClient) return null;
+
+    const title = card.dataset.title || 'Sans titre';
+    const author = card.dataset.author || 'Inconnu';
+    const sourceUrl = card.dataset.url || '';
+    const text = card.dataset.text || '';
+    const lang = card.dataset.lang || 'fr';
+    const textToStore = text.substring(0, 500);
+    const { textHash, textLength } = buildExtraitKey(textToStore, title, author, sourceUrl);
+
+    let query = supabaseClient
+        .from('extraits')
+        .select('id')
+        .eq('source_title', title)
+        .eq('source_author', author);
+    if (sourceUrl) query = query.eq('source_url', sourceUrl);
+    if (textHash) query = query.eq('text_hash', textHash);
+
+    const { data: existingByHash } = await query.order('created_at', { ascending: false }).maybeSingle();
+    let extraitId = existingByHash?.id || null;
+
+    if (!extraitId) {
+        let fallbackQuery = supabaseClient
+            .from('extraits')
+            .select('id')
+            .eq('source_title', title)
+            .eq('source_author', author);
+        if (sourceUrl) fallbackQuery = fallbackQuery.eq('source_url', sourceUrl);
+        const { data: existingFallback } = await fallbackQuery.order('created_at', { ascending: false }).maybeSingle();
+        extraitId = existingFallback?.id || null;
+    }
+
+    if (!extraitId && createIfMissing) {
+        if (!currentUser) return null;
+        const { data: newExtrait, error } = await supabaseClient
+            .from('extraits')
+            .insert({
+                user_id: currentUser.id,
+                texte: textToStore,
+                source_title: title,
+                source_author: author,
+                source_url: sourceUrl || `https://${lang}.wikisource.org/wiki/${encodeURIComponent(title)}`,
+                text_hash: textHash || null,
+                text_length: textLength || null,
+                likes_count: 0
+            })
+            .select()
+            .single();
+        if (error) throw error;
+        extraitId = newExtrait?.id || null;
+    }
+
+    if (extraitId) {
+        card.dataset.extraitId = extraitId;
+        syncCardCommentCountId(card, extraitId);
+    }
+
+    return extraitId;
+}
+
+async function openCardComments(cardId) {
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    if (!supabaseClient) return;
+
+    const existingId = card.dataset.extraitId;
+    let extraitId = existingId || await resolveExtraitForCard(card, false);
+
+    if (!extraitId && !currentUser) {
+        if (typeof openAuthModal === 'function') openAuthModal('login');
+        toast('📝 Connectez-vous pour commenter');
+        return;
+    }
+
+    if (!extraitId) {
+        try {
+            extraitId = await resolveExtraitForCard(card, true);
+        } catch (e) {
+            toast('Impossible de préparer les commentaires');
+            return;
+        }
+    }
+
+    if (!extraitId) return;
+
+    let section = card.querySelector(`.comments-section[data-extrait-id="${extraitId}"]`);
+    if (section) {
+        toggleComments(extraitId);
+        return;
+    }
+
+    const countEl = document.getElementById(`commentCount-${extraitId}`) || document.getElementById(`commentCount-${cardId}`);
+    const countVal = parseInt(countEl?.textContent) || 0;
+
+    section = document.createElement('div');
+    section.className = 'comments-section';
+    section.dataset.extraitId = extraitId;
+    section.innerHTML = `
+        <div class="comments-container open" id="comments-${extraitId}">
+            <div class="comments-list" id="commentsList-${extraitId}">
+                <div class="comments-empty">Chargement...</div>
+            </div>
+            <div class="comment-input-area">
+                <textarea class="comment-input" id="commentInput-${extraitId}" placeholder="Écrire un commentaire..." rows="1" onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); postComment('${extraitId}'); }"></textarea>
+                <button class="comment-send" onclick="postComment('${extraitId}')">➤</button>
+            </div>
+        </div>
+    `;
+    const foot = card.querySelector('.card-foot');
+    if (foot) foot.after(section);
+    else card.appendChild(section);
+
+    if (countEl && countEl.id !== `commentCount-${extraitId}`) {
+        countEl.id = `commentCount-${extraitId}`;
+        countEl.dataset.extraitId = extraitId;
+        countEl.textContent = countVal;
+    }
+
+    await loadComments(extraitId);
+}
+
 async function loadInlineComments(cardId) {
     const card = document.getElementById(cardId);
     if (!card || !supabaseClient) return;
@@ -446,3 +582,5 @@ window.showShareTooltip = showShareTooltip;
 window.hideShareTooltip = hideShareTooltip;
 window.showInlineComment = showInlineComment;
 window.sendInlineComment = sendInlineComment;
+window.openCardComments = openCardComments;
+window.syncCardCommentCountId = syncCardCommentCountId;

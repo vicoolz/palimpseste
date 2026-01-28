@@ -256,9 +256,13 @@ function viewTrendingComments(extraitId) {
     // Fermer le trending et ouvrir le social feed sur cet extrait
     closeTrendingFeed();
     if (typeof openSocialFeed === 'function') openSocialFeed();
-    // Scroll to the extrait after a short delay
+    // Charger l'extrait dans le feed si possible
+    if (typeof viewExtraitById === 'function') {
+        viewExtraitById(extraitId);
+    }
+    // Scroll + ouvrir commentaires après un court délai
     setTimeout(() => {
-        const card = document.querySelector(`[data-extrait-id="${extraitId}"]`);
+        const card = document.querySelector(`[data-id="${extraitId}"]`) || document.querySelector(`[data-extrait-id="${extraitId}"]`);
         if (card) {
             card.scrollIntoView({ behavior: 'smooth', block: 'center' });
             if (typeof toggleComments === 'function') toggleComments(extraitId);

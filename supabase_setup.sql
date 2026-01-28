@@ -595,9 +595,9 @@ CREATE INDEX IF NOT EXISTS idx_source_likes_created ON source_likes(created_at D
 -- RLS pour source_likes
 ALTER TABLE source_likes ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Les utilisateurs voient leurs propres likes de sources"
+CREATE POLICY "Les utilisateurs voient les likes de sources"
     ON source_likes FOR SELECT
-    USING (auth.uid() = user_id);
+    USING (true);
 
 CREATE POLICY "Les utilisateurs peuvent liker des sources"
     ON source_likes FOR INSERT
