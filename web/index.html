@@ -709,12 +709,13 @@
     <div class="user-profile-modal" id="userProfileModal" onclick="if(event.target === this) closeUserProfile()">
         <div class="user-profile-content">
             <div class="profile-header-section">
+                <button class="profile-close-x" onclick="closeUserProfile()" aria-label="Fermer le profil">✕</button>
                 <div class="profile-header">
                     <div class="profile-avatar-large" id="profileAvatar">?</div>
                     <div class="profile-info">
                         <h3 id="profileUsername">Utilisateur</h3>                        <div class="profile-last-seen" id="profileLastSeen"></div>                        <div class="profile-stats">
                             <span class="profile-stat" onclick="switchProfileTab('followers')"><strong id="profileFollowers">0</strong> abonnés</span>
-                            <span class="profile-stat" onclick="switchProfileTab('following')"><strong id="profileFollowing">0</strong> abonnements</span>
+                            <span class="profile-stat" onclick="switchProfileTab('following')"><strong id="profileFollowing">0</strong> suivis</span>
                             <span class="profile-stat" onclick="switchProfileTab('extraits')"><strong id="profileExtraits">0</strong> extraits</span>
                         </div>
                     </div>
@@ -722,18 +723,32 @@
                 <div class="profile-actions">
                     <button class="btn-follow-large" id="profileFollowBtn" onclick="toggleFollowFromProfile()">Suivre</button>
                     <button class="btn-message" id="profileMessageBtn" onclick="startConversation(currentProfileUserId)">💬 Message</button>
-                    <button class="btn-close-profile" onclick="closeUserProfile()">✕ Fermer</button>
                 </div>
             </div>
             <div class="profile-tabs">
-                <button class="profile-tab active" id="tabProfileExtraits" onclick="switchProfileTab('extraits')">📝 Extraits</button>
-                <button class="profile-tab" id="tabProfileLikes" onclick="switchProfileTab('likes')">❤️ Likés</button>
-                <button class="profile-tab" id="tabProfileCollections" onclick="switchProfileTab('collections')">📚 Collections</button>
-                <button class="profile-tab" id="tabProfileFollowers" onclick="switchProfileTab('followers')">👥 Abonnés</button>
-                <button class="profile-tab" id="tabProfileFollowing" onclick="switchProfileTab('following')">📤 Abonnements</button>
+                <button class="profile-tab active" id="tabProfileExtraits" onclick="switchProfileTab('extraits')">
+                    <span class="tab-emoji">📝</span>
+                    <span class="tab-label">Extraits</span>
+                </button>
+                <button class="profile-tab" id="tabProfileLikes" onclick="switchProfileTab('likes')">
+                    <span class="tab-emoji">❤️</span>
+                    <span class="tab-label">Likés</span>
+                </button>
+                <button class="profile-tab" id="tabProfileCollections" onclick="switchProfileTab('collections')">
+                    <span class="tab-emoji">📚</span>
+                    <span class="tab-label">Collections</span>
+                </button>
+                <button class="profile-tab" id="tabProfileFollowers" onclick="switchProfileTab('followers')">
+                    <span class="tab-emoji">👥</span>
+                    <span class="tab-label">Abonnés</span>
+                </button>
+                <button class="profile-tab" id="tabProfileFollowing" onclick="switchProfileTab('following')">
+                    <span class="tab-emoji">📤</span>
+                    <span class="tab-label">Suivis</span>
+                </button>
             </div>
             <div class="profile-content" id="profileContentArea"></div>
-            <button class="profile-floating-close" onclick="closeUserProfile()">✕ Fermer</button>
+            <button class="profile-floating-close" onclick="closeUserProfile()" aria-label="Fermer le profil"></button>
         </div>
     </div>
     
