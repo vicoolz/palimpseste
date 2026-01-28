@@ -2024,6 +2024,29 @@ color: var(--accent);
 white-space: nowrap;
 }
 
+.filter-tag-removable {
+padding-right: 0.25rem;
+}
+
+.filter-tag-label {
+min-width: 0;
+}
+
+.filter-tag-remove {
+border: none;
+background: none;
+color: var(--accent);
+opacity: 0.6;
+cursor: pointer;
+font-size: 0.95rem;
+line-height: 1;
+padding: 0 0.25rem;
+}
+
+.filter-tag-remove:hover {
+opacity: 1;
+}
+
 .filter-free-input {
 flex: 0 0 220px;
 max-width: 40vw;

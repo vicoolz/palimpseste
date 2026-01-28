@@ -1933,17 +1933,19 @@ function getAuthorsForGenre(genre, excludeAuthor) {
 }
 
 // Explorer un auteur spécifique (recherche ciblée) - charge les textes EN HAUT
-async function exploreAuthor(author, setContext = true) {
+async function exploreAuthor(author, setContext = true, contextType = 'author') {
     if (state.loading) return;
     state.loading = true;
     
     // Définir le contexte pour la navigation future (infinite scroll pertinent)
     if (setContext) {
         state.activeSearchTerm = author;
+        state.activeSearchContextType = contextType || 'author';
         state.searchOffset = 0;
         if (Array.isArray(state.textPool)) state.textPool = [];
         state.loadingMessage = `Recherche de "${author}"...`;
         if (window.setMainLoadingMessage) window.setMainLoadingMessage(state.loadingMessage);
+        if (window.updateFilterSummary) window.updateFilterSummary();
     }
     
     toast(`Recherche de "${author}"...`);
@@ -2204,8 +2206,7 @@ function extractKeywords(text, title, author, tag, categories = []) {
 
 // Explorer un mot-clé
 async function exploreKeyword(keyword) {
-    toast(`Recherche de "${keyword}"...`);
-    await exploreAuthor(keyword);
+    await exploreAuthor(keyword, true, 'keyword');
 }
 
 

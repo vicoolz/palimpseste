@@ -427,7 +427,41 @@ function updateFilterSummary() {
         summaryText.appendChild(tag);
     };
 
+    const addRemovableTag = (text, onRemove, ariaLabel = 'Retirer') => {
+        const tag = document.createElement('span');
+        tag.className = 'filter-tag filter-tag-removable';
+
+        const label = document.createElement('span');
+        label.className = 'filter-tag-label';
+        label.textContent = text;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'filter-tag-remove';
+        btn.setAttribute('aria-label', ariaLabel);
+        btn.textContent = '×';
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof onRemove === 'function') onRemove();
+        });
+
+        tag.appendChild(label);
+        tag.appendChild(btn);
+        summaryText.appendChild(tag);
+    };
+
     summaryText.innerHTML = '';
+
+    // Tag de contexte (clic hashtag / auteur / recherche libre)
+    if (window.state?.activeSearchTerm) {
+        const term = String(window.state.activeSearchTerm);
+        const type = window.state.activeSearchContextType || 'term';
+        const label = type === 'keyword'
+            ? (term.startsWith('#') ? term : `#${term}`)
+            : `Recherche: "${term}"`;
+        addRemovableTag(label, clearActiveSearchContext, 'Retirer le filtre de recherche');
+    }
 
     // Tags Forme
     if (!activeFilters.forme.includes('all')) {
@@ -456,6 +490,26 @@ function getExplorationFreeTerm() {
 }
 
 /**
+ * Efface uniquement le contexte de recherche (ex: clic hashtag/auteur)
+ * sans toucher aux filtres (forme/époque/ton/pensée).
+ */
+function clearActiveSearchContext() {
+    if (!window.state) return;
+
+    window.state.activeSearchTerm = null;
+    window.state.activeSearchContextType = null;
+    window.state.searchOffset = 0;
+    window.state.lastSearchTerm = null;
+    window.state.loadingMessage = 'Chargement...';
+    if (window.setMainLoadingMessage) window.setMainLoadingMessage('Chargement...');
+    if (Array.isArray(window.state.textPool)) window.state.textPool = [];
+
+    if (typeof window.fillPool === 'function') window.fillPool();
+    updateFilterSummary();
+    toast('🔎 Filtre retiré');
+}
+
+/**
  * Efface tous les filtres
  */
 function clearAllFilters() {
@@ -468,6 +522,7 @@ function clearAllFilters() {
     // Revenir au mode standard (scroll = chargement générique / random)
     if (window.state) {
         window.state.activeSearchTerm = null;
+        window.state.activeSearchContextType = null;
         window.state.searchOffset = 0;
         window.state.lastSearchTerm = null;
         window.state.filterFreeTerm = null;
@@ -655,18 +710,20 @@ async function applyFilters() {
 
         if (!hasAnyFilterKeywords && freeTerm) {
             state.activeSearchTerm = freeTerm;
+            state.activeSearchContextType = 'free';
             state.searchOffset = 0;
             state.loadingMessage = `Recherche de "${freeTerm}"...`;
             if (window.setMainLoadingMessage) window.setMainLoadingMessage(state.loadingMessage);
         } else {
             state.activeSearchTerm = null;
+            state.activeSearchContextType = null;
             state.searchOffset = 0;
         }
     }
 
     // Si recherche libre seule: une seule requête, et on verrouille le contexte
     if (!hasAnyFilterKeywords && freeTerm) {
-        await exploreAuthor(freeTerm, true);
+        await exploreAuthor(freeTerm, true, 'free');
         return;
     }
 
@@ -774,6 +831,8 @@ window.randomizeFilters = randomizeFilters;
 window.applyFilters = applyFilters;
 window.rollExploration = rollExploration;
 window.activeFilters = activeFilters;
+window.updateFilterSummary = updateFilterSummary;
+window.clearActiveSearchContext = clearActiveSearchContext;
 
 // ═══════════════════════════════════════════════════════════
 // 🎨 AMBIANCES DE LECTURE (Supprimé)
