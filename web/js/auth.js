@@ -273,6 +273,8 @@ async function loginWithEmail() {
     if (!identifier.includes('@')) {
         try {
             const resp = await fetch(`/api/resolve-login?identifier=${encodeURIComponent(identifier)}`);
+            const isJson = resp.headers.get('content-type')?.includes('application/json');
+
             if (resp.ok) {
                 const payload = await resp.json();
                 if (payload?.email) {
@@ -283,7 +285,15 @@ async function loginWithEmail() {
                     showAuthError('login', 'Pseudo introuvable. Vérifiez votre saisie.');
                     return;
                 }
+            } else if (resp.status === 404 && !isJson) {
+                // Erreur 404 HTML (page non trouvée) -> Nous sommes probablement en local sans l'API
+                console.warn('API resolve-login introuvable (404 HTML). Mode local ?');
+                document.getElementById('loginBtn').disabled = false;
+                document.getElementById('loginBtn').textContent = 'Se connecter';
+                showAuthError('login', 'Connexion par pseudo impossible en local (API absente). Utilisez votre email.');
+                return;
             } else if (resp.status === 404) {
+                // Erreur 404 JSON (réponse de l'API) -> Pseudo non trouvé
                 document.getElementById('loginBtn').disabled = false;
                 document.getElementById('loginBtn').textContent = 'Se connecter';
                 showAuthError('login', 'Pseudo introuvable. Vérifiez votre saisie.');
