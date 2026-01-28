@@ -333,7 +333,17 @@ function showShareTooltip(text, author, title, sourceUrl) {
     const rect = selection.getRangeAt(0).getBoundingClientRect();
     shareTooltip = document.createElement('div');
     shareTooltip.className = 'share-tooltip';
-    shareTooltip.innerHTML = `<button onclick="openShareModal(\`${text.replace(/`/g, '')}\`, '${author}', '${title}', '${sourceUrl}')">📤 Partager</button>`;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = '📤 Partager';
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.openShareModal === 'function') {
+            window.openShareModal(text, author, title, sourceUrl);
+        }
+    });
+    shareTooltip.appendChild(btn);
     shareTooltip.style.cssText = `position:fixed;top:${rect.top-45}px;left:${Math.max(10,rect.left+rect.width/2-50)}px;background:var(--accent);color:white;padding:0.5rem 1rem;border-radius:8px;z-index:10000;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.4);`;
     document.body.appendChild(shareTooltip);
     setTimeout(hideShareTooltip, 5000);

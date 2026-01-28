@@ -112,7 +112,26 @@ function updateMobileAvatar() {
     if (mobileAvatar && currentUser) {
         const profile = currentUser.user_metadata;
         if (profile?.avatar_url) {
-            mobileAvatar.innerHTML = `<img src="${profile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            // Éviter l'injection via innerHTML/attributs
+            mobileAvatar.innerHTML = '';
+            const img = document.createElement('img');
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.borderRadius = '50%';
+            img.style.objectFit = 'cover';
+            img.alt = 'Avatar';
+
+            try {
+                const url = new URL(profile.avatar_url, window.location.href);
+                if (url.protocol === 'http:' || url.protocol === 'https:') {
+                    img.src = url.href;
+                    mobileAvatar.appendChild(img);
+                } else {
+                    mobileAvatar.textContent = profile?.username ? getAvatarSymbol(profile.username) : '👤';
+                }
+            } catch (e) {
+                mobileAvatar.textContent = profile?.username ? getAvatarSymbol(profile.username) : '👤';
+            }
         } else if (profile?.username) {
             mobileAvatar.textContent = getAvatarSymbol(profile.username);
         }
