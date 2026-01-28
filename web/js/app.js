@@ -2469,10 +2469,36 @@ const LITERARY_THEMES = {
 
 // Mots vides à ignorer
 const STOP_WORDS = new Set(['le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'et', 'ou', 'mais', 'donc', 'car', 'ni', 'que', 'qui', 'quoi', 'dont', 'ce', 'cette', 'ces', 'mon', 'ton', 'son', 'ma', 'ta', 'sa', 'mes', 'tes', 'ses', 'notre', 'votre', 'leur', 'nos', 'vos', 'leurs', 'je', 'tu', 'il', 'elle', 'nous', 'vous', 'ils', 'elles', 'on', 'se', 'ne', 'pas', 'plus', 'moins', 'tout', 'tous', 'toute', 'toutes', 'autre', 'autres', 'bien', 'peu', 'trop', 'aussi', 'encore', 'jamais', 'toujours', 'rien', 'personne', 'chaque', 'quelque', 'aucun', 'sans', 'avec', 'pour', 'par', 'dans', 'sur', 'sous', 'entre', 'vers', 'chez', 'comme', 'ainsi', 'alors', 'puis', 'quand', 'avoir', 'faire', 'dire', 'voir', 'aller', 'venir', 'pouvoir', 'vouloir', 'devoir', 'falloir', 'savoir', 'prendre', 'mettre', 'fait', 'dit', 'sont', 'ont', 'aux', 'the', 'and', 'are', 'was', 'were', 'been', 'being', 'have', 'has', 'had', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'for', 'with', 'from', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'nor', 'not', 'only', 'own', 'same', 'than', 'too', 'very', 'just', 'now', 'its', 'this', 'that', 'these', 'those', 'myself', 'our', 'ours', 'ourselves', 'your', 'yours', 'yourself', 'yourselves', 'him', 'his', 'himself', 'her', 'hers', 'herself', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'whom', 'whose']);
+const GENERIC_WORDS = new Set([
+    'temps', 'homme', 'femme', 'monde', 'jour', 'nuit', 'ciel', 'terre', 'main', 'coeur', 'regard',
+    'vie', 'mort', 'amour', 'haine', 'joie', 'tristesse', 'bonheur', 'douleur', 'peur', 'esprit',
+    'coeur', 'âme', 'ame', 'être', 'etre', 'peuple', 'roi', 'reine', 'dieu', 'diable', 'ange',
+    'chose', 'rien', 'tout', 'journee', 'journée', 'nuitée', 'nuit', 'saison', 'histoire', 'roman'
+]);
 
 function extractKeywords(text, title, author, tag, categories = []) {
     const keywords = new Set();
     const fullText = (text + ' ' + title).toLowerCase();
+    const titleText = (title || '').toLowerCase();
+    const introText = (text || '').split('\n').slice(0, 6).join(' ').toLowerCase();
+
+    const normalizeKey = (str) => String(str || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+    const tokenize = (str) => {
+        const tokens = str.match(/[\p{L}\p{N}'’-]+/gu) || [];
+        return tokens
+            .map(t => t.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '').toLowerCase())
+            .filter(Boolean);
+    };
+
+    const isStopOrGeneric = (w) => {
+        const k = normalizeKey(w);
+        return STOP_WORDS.has(k) || GENERIC_WORDS.has(k) || k.length < 4;
+    };
 
     // 0) Catégories Wikisource (métadonnées réelles) -> tags prioritaires
     const normalizeCategoryName = (cat) => {
@@ -2543,35 +2569,68 @@ function extractKeywords(text, title, author, tag, categories = []) {
     if (/\b(acte|scène|scene|personnages)\b/i.test(text)) keywords.add('dialogue');
 
     // 2) Chercher les thèmes littéraires présents dans le texte
-    
-    // Limiter l'ajout de thèmes si on a déjà des catégories précises
-    for (const [category, themes] of Object.entries(LITERARY_THEMES)) {
+    const themeLimit = topCats.length > 0 ? 2 : 4;
+    let themeCount = 0;
+    for (const [, themes] of Object.entries(LITERARY_THEMES)) {
         for (const theme of themes) {
-            if (fullText.includes(theme.toLowerCase())) {
+            if (fullText.includes(theme.toLowerCase()) && !isStopOrGeneric(theme)) {
                 keywords.add(theme);
-                if (keywords.size >= 8) break;
+                themeCount++;
+                if (themeCount >= themeLimit || keywords.size >= 8) break;
             }
         }
-        if (keywords.size >= 8) break;
+        if (themeCount >= themeLimit || keywords.size >= 8) break;
     }
-    
-    // 2. Extraire les mots significatifs du texte
-    const words = fullText
-        .replace(/[.,;:!?()\[\]{}"']/g, ' ')
-        .split(/\s+/)
-        .filter(w => w.length > 4 && !STOP_WORDS.has(w));
-    
-    // Compter les occurrences
-    const wordCount = {};
-    words.forEach(w => wordCount[w] = (wordCount[w] || 0) + 1);
-    
-    // Ajouter des mots fréquents, mais seulement si on manque encore de précision
-    const sorted = Object.entries(wordCount)
+
+    // 2. Extraire des mots-clés pondérés (titre + intro + texte)
+    const weighted = new Map();
+    const addWeighted = (w, score) => {
+        const key = normalizeKey(w);
+        if (!key || isStopOrGeneric(key)) return;
+        weighted.set(key, (weighted.get(key) || 0) + score);
+    };
+
+    const titleTokens = tokenize(titleText);
+    const introTokens = tokenize(introText);
+    const bodyTokens = tokenize(fullText);
+
+    titleTokens.forEach(w => addWeighted(w, 3));
+    introTokens.forEach(w => addWeighted(w, 2));
+    bodyTokens.forEach(w => addWeighted(w, 1));
+
+    // 2b) Bigrams (paires de mots) pour qualifier mieux le texte
+    const buildBigrams = (tokens) => {
+        const bigrams = new Map();
+        for (let i = 0; i < tokens.length - 1; i++) {
+            const a = tokens[i];
+            const b = tokens[i + 1];
+            if (isStopOrGeneric(a) || isStopOrGeneric(b)) continue;
+            const key = `${normalizeKey(a)} ${normalizeKey(b)}`.trim();
+            if (key.length < 6) continue;
+            bigrams.set(key, (bigrams.get(key) || 0) + 1);
+        }
+        return bigrams;
+    };
+
+    const bigrams = buildBigrams([...titleTokens, ...introTokens]);
+    const topBigrams = [...bigrams.entries()]
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 10);
-    
-    for (const [word] of sorted) {
-        if (keywords.size < 5 && word.length > 3 && !keywords.has(word)) {
+        .slice(0, 4)
+        .map(([k]) => k);
+
+    for (const bg of topBigrams) {
+        if (keywords.size < 5 && !keywords.has(bg)) {
+            keywords.add(bg);
+        }
+    }
+
+    const sortedWeighted = [...weighted.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 12)
+        .map(([k]) => k);
+
+    for (const word of sortedWeighted) {
+        if (keywords.size < 5 && !keywords.has(word)) {
             keywords.add(word);
         }
     }
