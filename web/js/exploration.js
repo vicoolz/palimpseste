@@ -312,6 +312,46 @@ function toggleFilter(category, value) {
     updateFilterSummary();
 }
 
+// Ajouter un tag (poésie/roman/...) à la barre de filtres et lancer la recherche
+function applyTagFilter(rawTag) {
+    if (!rawTag) return;
+
+    const normalize = (str) => String(str || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+    const tag = normalize(rawTag);
+
+    const TAG_TO_FILTER = {
+        poesie: { category: 'forme', value: 'category-poesie' },
+        roman: { category: 'forme', value: 'roman' },
+        nouvelle: { category: 'forme', value: 'nouvelle' },
+        conte: { category: 'forme', value: 'conte' },
+        fable: { category: 'forme', value: 'fable' },
+        theatre: { category: 'forme', value: 'category-theatre' },
+        philosophie: { category: 'forme', value: 'category-idees' },
+        mystique: { category: 'ton', value: 'mystique' }
+    };
+
+    const mapping = TAG_TO_FILTER[tag];
+    if (!mapping) return;
+
+    if (!activeFilters[mapping.category]) {
+        activeFilters[mapping.category] = ['all'];
+    }
+
+    let next = activeFilters[mapping.category].filter(v => v !== 'all');
+    if (!next.includes(mapping.value)) next.push(mapping.value);
+    if (next.length === 0) next = ['all'];
+    activeFilters[mapping.category] = next;
+
+    updateFilterUI();
+    updateFilterSummary();
+    if (typeof applyFilters === 'function') applyFilters();
+}
+
 /**
  * Ouvre/ferme un groupe de sous-filtres
  */
@@ -850,6 +890,7 @@ window.rollExploration = rollExploration;
 window.activeFilters = activeFilters;
 window.updateFilterSummary = updateFilterSummary;
 window.clearActiveSearchContext = clearActiveSearchContext;
+window.applyTagFilter = applyTagFilter;
 
 // ═══════════════════════════════════════════════════════════
 // 🎨 AMBIANCES DE LECTURE (Supprimé)

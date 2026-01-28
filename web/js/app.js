@@ -1233,7 +1233,7 @@ function createCardElement(result, origTitle, wikisource = getCurrentWikisource(
                 <div class="author">${esc(author)} ${langBadge} <span class="explore-hint">🕸️</span></div>
                 <div class="work">${esc(displayTitle)}</div>
             </div>
-            <span class="tag ${tag}" onclick="event.stopPropagation(); exploreCategory('${tag}')" title="Explorer ce genre">${tag}</span>
+            <span class="tag ${tag}" onclick="event.stopPropagation(); applyTagFilter('${tag}')" title="Filtrer par ce tag">${tag}</span>
         </div>
         <div class="card-body" ondblclick="doubleTapLike('${cardId}', event)">
             <span class="like-heart-overlay" id="heart-${cardId}">♥</span>
@@ -1552,7 +1552,7 @@ function renderCard(result, origTitle, wikisource = getCurrentWikisource(), allo
                 <div class="author">${esc(author)} ${langBadge} <span class="explore-hint">🕸️</span></div>
                 <div class="work">${esc(displayTitle)}</div>
             </div>
-            <span class="tag ${tag}" onclick="event.stopPropagation(); exploreCategory('${tag}')" title="Explorer ce genre">${tag}</span>
+            <span class="tag ${tag}" onclick="event.stopPropagation(); applyTagFilter('${tag}')" title="Filtrer par ce tag">${tag}</span>
         </div>
         <div class="card-body" ondblclick="doubleTapLike('${cardId}', event)">
             <span class="like-heart-overlay" id="heart-${cardId}">♥</span>
