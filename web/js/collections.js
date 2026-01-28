@@ -742,12 +742,13 @@ async function openCollection(collectionId) {
                                         <div class="collection-item-preview" id="preview-${itemId}">${escapeHtml(previewText)}${hasMore ? '...' : ''}</div>
                                         <div class="collection-item-full" id="full-${itemId}" style="display:none;">${escapeHtml(fullText || '')}</div>
                                     </div>
-                                    ${hasMore ? `<button class="collection-item-expand" id="expand-btn-${itemId}">Lire la suite →</button>` : ''}
+                                    ${hasMore ? `<button class="collection-item-expand" id="expand-btn-${itemId}" type="button" aria-expanded="false" aria-label="Afficher le texte complet"><span class="expand-icon">▾</span><span class="expand-label">Afficher le texte complet</span></button>` : ''}
                                     ${item.note ? `<div class="collection-item-note"><span class="note-icon">¶</span> ${escapeHtml(item.note)}</div>` : ''}
                                 </div>
                                 <div class="collection-item-actions" onclick="event.stopPropagation()">
-                                    ${url ? `<button class="item-action action-load" onclick="loadTextFromCollectionById('${itemId}')" title="Charger le texte complet">
+                                    ${url ? `<button class="item-action action-load" onclick="loadTextFromCollectionById('${itemId}')" title="Charger le texte complet" aria-label="Charger le texte complet">
                                         <span class="icon">↻</span>
+                                        <span class="label">Texte complet</span>
                                     </button>` : ''}
                                     ${url ? `<button class="item-action action-open" onclick="window.open(decodeURIComponent('${safeUrl}'), '_blank')" title="Ouvrir la source">↗</button>` : ''}
                                     <button class="item-action action-delete" onclick="removeFromCollection('${collectionId}', '${item.id}')" title="Retirer">×</button>
@@ -1114,6 +1115,15 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function updateCollectionExpandButton(expandBtn, isExpanded) {
+    if (!expandBtn) return;
+    const label = isExpanded ? 'Réduire le texte' : 'Afficher le texte complet';
+    const icon = isExpanded ? '▴' : '▾';
+    expandBtn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+    expandBtn.setAttribute('aria-label', label);
+    expandBtn.innerHTML = `<span class="expand-icon">${icon}</span><span class="expand-label">${label}</span>`;
+}
+
 /**
  * Toggle l'affichage du texte complet d'un item de collection
  */
@@ -1133,14 +1143,14 @@ function toggleCollectionItemText(itemId) {
         full.style.display = 'none';
         card.dataset.expanded = 'false';
         card.classList.remove('expanded');
-        if (expandBtn) expandBtn.textContent = 'Lire la suite →';
+        updateCollectionExpandButton(expandBtn, false);
     } else {
         // Étendre
         preview.style.display = 'none';
         full.style.display = 'block';
         card.dataset.expanded = 'true';
         card.classList.add('expanded');
-        if (expandBtn) expandBtn.textContent = '← Réduire';
+        updateCollectionExpandButton(expandBtn, true);
     }
 }
 
@@ -1182,7 +1192,7 @@ async function loadTextFromCollection(itemId, title, author, url) {
     if (preview) preview.style.display = 'none';
     card.dataset.expanded = 'true';
     card.classList.add('expanded');
-    if (expandBtn) expandBtn.textContent = '← Réduire';
+    updateCollectionExpandButton(expandBtn, true);
     
     if (url && url.includes('wikisource.org')) {
         try {
