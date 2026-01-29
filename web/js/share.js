@@ -401,6 +401,71 @@ async function publishExtrait() {
     }
 }
 
+/**
+ * Annuler un partage (suppression de l'extrait) avec confirmation
+ */
+async function cancelShareExtrait(extraitId) {
+    if (!currentUser) {
+        if (typeof openAuthModal === 'function') openAuthModal('login');
+        toast('📝 Connectez-vous pour annuler un partage');
+        return;
+    }
+    if (!supabaseClient || !extraitId) return;
+
+    const confirmed = confirm('Annuler ce partage ?\nCette action est définitive.');
+    if (!confirmed) return;
+
+    const btn = document.getElementById(`unshareBtn-${extraitId}`);
+    if (btn) btn.disabled = true;
+
+    try {
+        const { error } = await supabaseClient
+            .from('extraits')
+            .delete()
+            .eq('id', extraitId)
+            .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+
+        toast('✅ Partage annulé');
+
+        // Nettoyer les caches locaux
+        if (typeof extraitSharesCache !== 'undefined') {
+            extraitSharesCache.delete(extraitId);
+        }
+        if (typeof extraitDataCache !== 'undefined') {
+            extraitDataCache.delete(extraitId);
+        }
+
+        // Retirer la carte du DOM si présente
+        const card = document.querySelector(`.extrait-card[data-id="${extraitId}"]`);
+        if (card) card.remove();
+
+        // Mettre à jour le feed social si affiché
+        const socialContainer = document.getElementById('socialFeed');
+        if (socialContainer && typeof socialExtraits !== 'undefined' && typeof renderSocialFeed === 'function') {
+            socialExtraits = (socialExtraits || []).filter(e => e.id !== extraitId);
+            await renderSocialFeed();
+        }
+
+        // Rafraîchir les compteurs de partages visibles
+        if (typeof loadExtraitShareInfoBatch === 'function') {
+            const visibleIds = Array.from(document.querySelectorAll('.extrait-card[data-id]'))
+                .map(el => el.getAttribute('data-id'))
+                .filter(Boolean);
+            if (visibleIds.length > 0) {
+                await loadExtraitShareInfoBatch(visibleIds);
+            }
+        }
+
+        if (typeof loadUserStats === 'function') loadUserStats();
+    } catch (err) {
+        console.error('Erreur annulation partage:', err);
+        toast('Erreur : ' + (err.message || err));
+        if (btn) btn.disabled = false;
+    }
+}
+
 // ═══════════════════════════════════════════════════════════
 // 💬 COMMENTAIRES INLINE - Directement sous les cartes
 // ═══════════════════════════════════════════════════════════
@@ -862,3 +927,4 @@ window.loadExtraitShareInfoBatch = loadExtraitShareInfoBatch;
 window.updateExtraitShareButtons = updateExtraitShareButtons;
 window.showSharers = showSharers;
 window.closeSharersModal = closeSharersModal;
+window.cancelShareExtrait = cancelShareExtrait;

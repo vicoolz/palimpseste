@@ -334,6 +334,12 @@ async function renderSocialFeed() {
                         <span>Partager</span>
                         <span class="share-count ${shareCount === 0 ? 'is-zero' : ''}" id="shareCount-${extrait.id}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${extrait.id}')">${shareCount}</span>
                     </button>
+                    ${currentUser && extrait.user_id === currentUser.id ? `
+                        <button class="extrait-action unshare-btn" id="unshareBtn-${extrait.id}" onclick="event.stopPropagation(); cancelShareExtrait('${extrait.id}')">
+                            <span class="icon">✕</span>
+                            <span>Annuler</span>
+                        </button>
+                    ` : ''}
                     <button class="extrait-action collection-btn" onclick="openCollectionPickerForExtrait('${extrait.id}')">
                         <span class="icon">▦</span>
                         <span>Collections</span>
@@ -358,8 +364,10 @@ async function renderSocialFeed() {
         `;
     }).join('');
     
-    // Charger les commentaires pour ces extraits
-    await loadCommentsForExtraits();
+    // Charger les commentaires pour ces extraits (si disponible)
+    if (typeof loadCommentsForExtraits === 'function') {
+        await loadCommentsForExtraits();
+    }
     
     // Mettre à jour les compteurs de partages et collections
     if (typeof updateExtraitShareButtons === 'function') {

@@ -563,6 +563,34 @@ async function showCardLikers(cardId) {
     openLikersModalWithMessage('Aucun like pour le moment');
 }
 
+async function showCardSharers(cardId) {
+    if (!supabaseClient) return;
+    const card = document.getElementById(cardId);
+    if (!card) return;
+
+    const extraitId = await resolveExtraitIdForCard(card, false);
+    if (extraitId && typeof showSharers === 'function') {
+        showSharers(extraitId);
+        return;
+    }
+
+    if (typeof toast === 'function') toast('Aucun partage pour le moment');
+}
+
+async function showCardCollections(cardId) {
+    if (!supabaseClient) return;
+    const card = document.getElementById(cardId);
+    if (!card) return;
+
+    const extraitId = await resolveExtraitIdForCard(card, false);
+    if (extraitId && typeof showExtraitCollections === 'function') {
+        showExtraitCollections(extraitId);
+        return;
+    }
+
+    if (typeof toast === 'function') toast('Aucune collection pour le moment');
+}
+
 function loadState() {
     try {
         const d = JSON.parse(localStorage.getItem('palimpseste') || '{}');
@@ -1254,11 +1282,11 @@ function createCardElement(result, origTitle, wikisource = getCurrentWikisource(
                         <span class="like-count clickable" id="likeCount-${cardId}" data-card-id="${cardId}" onclick="event.stopPropagation(); showCardLikers('${cardId}')">0</span>
                     </button>
                 </div>
-                <button class="btn btn-share" onclick="shareCardExtrait('${cardId}')" title="Partager">📤 <span class="btn-text">Partager</span></button>
+                <button class="btn btn-share" onclick="shareCardExtrait('${cardId}')" title="Partager">📤 <span class="btn-text">Partager</span> <span class="share-count is-zero" id="shareCount-${cardId}" onclick="event.stopPropagation(); event.preventDefault(); showCardSharers('${cardId}')">0</span></button>
                 <button class="btn btn-comment" onclick="openCardComments('${cardId}')" title="Commenter">
                     💬 <span id="commentCount-${cardId}" class="comment-count" style="display:none;">0</span> <span class="btn-text">commentaire<span class="comment-plural">s</span></span>
                 </button>
-                <button class="btn btn-collection card-btn-collection" onclick="openCollectionPickerFromCard('${cardId}')" title="Ajouter à une collection">+ <span class="btn-text">Collection</span></button>
+                <button class="btn btn-collection card-btn-collection" onclick="openCollectionPickerFromCard('${cardId}')" title="Ajouter à une collection">+ <span class="btn-text">Collection</span> <span class="collections-count is-zero" id="collectionsCount-${cardId}" onclick="event.stopPropagation(); event.preventDefault(); showCardCollections('${cardId}')">0</span></button>
                 <button class="btn btn-explore" onclick="showRelatedAuthors('${cardId}')" title="Découvrir">🔗 <span class="btn-text">Explorer</span></button>
                 <a class="btn btn-source" href="${url}" target="_blank" title="Source">↗ <span class="btn-text">Source</span></a>
             </div>
@@ -1372,6 +1400,26 @@ function syncCardLikeCountId(card, extraitId) {
     }
 }
 
+function syncCardShareCountId(card, extraitId) {
+    if (!card || !extraitId) return;
+    const cardId = card.id;
+    const countEl = document.getElementById(`shareCount-${cardId}`);
+    if (countEl) {
+        countEl.dataset.extraitId = extraitId;
+        countEl.id = `shareCount-${extraitId}`;
+    }
+}
+
+function syncCardCollectionsCountId(card, extraitId) {
+    if (!card || !extraitId) return;
+    const cardId = card.id;
+    const countEl = document.getElementById(`collectionsCount-${cardId}`);
+    if (countEl) {
+        countEl.dataset.extraitId = extraitId;
+        countEl.id = `collectionsCount-${extraitId}`;
+    }
+}
+
 async function resolveExtraitIdForCard(card, createIfMissing = false) {
     if (!card || !supabaseClient) return null;
     if (card.dataset.extraitId) return card.dataset.extraitId;
@@ -1382,6 +1430,8 @@ async function resolveExtraitIdForCard(card, createIfMissing = false) {
             if (resolved) {
                 card.dataset.extraitId = resolved;
                 syncCardLikeCountId(card, resolved);
+                syncCardShareCountId(card, resolved);
+                syncCardCollectionsCountId(card, resolved);
                 return resolved;
             }
         } catch (err) {
@@ -1429,6 +1479,8 @@ async function resolveExtraitIdForCard(card, createIfMissing = false) {
     if (extraitId) {
         card.dataset.extraitId = extraitId;
         syncCardLikeCountId(card, extraitId);
+        syncCardShareCountId(card, extraitId);
+        syncCardCollectionsCountId(card, extraitId);
     }
 
     return extraitId;
@@ -1478,6 +1530,13 @@ async function loadCardLikeCount(cardId, url) {
         const btn = card.querySelector('.btn-like');
         if (btn && typeof isExtraitLiked === 'function') {
             btn.classList.toggle('active', isExtraitLiked(extraitId));
+        }
+
+        if (typeof loadExtraitShareInfoBatch === 'function') {
+            loadExtraitShareInfoBatch([extraitId]);
+        }
+        if (typeof loadExtraitCollectionsInfoBatch === 'function') {
+            loadExtraitCollectionsInfoBatch([extraitId]);
         }
     } catch (e) {
         // ignore
@@ -1573,11 +1632,11 @@ function renderCard(result, origTitle, wikisource = getCurrentWikisource(), allo
                         <span class="like-count clickable" id="likeCount-${cardId}" data-card-id="${cardId}" onclick="event.stopPropagation(); showCardLikers('${cardId}')">0</span>
                     </button>
                 </div>
-                <button class="btn btn-share" onclick="shareCardExtrait('${cardId}')" title="Partager">📤 <span class="btn-text">Partager</span></button>
+                <button class="btn btn-share" onclick="shareCardExtrait('${cardId}')" title="Partager">📤 <span class="btn-text">Partager</span> <span class="share-count is-zero" id="shareCount-${cardId}" onclick="event.stopPropagation(); event.preventDefault(); showCardSharers('${cardId}')">0</span></button>
                 <button class="btn btn-comment" onclick="openCardComments('${cardId}')" title="Commenter">
                     💬 <span id="commentCount-${cardId}" class="comment-count" style="display:none;">0</span> <span class="btn-text">commentaire<span class="comment-plural">s</span></span>
                 </button>
-                <button class="btn btn-collection card-btn-collection" onclick="openCollectionPickerFromCard('${cardId}')" title="Ajouter à une collection">+ <span class="btn-text">Collection</span></button>
+                <button class="btn btn-collection card-btn-collection" onclick="openCollectionPickerFromCard('${cardId}')" title="Ajouter à une collection">+ <span class="btn-text">Collection</span> <span class="collections-count is-zero" id="collectionsCount-${cardId}" onclick="event.stopPropagation(); event.preventDefault(); showCardCollections('${cardId}')">0</span></button>
                 <button class="btn btn-explore" onclick="showRelatedAuthors('${cardId}')" title="Découvrir">🔗 <span class="btn-text">Explorer</span></button>
                 <a class="btn btn-source" href="${url}" target="_blank" title="Source">↗ <span class="btn-text">Source</span></a>
             </div>

@@ -1089,6 +1089,12 @@ async function loadProfileExtraits(userId) {
                             <span>Partager</span>
                             <span class="share-count ${shareCount === 0 ? 'is-zero' : ''}" id="shareCount-${e.id}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${e.id}')">${shareCount}</span>
                         </button>
+                        ${currentUser && e.user_id === currentUser.id ? `
+                            <button class="extrait-action unshare-btn" id="unshareBtn-${e.id}" onclick="event.stopPropagation(); cancelShareExtrait('${e.id}')">
+                                <span class="icon">✕</span>
+                                <span>Annuler</span>
+                            </button>
+                        ` : ''}
                         <button class="extrait-action collection-btn" onclick="openCollectionPickerForExtrait('${e.id}')">
                             <span class="icon">▦</span>
                             <span>Collections</span>
