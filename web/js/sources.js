@@ -597,7 +597,7 @@ async function fetchGutenberg() {
         if (books.length === 0) return [];
 
         // Prendre 2-3 livres au hasard
-        const shuffled = books.sort(() => Math.random() - 0.5).slice(0, 3);
+        const shuffled = books.slice(0).sort(() => Math.random() - 0.5).slice(0, 3);
         const results = [];
 
         for (const book of shuffled) {
@@ -737,7 +737,7 @@ async function fetchPoetryDB() {
             const poems = await fetchJsonWithCorsFallback(`https://poetrydb.org/author/${encodeURIComponent(randomAuthor)}/title,author,lines`);
 
             if (Array.isArray(poems) && poems.length > 0) {
-                const shuffled = poems.sort(() => Math.random() - 0.5).slice(0, 5);
+                const shuffled = poems.slice(0).sort(() => Math.random() - 0.5).slice(0, 5);
                 return shuffled.map(poem => ({
                     title: poem.title,
                     text: Array.isArray(poem.lines) ? poem.lines.join('\n') : poem.lines,
@@ -989,7 +989,7 @@ async function fillPool() {
     }
     
     // Mélanger les sources
-    const shuffledSources = [...activeSources].sort(() => Math.random() - 0.5).slice(0, 3);
+    const shuffledSources = [...activeSources].slice(0).sort(() => Math.random() - 0.5).slice(0, 3);
     
     for (const ws of shuffledSources) {
         // A) Stratégie de remplissage
@@ -1223,7 +1223,7 @@ async function searchByTerm(term, wikisource) {
         }));
         
         // Mélanger et charger
-        state.textPool = state.textPool.sort(() => Math.random() - 0.5);
+        state.textPool = state.textPool.slice(0).sort(() => Math.random() - 0.5);
         
         if (state.textPool.length > 0) {
             // IMPORTANT: Remettre loading à false AVANT d'appeler loadMore
@@ -1268,7 +1268,7 @@ async function fetchCategoryData(categoryName, wikisource) {
         }
         
         // Mélanger et charger
-        state.textPool = state.textPool.sort(() => Math.random() - 0.5);
+        state.textPool = state.textPool.slice(0).sort(() => Math.random() - 0.5);
         
         if (state.textPool.length > 0) {
             loadMore();

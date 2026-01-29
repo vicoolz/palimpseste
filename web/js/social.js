@@ -674,7 +674,7 @@ async function loadFullTextFromSource(extraitId, sourceUrl, sourceTitle) {
         if (data.parse?.text?.['*']) {
             // Parser le HTML et extraire le texte
             const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = data.parse.text['*'];
+            tempDiv.innerHTML = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(data.parse.text['*']) : '';
             
             // Supprimer les éléments indésirables
             tempDiv.querySelectorAll('table, .mw-editsection, script, style, .noprint, .reference, sup.reference').forEach(el => el.remove());

@@ -302,7 +302,7 @@
     color: var(--text);
     font-size: 0.85rem;
     cursor: pointer;
-    outline: none;
+
 }
 
 .drawer-lang-selector select option {
@@ -1516,7 +1516,7 @@ background-repeat: no-repeat;
 background-position: right 0.5rem center;
 }
 .lang-select:hover { border-color: var(--text); }
-.lang-select:focus { outline: none; border-color: var(--text); }
+.lang-select:focus { border-color: var(--text); }
 .lang-icon { font-size: 0.9rem; }
 
 /* Search Bar */
@@ -1544,7 +1544,7 @@ transition: all 0.2s;
 min-width: 150px;
 }
 .search-input:focus {
-outline: none;
+
 border-color: var(--accent);
 box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
 }
@@ -2130,7 +2130,7 @@ color: var(--text);
 border-radius: 10px;
 padding: 0.35rem 0.6rem;
 font-size: 0.85rem;
-outline: none;
+
 }
 
 .filter-free-input:focus {
@@ -3066,7 +3066,7 @@ padding: 0.4rem 0.8rem;
 border-radius: 6px;
 font-weight: 500;
 }
-.cat-close:hover { background: #c0392b; }
+.cat-close:hover { background: var(--danger); }
 
 .empty-state {
 text-align: center;
@@ -4383,7 +4383,7 @@ margin-bottom: 0.75rem;
 transition: border-color 0.2s;
 }
 .auth-input:focus {
-outline: none;
+
 border-color: var(--accent);
 }
 .auth-input::placeholder { color: var(--muted); }
@@ -4400,7 +4400,7 @@ cursor: pointer;
 transition: all 0.2s;
 margin-top: 0.5rem;
 }
-.auth-btn:hover { background: #ff4757; transform: scale(1.02); }
+.auth-btn:hover { background: var(--accent-hover); transform: scale(1.02); }
 .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .auth-btn.secondary {
 background: transparent;
@@ -4518,7 +4518,7 @@ border-radius: 12px;
 min-width: 200px;
 display: none;
 box-shadow: 0 12px 48px rgba(0,0,0,0.6);
-z-index: 9999;
+z-index: var(--z-modal);
 }
 .user-dropdown.open { display: block; }
 .user-dropdown-item {
@@ -4630,7 +4630,7 @@ background: rgba(42, 157, 143, 0.4);
 position: fixed;
 top: 0; left: 0; right: 0; bottom: 0;
 background: var(--overlay-bg);
-z-index: 100000;
+z-index: var(--z-modal);
 display: none;
 align-items: center;
 justify-content: center;
@@ -4688,7 +4688,7 @@ min-height: 80px;
 margin-bottom: 1rem;
 font-family: inherit;
 }
-.share-commentary:focus { outline: none; border-color: var(--accent-tertiary); }
+.share-commentary:focus { border-color: var(--accent-tertiary); }
 .share-actions {
 display: flex;
 gap: 0.75rem;
@@ -4820,7 +4820,7 @@ z-index: 10;
     bottom: 0;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px);
-    z-index: 100000;
+    z-index: var(--z-modal);
     display: none;
     align-items: center;
     justify-content: center;
@@ -4906,7 +4906,7 @@ left: 0;
 right: 0;
 bottom: 0;
 background: rgba(0, 0, 0, 0.75);
-z-index: 100000;
+z-index: var(--z-modal);
 display: flex;
 align-items: center;
 justify-content: center;
@@ -4928,7 +4928,7 @@ max-height: 70vh;
 overflow-y: auto;
 box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 pointer-events: auto;
-z-index: 10001;
+z-index: var(--z-toast);
 }
 .extrait-collections-header {
 display: flex;
@@ -5206,7 +5206,7 @@ min-width: 12px;
 
 .comment-reaction-picker {
     position: fixed;
-    z-index: 99999;
+    z-index: var(--z-modal);
     display: flex;
     gap: 6px;
     padding: 6px;
@@ -5240,7 +5240,7 @@ border-radius: 16px;
 padding: 0.5rem 0.9rem;
 font-size: 0.8rem;
 color: var(--text);
-outline: none;
+
 resize: none;
 max-height: 80px;
 min-height: 32px;
@@ -6075,7 +6075,7 @@ border-radius: 20px;
 padding: 0.65rem 1rem;
 color: var(--text);
 font-size: 0.85rem;
-outline: none;
+
 }
 .chat-input:focus {
 border-color: var(--accent);
@@ -6193,7 +6193,7 @@ cursor: not-allowed;
 
 .msg-reaction-picker {
     position: fixed;
-    z-index: 99999;
+    z-index: var(--z-modal);
     display: flex;
     gap: 6px;
     padding: 6px;
@@ -6379,7 +6379,7 @@ background: var(--bg-card);
 border: 1px solid var(--accent-secondary);
 border-radius: 12px;
 box-shadow: 0 12px 48px rgba(0,0,0,0.6);
-z-index: 9999;
+z-index: var(--z-modal);
 display: none;
 overflow: hidden;
 }
@@ -6880,7 +6880,7 @@ font-size: 0.8rem;
 cursor: pointer;
 transition: all 0.2s;
 }
-.login-prompt-btn:hover { background: #ff4757; }
+.login-prompt-btn:hover { background: var(--accent-hover); }
 
 /* -----------------------------------------------------------
    ?? RESPONSIVE MOBILE (iPhone & petits ?crans)
@@ -7826,7 +7826,7 @@ transition: all 0.2s;
     padding: 0.5rem 1rem;
     font-size: 0.85rem;
     color: var(--text);
-    outline: none;
+
     transition: border-color 0.2s ease;
 }
 
@@ -8141,7 +8141,7 @@ transition: all 0.2s;
     bottom: 0 !important;
     background: rgba(0, 0, 0, 0.6) !important;
     backdrop-filter: blur(4px);
-    z-index: 99999 !important;
+    z-index: var(--z-modal) !important;
     display: none;
     align-items: center;
     justify-content: center;
@@ -8319,7 +8319,7 @@ transition: all 0.2s;
     bottom: 0;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(4px);
-    z-index: 100000;
+    z-index: var(--z-modal);
     display: none;
     align-items: center;
     justify-content: center;
@@ -8524,7 +8524,7 @@ transition: all 0.2s;
 }
 
 .collection-input:focus {
-    outline: none;
+
     border-color: var(--accent);
 }
 
@@ -8686,7 +8686,7 @@ transition: all 0.2s;
 }
 
 .collection-textarea:focus {
-    outline: none;
+
     border-color: var(--accent);
 }
 
@@ -9477,7 +9477,7 @@ transition: all 0.2s;
 
 .msg-reaction-picker {
     position: absolute;
-    z-index: 99999;
+    z-index: var(--z-modal);
     display: flex;
     gap: 6px;
     padding: 6px;
@@ -9682,7 +9682,7 @@ transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10000;
+    z-index: var(--z-modal);
     opacity: 0;
     transition: opacity 0.3s ease;
 }

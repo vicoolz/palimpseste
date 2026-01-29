@@ -1,12 +1,12 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * 🎨 BASE.CSS - Palimpseste
- * Styles de base : reset, body, scrollbar
+ * BASE.CSS - Palimpseste
+ * Styles de base : reset, body, scrollbar, accessibility
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   🔄 RESET
+   RESET
    ═══════════════════════════════════════════════════════════════════════════ */
 * {
     margin: 0;
@@ -14,8 +14,70 @@
     box-sizing: border-box;
 }
 
+/* Form element reset */
+button, input, select, textarea {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+}
+
+button {
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
-   📄 BODY
+   ACCESSIBILITY
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Screen-reader only content */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Skip to content link */
+.skip-link {
+    position: absolute;
+    top: -100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 0 0 4px 4px;
+    z-index: 100001;
+    font-weight: bold;
+    text-decoration: none;
+    transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* Focus-visible for keyboard navigation */
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* Remove default focus ring for mouse users */
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BODY
    ═══════════════════════════════════════════════════════════════════════════ */
 body {
     font-family: 'EB Garamond', Georgia, serif;
@@ -42,7 +104,7 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   🖱️ SCROLLBAR PERSONNALISÉE
+   SCROLLBAR PERSONNALISEE
    ═══════════════════════════════════════════════════════════════════════════ */
 ::-webkit-scrollbar {
     width: 8px;
@@ -50,7 +112,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--bg-lighter);
+    background: var(--bg-elevated);
     border-radius: 4px;
 }
 
@@ -60,11 +122,11 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted);
+    background: var(--text-secondary);
 }
 
 /* Firefox */
 * {
     scrollbar-width: thin;
-    scrollbar-color: var(--border) var(--bg-lighter);
+    scrollbar-color: var(--border) var(--bg-elevated);
 }
