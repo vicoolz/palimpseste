@@ -62,7 +62,7 @@ async function getExtraitSharesInfo(extraitId) {
     try {
         let query = supabaseClient
             .from('extraits')
-            .select('id, user_id, created_at, text_hash, source_url, source_title, source_author, profiles:user_id (username, avatar_url)');
+            .select('id, user_id, created_at, text_hash, source_url, source_title, source_author');
 
         if (extrait.text_hash) {
             query = query.eq('text_hash', extrait.text_hash);
@@ -83,6 +83,12 @@ async function getExtraitSharesInfo(extraitId) {
         if (error) throw error;
 
         const shares = data || [];
+        if (typeof loadProfilesMap === 'function') {
+            const profileMap = await loadProfilesMap(shares.map(s => s.user_id));
+            shares.forEach(share => {
+                share.profiles = profileMap.get(share.user_id) || null;
+            });
+        }
         const info = { hasShares: shares.length > 0, count: shares.length, shares };
         extraitSharesCache.set(extraitId, info);
         return info;
@@ -145,10 +151,16 @@ async function loadExtraitShareInfoBatch(extraitIds) {
     if (hashes.length > 0) {
         const { data } = await supabaseClient
             .from('extraits')
-            .select('id, user_id, created_at, text_hash, source_url, source_title, source_author, profiles:user_id (username, avatar_url)')
+            .select('id, user_id, created_at, text_hash, source_url, source_title, source_author')
             .in('text_hash', hashes)
             .order('created_at', { ascending: false });
         sharesByHash = data || [];
+        if (typeof loadProfilesMap === 'function') {
+            const profileMap = await loadProfilesMap(sharesByHash.map(s => s.user_id));
+            sharesByHash.forEach(share => {
+                share.profiles = profileMap.get(share.user_id) || null;
+            });
+        }
     }
 
     for (const extrait of validExtraits) {
@@ -165,7 +177,7 @@ async function loadExtraitShareInfoBatch(extraitIds) {
         } else {
             let query = supabaseClient
                 .from('extraits')
-                .select('id, user_id, created_at, text_hash, source_url, source_title, source_author, profiles:user_id (username, avatar_url)');
+                .select('id, user_id, created_at, text_hash, source_url, source_title, source_author');
             if (extrait.source_url) {
                 query = query.eq('source_url', extrait.source_url);
             } else {
@@ -173,6 +185,12 @@ async function loadExtraitShareInfoBatch(extraitIds) {
             }
             const { data } = await query.order('created_at', { ascending: false });
             shares = data || [];
+            if (typeof loadProfilesMap === 'function') {
+                const profileMap = await loadProfilesMap(shares.map(s => s.user_id));
+                shares.forEach(share => {
+                    share.profiles = profileMap.get(share.user_id) || null;
+                });
+            }
         }
 
         const info = { hasShares: shares.length > 0, count: shares.length, shares };
@@ -715,10 +733,17 @@ async function loadInlineComments(cardId) {
         // Charger les commentaires
         const { data: comments } = await supabaseClient
             .from('comments')
-            .select('*, profiles:user_id(username)')
+            .select('*')
             .eq('extrait_id', extraitId)
             .order('created_at', { ascending: false })
             .limit(5);
+
+        if (comments && comments.length > 0 && typeof loadProfilesMap === 'function') {
+            const profileMap = await loadProfilesMap(comments.map(c => c.user_id));
+            comments.forEach(c => {
+                c.profiles = profileMap.get(c.user_id) || null;
+            });
+        }
         
         if (comments && comments.length > 0) {
             listEl.innerHTML = comments.map(c => {
