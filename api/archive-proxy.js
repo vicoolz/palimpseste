@@ -27,6 +27,11 @@ export default async function handler(req, res) {
         const upstream = await fetch(url, {
             redirect: 'follow',
             cache: 'no-store',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+                'Accept': 'text/plain, application/json, */*',
+                'Referer': 'https://archive.org/'
+            },
             signal: controller.signal
         });
 
@@ -42,6 +47,7 @@ export default async function handler(req, res) {
         res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
         res.setHeader('Content-Type', contentType);
+        res.setHeader('Cache-Control', 'no-store');
 
         const body = await upstream.arrayBuffer();
         res.status(200).send(Buffer.from(body));

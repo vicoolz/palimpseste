@@ -809,8 +809,12 @@ async function fetchArchiveJson(url) {
     try {
         const localProxy = localArchiveProxyUrl(url);
         if (localProxy) {
-            const res = await fetchWithRetry(localProxy);
-            return await res.json();
+            try {
+                const res = await fetchWithRetry(localProxy);
+                return await res.json();
+            } catch (err) {
+                return null;
+            }
         }
         const res = await fetchWithRetry(url);
         return await res.json();
@@ -829,8 +833,12 @@ async function fetchArchiveText(url) {
     try {
         const localProxy = localArchiveProxyUrl(url);
         if (localProxy) {
-            const res = await fetchWithRetry(localProxy);
-            return await res.text();
+            try {
+                const res = await fetchWithRetry(localProxy);
+                return await res.text();
+            } catch (err) {
+                return null;
+            }
         }
         const res = await fetchWithRetry(url);
         return await res.text();
@@ -852,6 +860,11 @@ async function fetchArchiveMetadata(identifier) {
 async function fetchArchiveTextByIdentifier(identifier) {
     if (!identifier) return null;
     const metadata = await fetchArchiveMetadata(identifier);
+    const meta = metadata?.metadata || {};
+    const accessRestricted = (meta['access-restricted'] ?? meta.access_restricted ?? meta.accessRestricted);
+    if (accessRestricted === true || accessRestricted === 1 || `${accessRestricted}`.toLowerCase() === 'true' || `${accessRestricted}` === '1') {
+        return null;
+    }
     const files = Array.isArray(metadata?.files) ? metadata.files : [];
 
     const preferredFiles = files
@@ -859,6 +872,7 @@ async function fetchArchiveTextByIdentifier(identifier) {
         .filter(f => {
             const name = f.name.toString().toLowerCase();
             if (!name.endsWith('.txt')) return false;
+            if (f.private === true || `${f.private}`.toLowerCase() === 'true') return false;
             const fmt = (f.format || '').toString().toLowerCase();
             if (fmt.includes('pdf')) return false;
             return fmt.includes('djvutxt') || fmt.includes('text') || fmt.includes('plain');
@@ -866,13 +880,7 @@ async function fetchArchiveTextByIdentifier(identifier) {
         .map(f => f.name);
 
     const uniqueNames = Array.from(new Set(preferredFiles));
-    const fallbackNames = [
-        `${identifier}_djvu.txt`,
-        `${identifier}_text.txt`,
-        `${identifier}.txt`
-    ];
-
-    const candidates = [...uniqueNames, ...fallbackNames].filter(Boolean);
+    const candidates = [...uniqueNames].filter(Boolean);
 
     for (const name of candidates) {
         const safeName = encodeURIComponent(name).replace(/%2F/g, '/');
