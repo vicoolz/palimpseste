@@ -961,7 +961,7 @@ async function openCollection(collectionId) {
                         
                         return `
                                <div class="collection-item-card" id="coll-item-${itemId}" data-expanded="false"
-                                   data-url="${safeUrl}" data-title="${safeTitle}" data-author="${safeAuthor}">
+                                   data-preview-truncated="${hasMore ? 'true' : 'false'}" data-url="${safeUrl}" data-title="${safeTitle}" data-author="${safeAuthor}">
                                   <div class="collection-item-content" onclick="toggleCollectionItemText('${itemId}', this, event)">
                                     <div class="collection-item-header">
                                         <div class="collection-item-title">${escapeHtml(title || 'Sans titre')}</div>
@@ -971,7 +971,7 @@ async function openCollection(collectionId) {
                                         <div class="collection-item-preview" id="preview-${itemId}">${escapeHtml(previewText)}${hasMore ? '...' : ''}</div>
                                         <div class="collection-item-full" id="full-${itemId}">${escapeHtml(fullText || '')}</div>
                                     </div>
-                                    ${hasMore ? `<button class="collection-item-expand" id="expand-btn-${itemId}" type="button" aria-expanded="false" aria-label="Afficher le texte complet" onmousedown="event.preventDefault()" onclick="event.preventDefault(); event.stopPropagation(); toggleCollectionItemText('${itemId}', this, event)"><span class="expand-icon">▾</span><span class="expand-label">Afficher le texte complet</span></button>` : ''}
+                                    <button class="collection-item-expand${hasMore ? '' : ' is-hidden'}" id="expand-btn-${itemId}" type="button" aria-expanded="false" aria-label="Afficher le texte complet" onmousedown="event.preventDefault()" onclick="event.preventDefault(); event.stopPropagation(); toggleCollectionItemText('${itemId}', this, event)"><span class="expand-icon">▾</span><span class="expand-label">Afficher le texte complet</span></button>
                                     ${item.note ? `<div class="collection-item-note"><span class="note-icon">¶</span> ${escapeHtml(item.note)}</div>` : ''}
                                 </div>
                                 ${extraitId ? `
@@ -1007,6 +1007,8 @@ async function openCollection(collectionId) {
             </div>
         </div>
     `;
+
+    scheduleCollectionExpandCheck(grid);
 
     const extraitIdsInCollection = items.filter(i => i.extraits?.id).map(i => i.extraits.id);
     if (extraitIdsInCollection.length > 0) {
@@ -1407,6 +1409,58 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function normalizeCollectionText(text) {
+    return (text || '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function updateCollectionExpandAvailability(card) {
+    if (!card) return;
+    const preview = card.querySelector('.collection-item-preview');
+    const full = card.querySelector('.collection-item-full');
+    const expandBtn = card.querySelector('.collection-item-expand');
+
+    if (!preview || !expandBtn) return;
+
+    const previewText = (preview.textContent || '').trim();
+    if (!card.dataset.previewText) {
+        card.dataset.previewText = previewText;
+    }
+
+    const fullText = card.dataset.fullText || (full ? full.textContent : '') || '';
+    const hasPreviewTruncation = card.dataset.previewTruncated === 'true';
+    const hasOverflow = preview.scrollHeight > preview.clientHeight + 1;
+
+    let hasFullMore = false;
+    if (fullText) {
+        const normPreview = normalizeCollectionText(previewText);
+        const normFull = normalizeCollectionText(fullText);
+        hasFullMore = normFull.length > normPreview.length + 20;
+    }
+
+    const shouldShow = hasPreviewTruncation || hasOverflow || hasFullMore;
+    expandBtn.classList.toggle('is-hidden', !shouldShow);
+    card.dataset.canExpand = shouldShow ? 'true' : 'false';
+
+    if (!shouldShow) {
+        card.dataset.expanded = 'false';
+        card.classList.remove('expanded');
+        updateCollectionExpandButton(expandBtn, false);
+    }
+}
+
+function refreshCollectionExpandButtons(container = document) {
+    const cards = container.querySelectorAll ? container.querySelectorAll('.collection-item-card') : [];
+    cards.forEach(updateCollectionExpandAvailability);
+}
+
+function scheduleCollectionExpandCheck(container) {
+    if (!container) return;
+    requestAnimationFrame(() => {
+        refreshCollectionExpandButtons(container);
+        setTimeout(() => refreshCollectionExpandButtons(container), 150);
+    });
+}
+
 function updateCollectionExpandButton(expandBtn, isExpanded) {
     if (!expandBtn) return;
     const label = isExpanded ? 'Réduire le texte' : 'Afficher le texte complet';
@@ -1418,13 +1472,12 @@ function updateCollectionExpandButton(expandBtn, isExpanded) {
 
 function stabilizeCollectionsScroll(scrollEl, scrollTop) {
     if (!scrollEl) return;
-    const start = performance.now();
-    const duration = 1200;
-    const step = () => {
+    requestAnimationFrame(() => {
         if (scrollEl.scrollTop !== scrollTop) scrollEl.scrollTop = scrollTop;
-        if (performance.now() - start < duration) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
+        requestAnimationFrame(() => {
+            if (scrollEl.scrollTop !== scrollTop) scrollEl.scrollTop = scrollTop;
+        });
+    });
 }
 
 /**
@@ -1448,8 +1501,16 @@ function toggleCollectionItemText(itemId, triggerEl = null, evt = null) {
 
     const scrollEl = card.closest('.favorites-overlay') || document.scrollingElement;
     const scrollTop = scrollEl ? scrollEl.scrollTop : window.scrollY;
+
+    if (card.classList.contains('loading')) {
+        return;
+    }
     
     const isExpanded = card.dataset.expanded === 'true';
+
+    if (!isExpanded && card.dataset.canExpand !== 'true') {
+        return;
+    }
     
     if (isExpanded) {
         // Réduire
@@ -1510,12 +1571,41 @@ async function loadTextFromCollection(itemId, title, author, url) {
 
     const scrollEl = card.closest('.favorites-overlay') || document.scrollingElement;
     const scrollTop = scrollEl ? scrollEl.scrollTop : window.scrollY;
-    
-    // Afficher un loader
-    fullContainer.innerHTML = '<div class="collection-loading">Chargement du texte complet...</div>';
-    card.dataset.expanded = 'true';
-    card.classList.add('expanded');
-    updateCollectionExpandButton(expandBtn, true);
+
+    const startLoadingState = () => {
+        card.classList.add('loading');
+        card.setAttribute('aria-busy', 'true');
+        if (expandBtn) {
+            expandBtn.disabled = true;
+            expandBtn.setAttribute('aria-busy', 'true');
+            expandBtn.innerHTML = '<span class="expand-icon">⏳</span><span class="expand-label">Chargement…</span>';
+        }
+    };
+
+    const finalizeLoadingState = (expand = true) => {
+        card.classList.remove('loading');
+        card.removeAttribute('aria-busy');
+        if (expand) {
+            card.dataset.expanded = 'true';
+            card.classList.add('expanded');
+        }
+        if (expandBtn) {
+            expandBtn.disabled = false;
+            expandBtn.removeAttribute('aria-busy');
+            updateCollectionExpandButton(expandBtn, expand);
+        }
+    };
+
+    // Afficher un loader compact
+    fullContainer.innerHTML = `
+        <div class="collection-loading" aria-live="polite">
+            <div class="loading-line"></div>
+            <div class="loading-line"></div>
+            <div class="loading-line short"></div>
+            <span class="loading-label">Chargement du texte complet...</span>
+        </div>
+    `;
+    startLoadingState();
 
     // Sauvegarder l'extrait actuel pour permettre le repli et l'alignement
     if (!card.dataset.previewText && preview) {
@@ -1591,25 +1681,33 @@ async function loadTextFromCollection(itemId, title, author, url) {
                 if (text.length > 100) {
                     fullContainer.innerHTML = `<div class="collection-full-text">${escapeHtml(text)}</div>`;
                     card.dataset.fullText = text;
+                    updateCollectionExpandAvailability(card);
                     toast('Texte complet chargé');
+                    finalizeLoadingState(true);
                     stabilizeCollectionsScroll(scrollEl, scrollTop);
                 } else {
                     // Texte trop court = probablement une page d'index
                     fullContainer.innerHTML = `<div class="collection-error">Cette page est un sommaire. <a href="${url}" target="_blank">Voir sur Wikisource →</a></div>`;
+                    finalizeLoadingState(true);
                 }
             } else if (data.error) {
                 fullContainer.innerHTML = `<div class="collection-error">Page introuvable. <a href="${url}" target="_blank">Voir sur Wikisource →</a></div>`;
+                finalizeLoadingState(true);
             } else {
                 fullContainer.innerHTML = `<div class="collection-error">Texte non disponible. <a href="${url}" target="_blank">Voir sur Wikisource →</a></div>`;
+                finalizeLoadingState(true);
             }
         } catch (err) {
             console.error('Erreur chargement texte:', err);
             fullContainer.innerHTML = `<div class="collection-error">Erreur de chargement. <a href="${url}" target="_blank">Ouvrir la source</a></div>`;
+            finalizeLoadingState(true);
         }
     } else if (url) {
         fullContainer.innerHTML = `<div class="collection-error">Source externe. <a href="${url}" target="_blank">Ouvrir dans un nouvel onglet</a></div>`;
+        finalizeLoadingState(true);
     } else {
         fullContainer.innerHTML = '<div class="collection-error">Aucune source disponible</div>';
+        finalizeLoadingState(true);
     }
 }
 
