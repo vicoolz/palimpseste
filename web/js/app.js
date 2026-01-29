@@ -370,6 +370,9 @@ async function init() {
     const langSelect = document.getElementById('langSelect');
     if (langSelect) langSelect.value = getSelectedLang();
     
+    // Charger les likes locaux (et Supabase si déjà connecté) avant le rendu des badges
+    if (typeof loadLikedSources === 'function') await loadLikedSources();
+    
     updateStats();
     updateConnections();
     renderAchievements();

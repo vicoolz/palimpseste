@@ -571,6 +571,13 @@ async function onUserLoggedIn() {
     // Load user stats (défini dans app.js)
     if (typeof loadUserStats === 'function') loadUserStats();
     
+    // Charger et synchroniser les likes locaux/Supabase (impacte les badges)
+    if (typeof loadLikedSources === 'function') await loadLikedSources();
+    
+    // Rafraîchir les badges après connexion/sync
+    if (typeof checkAchievements === 'function') checkAchievements();
+    if (typeof renderAchievements === 'function') renderAchievements();
+    
     // Mettre à jour le badge de messages non lus
     if (typeof updateUnreadBadge === 'function') updateUnreadBadge();
     
