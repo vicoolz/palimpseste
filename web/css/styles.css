@@ -9030,9 +9030,9 @@ transition: all 0.2s;
 /* Item dans une collection */
 .collection-item-card {
     display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    padding: 20px;
+    flex-direction: column;
+    gap: 12px;
+    padding: 24px;
     background: var(--bg-elevated);
     border-radius: 12px;
     border: 1px solid var(--border);
@@ -9051,6 +9051,7 @@ transition: all 0.2s;
 .collection-item-content {
     flex: 1;
     min-width: 0;
+    width: 100%;
     cursor: pointer;
 }
 
@@ -9060,7 +9061,7 @@ transition: all 0.2s;
 
 .collection-item-title {
     font-weight: 600;
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     margin-bottom: 4px;
     color: var(--text);
 }
@@ -9072,31 +9073,34 @@ transition: all 0.2s;
 
 .collection-item-text-container {
     margin-top: 12px;
+    width: 100%;
 }
 
 .collection-item-preview,
 .collection-item-full {
-    font-size: 1rem;
+    font-size: 1.05rem;
     color: var(--text-secondary);
-    line-height: 1.8;
+    line-height: 1.85;
     font-family: 'Cormorant Garamond', Georgia, serif;
-    padding: 16px 20px;
+    padding: 20px 24px;
     background: var(--bg);
     border-radius: 8px;
     border-left: 3px solid var(--accent);
+    width: 100%;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 .collection-item-preview {
     display: -webkit-box;
-    -webkit-line-clamp: 6;
+    -webkit-line-clamp: 10;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
 .collection-item-full {
-    max-height: 70vh;
+    max-height: 80vh;
     overflow-y: auto;
-    white-space: pre-wrap;
 }
 
 .collection-full-text {
@@ -9166,12 +9170,11 @@ transition: all 0.2s;
 
 .collection-item-actions {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 8px;
     flex-shrink: 0;
-    padding-left: 0.5rem;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
 /* Ergonomie "Like-like" : Cercle, sans bordure par défaut, feedback tactile */

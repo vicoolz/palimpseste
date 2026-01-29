@@ -97,7 +97,6 @@ async function getExtraitSharesInfo(extraitId) {
  */
 async function loadExtraitShareInfoBatch(extraitIds) {
     if (!supabaseClient || !extraitIds || extraitIds.length === 0) return;
-    if (typeof getExtraitData !== 'function') return;
 
     const uniqueIds = [...new Set(extraitIds.filter(Boolean))];
     const missingIds = uniqueIds.filter(id => !extraitSharesCache.has(id));
@@ -111,7 +110,26 @@ async function loadExtraitShareInfoBatch(extraitIds) {
 
     let extraits = [];
     try {
-        extraits = await Promise.all(idsToFetch.map(id => getExtraitData(id)));
+        if (typeof getExtraitData === 'function') {
+            extraits = await Promise.all(idsToFetch.map(id => getExtraitData(id)));
+        } else {
+            // Fallback: try extraitDataCache or fetch from DB
+            const uncachedIds = [];
+            for (const id of idsToFetch) {
+                if (typeof extraitDataCache !== 'undefined' && extraitDataCache.has(id)) {
+                    extraits.push(extraitDataCache.get(id));
+                } else {
+                    uncachedIds.push(id);
+                }
+            }
+            if (uncachedIds.length > 0) {
+                const { data } = await supabaseClient
+                    .from('extraits')
+                    .select('*')
+                    .in('id', uncachedIds);
+                if (data) extraits.push(...data);
+            }
+        }
     } finally {
         idsToFetch.forEach(id => extraitSharesInFlight.delete(id));
     }
