@@ -656,8 +656,9 @@ async function viewExtraitById(extraitId) {
 async function openUserProfile(userId, username, defaultTab = 'extraits') {
     if (!supabaseClient) return;
     
+    const safeDefaultTab = (defaultTab === 'collections') ? 'extraits' : defaultTab;
     currentProfileUserId = userId;
-    currentProfileTab = defaultTab;
+    currentProfileTab = safeDefaultTab;
     
     // Charger les infos du profil
     const { data: profile } = await supabaseClient
@@ -739,17 +740,16 @@ async function openUserProfile(userId, username, defaultTab = 'extraits') {
     const tabMap = {
         'extraits': 'tabProfileExtraits',
         'likes': 'tabProfileLikes',
-        'collections': 'tabProfileCollections',
         'followers': 'tabProfileFollowers',
         'following': 'tabProfileFollowing'
     };
-    document.getElementById(tabMap[defaultTab])?.classList.add('active');
+    document.getElementById(tabMap[safeDefaultTab])?.classList.add('active');
     
     // Ouvrir la modal
     document.getElementById('userProfileModal').classList.add('open');
     
     // Charger le contenu de l'onglet
-    await switchProfileTab(defaultTab);
+    await switchProfileTab(safeDefaultTab);
 }
 
 /**
@@ -758,32 +758,30 @@ async function openUserProfile(userId, username, defaultTab = 'extraits') {
 async function switchProfileTab(tab) {
     if (!currentProfileUserId) return;
     
-    currentProfileTab = tab;
+    const allowedTabs = new Set(['extraits', 'likes', 'followers', 'following']);
+    const safeTab = allowedTabs.has(tab) ? tab : 'extraits';
+    currentProfileTab = safeTab;
     
     // Update tabs UI
     document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
     const tabMap = {
         'extraits': 'tabProfileExtraits',
         'likes': 'tabProfileLikes',
-        'collections': 'tabProfileCollections',
         'followers': 'tabProfileFollowers',
         'following': 'tabProfileFollowing'
     };
-    document.getElementById(tabMap[tab])?.classList.add('active');
+    document.getElementById(tabMap[safeTab])?.classList.add('active');
     
     // Load content
     const container = document.getElementById('profileContentArea');
     container.innerHTML = '<div class="profile-empty"><div class="spinner"></div></div>';
     
-    switch(tab) {
+    switch(safeTab) {
         case 'extraits':
             await loadProfileExtraits(currentProfileUserId);
             break;
         case 'likes':
             await loadProfileLikes(currentProfileUserId);
-            break;
-        case 'collections':
-            await loadProfileCollections(currentProfileUserId);
             break;
         case 'followers':
             await loadProfileFollowersList(currentProfileUserId);

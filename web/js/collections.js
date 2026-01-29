@@ -553,15 +553,6 @@ async function openCollectionFromExtraitModal(collectionId) {
     const modal = document.querySelector('.extrait-collections-modal');
     if (modal) modal.remove();
 
-    if (currentUser && typeof openUserProfile === 'function') {
-        const username = currentUser.user_metadata?.username || 'Moi';
-        await openUserProfile(currentUser.id, username, 'collections');
-        if (typeof openProfileCollection === 'function') {
-            await openProfileCollection(collectionId);
-            return;
-        }
-    }
-
     if (typeof openCollectionsView === 'function') {
         await openCollectionsView(true);
     }
@@ -868,12 +859,20 @@ async function openCollectionsView(forceReload = false) {
                         <div class="collections-empty-text">Créez des collections pour organiser vos textes favoris par thèmes</div>
                         <button class="btn-create-first" onclick="showCreateCollectionModal()">Créer ma première collection</button>
                        </div>`
-                    : userCollections.map(c => `
+                    : userCollections.map(c => {
+                        const isPublic = !!c.is_public;
+                        const badge = `
+                            <div class="collection-card-badges">
+                                <span class="collection-card-badge ${isPublic ? 'public' : 'private'}">${isPublic ? 'Publique' : 'Privée'}</span>
+                            </div>
+                        `;
+                        return `
                         <div class="collection-card" onclick="openCollection('${c.id}')">
                             <div class="collection-card-emoji" style="background: ${c.color}15; color: ${c.color}">${c.emoji || '❧'}</div>
                             <div class="collection-card-info">
                                 <div class="collection-card-name">${escapeHtml(c.name)}</div>
                                 <div class="collection-card-count">${c.items_count || 0} texte${(c.items_count || 0) > 1 ? 's' : ''}</div>
+                                ${badge}
                                 ${c.description ? `<div class="collection-card-desc">${escapeHtml(c.description)}</div>` : ''}
                             </div>
                             <div class="collection-card-actions">
@@ -881,7 +880,8 @@ async function openCollectionsView(forceReload = false) {
                                 <button class="collection-card-action" onclick="event.stopPropagation(); deleteCollection('${c.id}')" title="Supprimer">×</button>
                             </div>
                         </div>
-                    `).join('')
+                        `;
+                    }).join('')
                 }
             </div>
         </div>
