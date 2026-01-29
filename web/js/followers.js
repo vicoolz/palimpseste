@@ -130,13 +130,23 @@ async function loadDiscoverUsers() {
         return;
     }
     
-    // Compter les extraits pour chaque profil
-    const profilesWithStats = await Promise.all(profiles.map(async (p) => {
-        const { count } = await supabaseClient
-            .from('extraits')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', p.id);
-        return { ...p, extraitCount: count || 0 };
+    // Compter les extraits pour tous les profils en une seule requete
+    const profileIds = profiles.map(p => p.id);
+    const { data: extraitCounts } = await supabaseClient
+        .from('extraits')
+        .select('user_id')
+        .in('user_id', profileIds);
+
+    const countMap = {};
+    if (extraitCounts) {
+        extraitCounts.forEach(e => {
+            countMap[e.user_id] = (countMap[e.user_id] || 0) + 1;
+        });
+    }
+
+    const profilesWithStats = profiles.map(p => ({
+        ...p,
+        extraitCount: countMap[p.id] || 0
     }));
     
     // Filtrer pour ne pas s'afficher soi-même

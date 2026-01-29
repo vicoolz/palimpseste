@@ -42,6 +42,8 @@
     </style>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- DOMPurify (XSS sanitization) -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
@@ -89,7 +91,7 @@
             bottom: 0 !important;
             background: rgba(0, 0, 0, 0.6) !important;
             backdrop-filter: blur(4px);
-            z-index: 99999 !important;
+            z-index: var(--z-modal) !important;
             display: none;
             align-items: center;
             justify-content: center;
@@ -100,10 +102,13 @@
     </style>
 </head>
 <body>
+    <!-- Skip to content link for keyboard navigation -->
+    <a href="#feed" class="skip-link">Aller au contenu principal</a>
+
     <!-- ═══════════════════════════════════════════════════════════════════════
          PROGRESS BAR
          ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="progress" id="progress"></div>
+    <div class="progress" id="progress" role="progressbar" aria-label="Progression de lecture"></div>
     
     <!-- ═══════════════════════════════════════════════════════════════════════
          MOBILE: Overlay pour fermer les drawers
@@ -343,8 +348,9 @@
             <div class="search-container">
                 <div class="search-input-wrapper">
                     <span class="search-icon">🔍</span>
-                    <input type="text" class="search-input" id="searchInput" 
-                           placeholder="Rechercher un auteur, un mot, un thème..." 
+                    <input type="text" class="search-input" id="searchInput"
+                           placeholder="Rechercher un auteur, un mot, un thème..."
+                           aria-label="Rechercher un auteur, un mot, un thème"
                            onkeydown="if(event.key==='Enter') performSearch()">
                     <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
                 </div>
@@ -419,13 +425,13 @@
                 
                 <!-- Menu utilisateur -->
                 <div class="user-menu" id="userMenu">
-                    <div class="user-avatar" id="headerAvatar" onclick="openMyProfile()">👤</div>
-                    <div class="user-dropdown" id="userDropdown">
-                        <div class="user-dropdown-item" onclick="openAuthModal('login')" id="loginMenuItem">🔑 Se connecter</div>
-                        <div class="user-dropdown-item" onclick="openAuthModal('register')" id="registerMenuItem">✍️ Créer un compte</div>
-                        <div class="user-dropdown-item" onclick="openMyProfile()" id="profileMenuItem" style="display:none;">👤 Mon profil</div>
-                        <div class="user-dropdown-divider" id="logoutDivider" style="display:none;"></div>
-                        <div class="user-dropdown-item danger" onclick="logoutUser()" id="logoutMenuItem" style="display:none;">⎋ Déconnexion</div>
+                    <button class="user-avatar" id="headerAvatar" onclick="openMyProfile()" aria-label="Mon profil">👤</button>
+                    <div class="user-dropdown" id="userDropdown" role="menu">
+                        <button class="user-dropdown-item" onclick="openAuthModal('login')" id="loginMenuItem" role="menuitem">🔑 Se connecter</button>
+                        <button class="user-dropdown-item" onclick="openAuthModal('register')" id="registerMenuItem" role="menuitem">✍️ Créer un compte</button>
+                        <button class="user-dropdown-item" onclick="openMyProfile()" id="profileMenuItem" style="display:none;" role="menuitem">👤 Mon profil</button>
+                        <div class="user-dropdown-divider" id="logoutDivider" style="display:none;" role="separator"></div>
+                        <button class="user-dropdown-item danger" onclick="logoutUser()" id="logoutMenuItem" style="display:none;" role="menuitem">⎋ Déconnexion</button>
                     </div>
                 </div>
             </div>
@@ -619,7 +625,7 @@
         <!-- Résumé des filtres actifs -->
         <div class="filter-summary" id="filterSummary">
             <div class="filter-summary-text" id="filterSummaryText"></div>
-            <input class="filter-free-input" id="explorationFreeInput" type="text" placeholder="Mot-clé libre…" onkeydown="if(event.key==='Enter'){applyFilters();}" />
+            <input class="filter-free-input" id="explorationFreeInput" type="text" placeholder="Mot-clé libre…" aria-label="Mot-clé libre pour filtrer" onkeydown="if(event.key==='Enter'){applyFilters();}" />
             <button class="filter-summary-clear" onclick="clearAllFilters()" title="Effacer les filtres">✕</button>
             <button class="filter-summary-random" onclick="rollExploration()" title="Relancer">🎲</button>
             <button class="filter-summary-go" onclick="applyFilters()">Lancer →</button>
@@ -635,7 +641,9 @@
     <!-- ═══════════════════════════════════════════════════════════════════════
          CONTENU PRINCIPAL (Feed)
          ═══════════════════════════════════════════════════════════════════════ -->
-    <main id="feed"></main>
+    <main id="feed" role="main" aria-label="Fil de lecture">
+        <h1 class="sr-only">Palimpseste - Fil de lecture</h1>
+    </main>
     
     <!-- Bandeau de recommandations -->
     <div id="recoBanner" class="reco-banner" style="display:none;">
@@ -770,7 +778,7 @@
                 </div>
                 <div class="chat-messages" id="chatMessages"></div>
                 <div class="chat-input-area">
-                    <input type="text" class="chat-input" id="chatInput" placeholder="Écrire un message..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="Écrire un message..." aria-label="Écrire un message" onkeypress="if(event.key === 'Enter') sendMessage()">
                     <button class="chat-send" id="chatSendBtn" onclick="sendMessage()">➤</button>
                 </div>
             </div>
@@ -789,8 +797,8 @@
                 <div class="auth-title">Bon retour 📚</div>
                 <div class="auth-subtitle">Connectez-vous pour partager vos extraits</div>
                 <div class="auth-error" id="loginError"></div>
-                <input type="text" class="auth-input" id="loginEmail" placeholder="Email ou pseudo">
-                <input type="password" class="auth-input" id="loginPassword" placeholder="Mot de passe">
+                <input type="text" class="auth-input" id="loginEmail" placeholder="Email ou pseudo" aria-label="Email ou pseudo" autocomplete="username">
+                <input type="password" class="auth-input" id="loginPassword" placeholder="Mot de passe" aria-label="Mot de passe" autocomplete="current-password">
                 <div class="auth-forgot"><a onclick="switchAuthForm('forgot')">Mot de passe oublié ?</a></div>
                 <button class="auth-btn" onclick="loginWithEmail()" id="loginBtn">Se connecter</button>
                 <div class="auth-divider"><span>ou</span></div>
@@ -804,7 +812,7 @@
                 <div class="auth-subtitle">Entrez votre email pour recevoir un lien de réinitialisation</div>
                 <div class="auth-error" id="forgotError"></div>
                 <div class="auth-success" id="forgotSuccess"></div>
-                <input type="email" class="auth-input" id="forgotEmail" placeholder="Email">
+                <input type="email" class="auth-input" id="forgotEmail" placeholder="Email" aria-label="Adresse email" autocomplete="email">
                 <button class="auth-btn" onclick="sendPasswordReset()" id="forgotBtn">Envoyer le lien</button>
                 <div class="auth-switch"><a onclick="switchAuthForm('login')">← Retour à la connexion</a></div>
             </div>
@@ -815,8 +823,8 @@
                 <div class="auth-subtitle">Choisissez votre nouveau mot de passe</div>
                 <div class="auth-error" id="resetError"></div>
                 <div class="auth-success" id="resetSuccess"></div>
-                <input type="password" class="auth-input" id="newPassword" placeholder="Nouveau mot de passe (min. 6 caractères)">
-                <input type="password" class="auth-input" id="confirmPassword" placeholder="Confirmer le mot de passe">
+                <input type="password" class="auth-input" id="newPassword" placeholder="Nouveau mot de passe (min. 6 caractères)" aria-label="Nouveau mot de passe" autocomplete="new-password">
+                <input type="password" class="auth-input" id="confirmPassword" placeholder="Confirmer le mot de passe" aria-label="Confirmer le mot de passe" autocomplete="new-password">
                 <button class="auth-btn" onclick="updatePassword()" id="resetBtn">Changer le mot de passe</button>
             </div>
             
@@ -825,9 +833,9 @@
                 <div class="auth-title">Bienvenue 🌟</div>
                 <div class="auth-subtitle">Créez votre compte pour rejoindre la communauté</div>
                 <div class="auth-error" id="registerError"></div>
-                <input type="text" class="auth-input" id="registerUsername" placeholder="Nom d'utilisateur">
-                <input type="email" class="auth-input" id="registerEmail" placeholder="Email">
-                <input type="password" class="auth-input" id="registerPassword" placeholder="Mot de passe (min. 6 caractères)">
+                <input type="text" class="auth-input" id="registerUsername" placeholder="Nom d'utilisateur" aria-label="Nom d'utilisateur" autocomplete="username">
+                <input type="email" class="auth-input" id="registerEmail" placeholder="Email" aria-label="Adresse email" autocomplete="email">
+                <input type="password" class="auth-input" id="registerPassword" placeholder="Mot de passe (min. 6 caractères)" aria-label="Mot de passe" autocomplete="new-password">
                 <button class="auth-btn" onclick="registerWithEmail()" id="registerBtn">Créer mon compte</button>
                 <div class="auth-divider"><span>ou</span></div>
                 <button class="auth-btn secondary" onclick="loginWithGoogle()">🌐 Continuer avec Google</button>
@@ -849,7 +857,7 @@
                 <div class="share-preview-text" id="sharePreviewText"></div>
                 <div class="share-preview-source" id="sharePreviewSource"></div>
             </div>
-            <textarea class="share-commentary" id="shareCommentary" placeholder="Ajoutez un commentaire... (optionnel)"></textarea>
+            <textarea class="share-commentary" id="shareCommentary" placeholder="Ajoutez un commentaire... (optionnel)" aria-label="Commentaire sur l'extrait"></textarea>
             <div class="share-actions">
                 <button class="share-btn secondary" onclick="closeShareModal()">Annuler</button>
                 <button class="share-btn primary" onclick="publishExtrait()" id="publishBtn">🚀 Publier</button>
@@ -887,7 +895,7 @@
     </div>
     
     <!-- MODAL PARAMÈTRES SOURCES -->
-    <div class="favorites-overlay" id="sourceSettingsModal" style="display: none; align-items: center; justify-content: center; z-index: 10000;">
+    <div class="favorites-overlay" id="sourceSettingsModal" style="display: none; align-items: center; justify-content: center; z-index: var(--z-modal);">
         <div class="favorites-view" style="max-width: 450px; height: auto; max-height: 85vh; background: var(--bg-elevated); border: 2px solid var(--border); box-shadow: 4px 4px 0 var(--pixel-shadow); padding: 0; display: flex; flex-direction: column; width: 90%; margin: 20px;">
             <div class="favorites-header" style="padding: 15px 20px; border-bottom: 2px solid var(--border); margin-bottom: 0;">
                 <div class="favorites-title" style="font-size: 1.2rem;">📚 Bibliothèques</div>

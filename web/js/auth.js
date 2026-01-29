@@ -15,6 +15,9 @@ function isSupabaseConfigured() {
 }
 
 // Initialise Supabase si configuré
+var _supabaseInitRetries = 0;
+var _supabaseMaxRetries = 10;
+
 function initSupabase() {
     if (!isSupabaseConfigured()) {
         // Mode local uniquement
@@ -23,9 +26,13 @@ function initSupabase() {
     try {
         // Vérifier que le SDK est chargé
         if (typeof window.supabase === 'undefined') {
-            // SDK pas encore chargé - retry
-            // Réessayer dans 500ms (le SDK est en async)
-            setTimeout(initSupabase, 500);
+            _supabaseInitRetries++;
+            if (_supabaseInitRetries >= _supabaseMaxRetries) {
+                console.error('Supabase SDK failed to load after ' + _supabaseMaxRetries + ' attempts');
+                return false;
+            }
+            // SDK pas encore chargé - retry avec backoff
+            setTimeout(initSupabase, 500 * _supabaseInitRetries);
             return false;
         }
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -530,16 +537,21 @@ async function ensureProfileExists() {
     }
 }
 
+// Interval IDs for cleanup
+var _lastSeenIntervalId = null;
+
 // Callbacks auth
 async function onUserLoggedIn() {
     // S'assurer que le profil existe dans la table profiles
     await ensureProfileExists();
-    
+
     // Mettre à jour last_seen
     updateLastSeen();
-    
+
+    // Nettoyer l'intervalle précédent si existant
+    if (_lastSeenIntervalId) clearInterval(_lastSeenIntervalId);
     // Mettre à jour last_seen toutes les 2 minutes tant que l'utilisateur est actif
-    setInterval(updateLastSeen, 2 * 60 * 1000);
+    _lastSeenIntervalId = setInterval(updateLastSeen, 2 * 60 * 1000);
     
     const username = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || 'Utilisateur';
     const avatarSymbol = getAvatarSymbol(username);

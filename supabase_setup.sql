@@ -15,7 +15,7 @@
 
 -- Table des profils utilisateurs
 CREATE TABLE profiles (
-    id UUID REFERENCES auth.users(id) PRIMARY KEY,
+    id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
     avatar_url TEXT,
     bio TEXT,
@@ -39,7 +39,7 @@ ALTER TABLE auth_lookup ENABLE ROW LEVEL SECURITY;
 -- Le texte complet est chargé à la volée depuis source_url (Wikisource)
 CREATE TABLE extraits (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     texte TEXT NOT NULL, -- Aperçu seulement (~150 chars)
     source_title TEXT NOT NULL,
     source_author TEXT NOT NULL,
@@ -159,7 +159,8 @@ CREATE TABLE follows (
     follower_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     following_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(follower_id, following_id)
+    UNIQUE(follower_id, following_id),
+    CONSTRAINT no_self_follow CHECK (follower_id != following_id)
 );
 
 -- Index pour les performances
@@ -229,7 +230,8 @@ CREATE TABLE messages (
     content TEXT NOT NULL,
     read_at TIMESTAMP WITH TIME ZONE,
     edited_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT no_self_message CHECK (sender_id != receiver_id)
 );
 
 -- Réactions (likes/emojis) sur les messages
@@ -693,7 +695,10 @@ CREATE POLICY "Les utilisateurs voient les items de leurs collections"
 
 CREATE POLICY "Les utilisateurs peuvent ajouter des items à leurs collections"
     ON collection_items FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (
+        auth.uid() = user_id
+        AND collection_id IN (SELECT id FROM collections WHERE user_id = auth.uid())
+    );
 
 CREATE POLICY "Les utilisateurs peuvent modifier leurs items"
     ON collection_items FOR UPDATE
@@ -723,13 +728,115 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- ✅ Terminé ! 
+-- TRIGGERS AUTOMATIQUES POUR COMPTEURS
+-- Remplace les appels RPC manuels par des triggers fiables
 -- ═══════════════════════════════════════════════════════════════════════════
--- 
+
+-- Trigger: likes_count sur extraits
+CREATE OR REPLACE FUNCTION trigger_update_likes_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE extraits SET likes_count = likes_count + 1 WHERE id = NEW.extrait_id;
+        RETURN NEW;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE extraits SET likes_count = GREATEST(0, likes_count - 1) WHERE id = OLD.extrait_id;
+        RETURN OLD;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_like_change ON likes;
+CREATE TRIGGER on_like_change
+    AFTER INSERT OR DELETE ON likes
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_likes_count();
+
+-- Trigger: comments_count sur extraits
+CREATE OR REPLACE FUNCTION trigger_update_comments_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE extraits SET comments_count = comments_count + 1 WHERE id = NEW.extrait_id;
+        RETURN NEW;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE extraits SET comments_count = GREATEST(0, comments_count - 1) WHERE id = OLD.extrait_id;
+        RETURN OLD;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_comment_change ON comments;
+CREATE TRIGGER on_comment_change
+    AFTER INSERT OR DELETE ON comments
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_comments_count();
+
+-- Trigger: followers_count et following_count sur profiles
+CREATE OR REPLACE FUNCTION trigger_update_follow_counts()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE profiles SET followers_count = followers_count + 1 WHERE id = NEW.following_id;
+        UPDATE profiles SET following_count = following_count + 1 WHERE id = NEW.follower_id;
+        RETURN NEW;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE profiles SET followers_count = GREATEST(0, followers_count - 1) WHERE id = OLD.following_id;
+        UPDATE profiles SET following_count = GREATEST(0, following_count - 1) WHERE id = OLD.follower_id;
+        RETURN OLD;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_follow_change ON follows;
+CREATE TRIGGER on_follow_change
+    AFTER INSERT OR DELETE ON follows
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_follow_counts();
+
+-- Trigger: items_count sur collections
+CREATE OR REPLACE FUNCTION trigger_update_collection_items_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE collections SET items_count = items_count + 1, updated_at = NOW() WHERE id = NEW.collection_id;
+        RETURN NEW;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE collections SET items_count = GREATEST(0, items_count - 1), updated_at = NOW() WHERE id = OLD.collection_id;
+        RETURN OLD;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_collection_item_change ON collection_items;
+CREATE TRIGGER on_collection_item_change
+    AFTER INSERT OR DELETE ON collection_items
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_collection_items_count();
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- INDEX ADDITIONNELS pour les requetes frequentes
+-- ═══════════════════════════════════════════════════════════════════════════
+
+CREATE INDEX IF NOT EXISTS idx_profiles_last_seen ON profiles(last_seen DESC);
+CREATE INDEX IF NOT EXISTS idx_follows_follower_created ON follows(follower_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_follows_following_created ON follows(following_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(LEAST(sender_id, receiver_id), GREATEST(sender_id, receiver_id), created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_extraits_user_created ON extraits(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, created_at DESC) WHERE read_at IS NULL;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Termine !
+-- ═══════════════════════════════════════════════════════════════════════════
+--
 -- N'oubliez pas d'activer les providers d'authentification dans:
 -- Authentication > Providers > Email (activé par défaut)
 -- Authentication > Providers > Google (optionnel, nécessite config OAuth)
 --
 -- Pour tester, activez aussi dans Authentication > Settings:
--- ✓ Enable email confirmations (peut être désactivé pour les tests)
+-- Enable email confirmations (peut être désactivé pour les tests)
 --

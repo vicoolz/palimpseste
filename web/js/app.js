@@ -387,7 +387,8 @@ async function init() {
     await loadMore();
     
     // Mise à jour périodique du fun stat
-    setInterval(updateFunStat, 15000);
+    var _funStatInterval = setInterval(updateFunStat, 15000);
+    window.addEventListener('beforeunload', function() { clearInterval(_funStatInterval); });
     
     // Créer le bouton scroll to top
     createScrollTopButton();
@@ -464,14 +465,14 @@ async function init() {
     const header = document.querySelector('header');
     const explorationContainer = document.getElementById('explorationContainer');
     
-    window.onscroll = () => {
-        document.getElementById('progress').style.width = 
+    window.addEventListener('scroll', throttle(() => {
+        document.getElementById('progress').style.width =
             (scrollY / (document.body.scrollHeight - innerHeight) * 100) + '%';
         if (innerHeight + scrollY >= document.body.scrollHeight - 800 && !state.loading) loadMore();
-        
+
         // Afficher/masquer le bouton scroll to top
         updateScrollTopButton();
-        
+
         // Headroom behavior - seulement sur desktop et après un peu de scroll
         if (window.innerWidth > 900 && scrollY > 150) {
             const scrollingDown = scrollY > lastScrollY && scrollY > 100;
@@ -496,7 +497,7 @@ async function init() {
         }
         
         lastScrollY = scrollY;
-    };
+    }, 80), { passive: true });
 }
 async function showSourceLikers(sourceUrl) {
     if (!supabaseClient || !sourceUrl) return;
@@ -1669,7 +1670,7 @@ function renderCard(result, origTitle, wikisource = getCurrentWikisource(), allo
     saveState();
 }
 
-function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+function esc(s) { return escapeHtml(s || '').replace(/\n/g,'<br>'); }
 
 // Afficher la suite du texte - tout d'un coup au premier clic
 function showMore(cardId) {

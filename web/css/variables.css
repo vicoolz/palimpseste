@@ -14,27 +14,37 @@
     --text-secondary: #9d9a95;
     --muted: #5c5a56;
     
-    /* 🔴 Accents */
+    /* Missing variables referenced elsewhere */
+    --bg-lighter: #1a1a1d;
+    --text-muted: #6d6b67;
+
+    /* Accents */
     --accent: #e63946;
     --accent-secondary: #f4a261;
     --accent-tertiary: #2a9d8f;
     --accent-purple: #9b5de5;
-    
-    /* 🔲 Bordures */
+    --accent-hover: #ff4757;
+    --danger: #c0392b;
+
+    /* Bordures */
     --border: #2a2a2d;
     --glow: 0 0 60px rgba(230, 57, 70, 0.1);
-    
-    /* 🎮 Pixel Art */
+
+    /* Pixel Art */
     --pixel-shadow: #0a0a0a;
     --pixel-highlight: #3a3a3d;
     
-    /* 📏 Z-index layers (correction mobile drawer) */
-    --z-mobile-nav: 200;
-    --z-drawer-overlay: 199;
-    --z-drawer: 250;
+    /* Z-index layers (standardized scale) */
+    --z-base: 1;
+    --z-dropdown: 100;
     --z-header: 100;
+    --z-sticky: 150;
+    --z-drawer-overlay: 199;
+    --z-mobile-nav: 200;
+    --z-drawer: 250;
     --z-modal: 1000;
     --z-toast: 1100;
+    --z-tooltip: 1200;
     
     /* ⏱️ Transitions */
     --transition-fast: 0.15s ease;

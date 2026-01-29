@@ -288,6 +288,20 @@ function throttle(func, limit) {
 }
 
 /**
+ * Fisher-Yates shuffle (unbiased, O(n))
+ * Mutates the array in place and returns it
+ * @param {Array} arr - Array to shuffle
+ * @returns {Array} The shuffled array
+ */
+function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+/**
  * Génère un ID unique
  * @returns {string} UUID v4
  */
@@ -323,3 +337,4 @@ window.debounce = debounce;
 window.throttle = throttle;
 window.generateUUID = generateUUID;
 window.isMobile = isMobile;
+window.shuffleArray = shuffleArray;

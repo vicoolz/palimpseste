@@ -172,17 +172,24 @@ async function searchUsers(query) {
                 if (requestId !== searchRequestId) return;
             }
             
-            // Compter les extraits pour chaque user
-            const enriched = await Promise.all(users.map(async (u) => {
-                const { count } = await supabaseClient
-                    .from('extraits')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('user_id', u.id);
-                return {
-                    ...u,
-                    extraitCount: count || 0,
-                    source: 'users'
-                };
+            // Compter les extraits pour tous les users en une seule requete
+            const userIds = users.map(u => u.id);
+            const { data: extraitCounts } = await supabaseClient
+                .from('extraits')
+                .select('user_id')
+                .in('user_id', userIds);
+
+            const countMap = {};
+            if (extraitCounts) {
+                extraitCounts.forEach(e => {
+                    countMap[e.user_id] = (countMap[e.user_id] || 0) + 1;
+                });
+            }
+
+            const enriched = users.map(u => ({
+                ...u,
+                extraitCount: countMap[u.id] || 0,
+                source: 'users'
             }));
 
             if (arguments.length >= 2) {
