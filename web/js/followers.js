@@ -1031,13 +1031,21 @@ async function loadProfileExtraits(userId) {
         .from('likes')
         .select('extrait_id')
         .in('extrait_id', extraitIds);
-    
+
     const realLikesCount = {};
     extraitIds.forEach(id => realLikesCount[id] = 0);
     (allLikesData || []).forEach(l => {
         realLikesCount[l.extrait_id] = (realLikesCount[l.extrait_id] || 0) + 1;
     });
-    
+
+    // Charger les compteurs de partages et collections AVANT le rendu
+    if (typeof loadExtraitShareInfoBatch === 'function') {
+        await loadExtraitShareInfoBatch(extraitIds);
+    }
+    if (typeof loadExtraitCollectionsInfoBatch === 'function') {
+        await loadExtraitCollectionsInfoBatch(extraitIds);
+    }
+
     container.innerHTML = `
         <div class="profile-extraits-list">
             ${extraits.map((e) => {
@@ -1046,11 +1054,15 @@ async function loadProfileExtraits(userId) {
                 const timeAgo = formatTimeAgo(new Date(e.created_at));
                 const isLiked = typeof isExtraitLiked === 'function' && isExtraitLiked(e.id);
                 const likeCount = realLikesCount[e.id] || 0;
+                const shareInfo = typeof extraitSharesCache !== 'undefined' && extraitSharesCache.get(e.id);
+                const shareCount = shareInfo?.count || 0;
+                const collInfo = typeof extraitCollectionsCache !== 'undefined' && extraitCollectionsCache.get(e.id);
+                const collCount = collInfo?.count || 0;
                 // Échapper les quotes pour les attributs onclick
                 const safeUrl = (e.source_url || '').replace(/'/g, "\\'");
                 const safeTitle = (e.source_title || '').replace(/'/g, "\\'");
                 const safeUsername = (username || '').replace(/'/g, "\\'");
-                
+
                 return `
                 <div class="extrait-card" data-id="${e.id}">
                     <div class="extrait-header">
@@ -1075,12 +1087,12 @@ async function loadProfileExtraits(userId) {
                         <button class="extrait-action share-btn" onclick="shareExtraitFromCard('${e.id}')">
                             <span class="icon">↗︎</span>
                             <span>Partager</span>
-                            <span class="share-count" id="shareCount-${e.id}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${e.id}')">0</span>
+                            <span class="share-count ${shareCount === 0 ? 'is-zero' : ''}" id="shareCount-${e.id}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${e.id}')">${shareCount}</span>
                         </button>
                         <button class="extrait-action collection-btn" onclick="openCollectionPickerForExtrait('${e.id}')">
                             <span class="icon">▦</span>
                             <span>Collections</span>
-                            <span class="collections-count" id="collectionsCount-${e.id}" onclick="event.stopPropagation(); event.preventDefault(); showExtraitCollections('${e.id}')">0</span>
+                            <span class="collections-count ${collCount === 0 ? 'is-zero' : ''}" id="collectionsCount-${e.id}" onclick="event.stopPropagation(); event.preventDefault(); showExtraitCollections('${e.id}')">${collCount}</span>
                         </button>
                     </div>
                     <div class="comments-section">
@@ -1101,13 +1113,6 @@ async function loadProfileExtraits(userId) {
             `}).join('')}
         </div>
     `;
-
-    if (typeof loadExtraitCollectionsInfoBatch === 'function') {
-        loadExtraitCollectionsInfoBatch(extraitIds);
-    }
-    if (typeof loadExtraitShareInfoBatch === 'function') {
-        loadExtraitShareInfoBatch(extraitIds);
-    }
 }
 
 /**
@@ -1182,15 +1187,23 @@ async function loadProfileLikes(userId) {
         .from('likes')
         .select('extrait_id')
         .in('extrait_id', extraitIds);
-    
+
     const realLikesCount = {};
     extraitIds.forEach(id => realLikesCount[id] = 0);
     (allLikesData || []).forEach(l => {
         realLikesCount[l.extrait_id] = (realLikesCount[l.extrait_id] || 0) + 1;
     });
-    
+
+    // Charger les compteurs de partages et collections AVANT le rendu
+    if (typeof loadExtraitShareInfoBatch === 'function') {
+        await loadExtraitShareInfoBatch(extraitIds);
+    }
+    if (typeof loadExtraitCollectionsInfoBatch === 'function') {
+        await loadExtraitCollectionsInfoBatch(extraitIds);
+    }
+
     const extraitMap = new Map(extraits.map(e => [e.id, e]));
-    
+
     container.innerHTML = `
         <div class="profile-extraits-list">
             ${likes.map(l => {
@@ -1201,11 +1214,15 @@ async function loadProfileLikes(userId) {
                 const timeAgo = formatTimeAgo(new Date(e.created_at));
                 const isLiked = currentUser ? (typeof userLikesCache !== 'undefined' && userLikesCache.has(e.id)) : false;
                 const likeCount = realLikesCount[e.id] || 0;
+                const shareInfo = typeof extraitSharesCache !== 'undefined' && extraitSharesCache.get(e.id);
+                const shareCount = shareInfo?.count || 0;
+                const collInfo = typeof extraitCollectionsCache !== 'undefined' && extraitCollectionsCache.get(e.id);
+                const collCount = collInfo?.count || 0;
                 // Échapper les quotes pour les attributs onclick
                 const safeUrl = (e.source_url || '').replace(/'/g, "\\'");
                 const safeTitle = (e.source_title || '').replace(/'/g, "\\'");
                 const safeUsername = (username || '').replace(/'/g, "\\'");
-                
+
                 return `
                 <div class="extrait-card" data-id="${e.id}">
                     <div class="extrait-header">
@@ -1230,12 +1247,12 @@ async function loadProfileLikes(userId) {
                         <button class="extrait-action share-btn" onclick="shareExtraitFromCard('${e.id}')">
                             <span class="icon">↗︎</span>
                             <span>Partager</span>
-                            <span class="share-count" id="shareCount-${e.id}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${e.id}')">0</span>
+                            <span class="share-count ${shareCount === 0 ? 'is-zero' : ''}" id="shareCount-${e.id}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${e.id}')">${shareCount}</span>
                         </button>
                         <button class="extrait-action collection-btn" onclick="openCollectionPickerForExtrait('${e.id}')">
                             <span class="icon">▦</span>
                             <span>Collections</span>
-                            <span class="collections-count" id="collectionsCount-${e.id}" onclick="event.stopPropagation(); event.preventDefault(); showExtraitCollections('${e.id}')">0</span>
+                            <span class="collections-count ${collCount === 0 ? 'is-zero' : ''}" id="collectionsCount-${e.id}" onclick="event.stopPropagation(); event.preventDefault(); showExtraitCollections('${e.id}')">${collCount}</span>
                         </button>
                     </div>
                     <div class="comments-section">
@@ -1257,13 +1274,6 @@ async function loadProfileLikes(userId) {
             }).join('')}
         </div>
     `;
-
-    if (typeof loadExtraitCollectionsInfoBatch === 'function') {
-        loadExtraitCollectionsInfoBatch(extraitIds);
-    }
-    if (typeof loadExtraitShareInfoBatch === 'function') {
-        loadExtraitShareInfoBatch(extraitIds);
-    }
 }
 
 /**

@@ -454,7 +454,7 @@ async function getExtraitCollectionsInfo(extraitId) {
  * Charger le statut des collections pour une liste d'extraits (batch)
  */
 async function loadExtraitCollectionsInfoBatch(extraitIds) {
-    if (!currentUser || !supabaseClient || !extraitIds || extraitIds.length === 0) return new Map();
+    if (!supabaseClient || !extraitIds || extraitIds.length === 0) return new Map();
 
     const uniqueIds = [...new Set(extraitIds.filter(Boolean))];
     const missingIds = uniqueIds.filter(id => !extraitCollectionsCache.has(id));
@@ -466,10 +466,10 @@ async function loadExtraitCollectionsInfoBatch(extraitIds) {
 
     try {
         idsToFetch.forEach(id => extraitCollectionsInFlight.set(id, true));
+        // Compter tous les ajouts en collection (tous utilisateurs) pour refléter la popularité
         const { data, error } = await supabaseClient
             .from('collection_items')
             .select('extrait_id')
-            .eq('user_id', currentUser.id)
             .in('extrait_id', idsToFetch);
 
         if (error) throw error;

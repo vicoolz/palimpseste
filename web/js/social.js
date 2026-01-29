@@ -296,7 +296,13 @@ async function renderSocialFeed() {
         const likeCount = getLikeCount(extrait.id);
         const isFollowing = typeof userFollowing !== 'undefined' && userFollowing.has(extrait.user_id);
         extraitDataCache.set(extrait.id, extrait);
-        
+
+        // Lire les compteurs depuis le cache (peuplé par les batch loads ci-dessus)
+        const shareInfo = typeof extraitSharesCache !== 'undefined' && extraitSharesCache.get(extrait.id);
+        const shareCount = shareInfo?.count || 0;
+        const collInfo = typeof extraitCollectionsCache !== 'undefined' && extraitCollectionsCache.get(extrait.id);
+        const collCount = collInfo?.count || 0;
+
         return `
             <div class="extrait-card" data-id="${extrait.id}">
                 <div class="extrait-header">
@@ -326,12 +332,12 @@ async function renderSocialFeed() {
                     <button class="extrait-action share-btn" onclick="shareExtraitFromCard('${extrait.id}')">
                         <span class="icon">↗︎</span>
                         <span>Partager</span>
-                        <span class="share-count" id="shareCount-${extrait.id}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${extrait.id}')">0</span>
+                        <span class="share-count ${shareCount === 0 ? 'is-zero' : ''}" id="shareCount-${extrait.id}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${extrait.id}')">${shareCount}</span>
                     </button>
                     <button class="extrait-action collection-btn" onclick="openCollectionPickerForExtrait('${extrait.id}')">
                         <span class="icon">▦</span>
                         <span>Collections</span>
-                        <span class="collections-count" id="collectionsCount-${extrait.id}" onclick="event.stopPropagation(); event.preventDefault(); showExtraitCollections('${extrait.id}')">0</span>
+                        <span class="collections-count ${collCount === 0 ? 'is-zero' : ''}" id="collectionsCount-${extrait.id}" onclick="event.stopPropagation(); event.preventDefault(); showExtraitCollections('${extrait.id}')">${collCount}</span>
                     </button>
                 </div>
                 <div class="comments-section">

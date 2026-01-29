@@ -538,18 +538,21 @@ function switchSearchTab(tab) {
     renderSearchResults(tab);
 }
 
-function hydrateSearchExtraitActions(extraitIds) {
+async function hydrateSearchExtraitActions(extraitIds) {
     if (!extraitIds || extraitIds.length === 0) return;
 
+    // Load batch data then update buttons in parallel
+    const promises = [];
     if (typeof hydrateExtraitLikesUI === 'function') {
         hydrateExtraitLikesUI(extraitIds);
     }
-    if (typeof loadExtraitCollectionsInfoBatch === 'function') {
-        loadExtraitCollectionsInfoBatch(extraitIds);
-    }
     if (typeof loadExtraitShareInfoBatch === 'function') {
-        loadExtraitShareInfoBatch(extraitIds);
+        promises.push(loadExtraitShareInfoBatch(extraitIds));
     }
+    if (typeof loadExtraitCollectionsInfoBatch === 'function') {
+        promises.push(loadExtraitCollectionsInfoBatch(extraitIds));
+    }
+    await Promise.all(promises);
 }
 
 /**
@@ -678,6 +681,10 @@ function renderSearchResults(tab) {
             const byline = bylineParts.length ? bylineParts.join(' • ') : 'Extrait partagé';
             const isLiked = typeof isExtraitLiked === 'function' ? isExtraitLiked(r.id) : false;
             const likeCount = typeof getLikeCount === 'function' ? getLikeCount(r.id) : 0;
+            const sInfo = typeof extraitSharesCache !== 'undefined' && extraitSharesCache.get(r.id);
+            const sCount = sInfo?.count || 0;
+            const cInfo = typeof extraitCollectionsCache !== 'undefined' && extraitCollectionsCache.get(r.id);
+            const cCount = cInfo?.count || 0;
 
             let snippet = r.preview || '';
             snippet = escapeHtml(snippet).replace(queryRegex, '<mark>$1</mark>');
@@ -698,12 +705,12 @@ function renderSearchResults(tab) {
                         <button class="extrait-action share-btn" onclick="event.stopPropagation(); shareExtraitFromCard('${r.id}')">
                             <span class="icon">↗︎</span>
                             <span>Partager</span>
-                            <span class="share-count" id="shareCount-${r.id}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${r.id}')">0</span>
+                            <span class="share-count ${sCount === 0 ? 'is-zero' : ''}" id="shareCount-${r.id}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${r.id}')">${sCount}</span>
                         </button>
                         <button class="extrait-action collection-btn" onclick="event.stopPropagation(); openCollectionPickerForExtrait('${r.id}')">
                             <span class="icon">▦</span>
                             <span>Collections</span>
-                            <span class="collections-count" id="collectionsCount-${r.id}" onclick="event.stopPropagation(); event.preventDefault(); showExtraitCollections('${r.id}')">0</span>
+                            <span class="collections-count ${cCount === 0 ? 'is-zero' : ''}" id="collectionsCount-${r.id}" onclick="event.stopPropagation(); event.preventDefault(); showExtraitCollections('${r.id}')">${cCount}</span>
                         </button>
                     </div>
                 </div>
@@ -782,6 +789,10 @@ function renderSearchResults(tab) {
         const byline = bylineParts.length ? bylineParts.join(' • ') : 'Extrait partagé';
         const isLiked = typeof isExtraitLiked === 'function' ? isExtraitLiked(r.id) : false;
         const likeCount = typeof getLikeCount === 'function' ? getLikeCount(r.id) : 0;
+        const sInfo = typeof extraitSharesCache !== 'undefined' && extraitSharesCache.get(r.id);
+        const sCount = sInfo?.count || 0;
+        const cInfo = typeof extraitCollectionsCache !== 'undefined' && extraitCollectionsCache.get(r.id);
+        const cCount = cInfo?.count || 0;
         let snippet = r.preview || '';
 
         // Highlight query dans le snippet
@@ -804,12 +815,12 @@ function renderSearchResults(tab) {
                     <button class="extrait-action share-btn" onclick="event.stopPropagation(); shareExtraitFromCard('${r.id}')">
                         <span class="icon">↗︎</span>
                         <span>Partager</span>
-                        <span class="share-count" id="shareCount-${r.id}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${r.id}')">0</span>
+                        <span class="share-count ${sCount === 0 ? 'is-zero' : ''}" id="shareCount-${r.id}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${r.id}')">${sCount}</span>
                     </button>
                     <button class="extrait-action collection-btn" onclick="event.stopPropagation(); openCollectionPickerForExtrait('${r.id}')">
                         <span class="icon">▦</span>
                         <span>Collections</span>
-                        <span class="collections-count" id="collectionsCount-${r.id}" onclick="event.stopPropagation(); event.preventDefault(); showExtraitCollections('${r.id}')">0</span>
+                        <span class="collections-count ${cCount === 0 ? 'is-zero' : ''}" id="collectionsCount-${r.id}" onclick="event.stopPropagation(); event.preventDefault(); showExtraitCollections('${r.id}')">${cCount}</span>
                     </button>
                 </div>
             </div>

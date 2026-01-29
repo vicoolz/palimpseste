@@ -1393,28 +1393,87 @@
     }
     .collection-card {
         padding: 0.6rem 0.7rem !important;
+        gap: 0.5rem !important;
+    }
+    .collection-card-emoji {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 1rem !important;
+        flex-shrink: 0 !important;
+    }
+    .collection-card-info {
+        flex: 1 !important;
+        min-width: 0 !important;
     }
     .collection-card-name {
         font-size: 0.9rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
     .collection-card-desc {
         margin-top: 0.3rem !important;
         line-height: 1.35 !important;
+        font-size: 0.78rem !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+    }
+    .collection-card-actions {
+        opacity: 1 !important;
+        flex-shrink: 0 !important;
     }
     .collection-item-card {
-        padding: 0.7rem !important;
+        padding: 0.85rem !important;
         border-radius: 8px !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    .collection-item-content {
+        width: 100% !important;
     }
     .collection-item-title {
-        font-size: 0.9rem !important;
+        font-size: 0.95rem !important;
+    }
+    .collection-item-text-container {
+        width: 100% !important;
     }
     .collection-item-preview,
     .collection-item-full {
         font-size: 0.92rem !important;
-        line-height: 1.55 !important;
+        line-height: 1.65 !important;
+        padding: 12px 14px !important;
+        width: 100% !important;
+    }
+    .collection-item-actions {
+        flex-direction: row !important;
+        width: 100% !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+        padding-left: 0 !important;
     }
     .collection-item-content:active {
         transform: none !important;
+    }
+
+    /* Extrait actions - proper alignment on mobile */
+    .extrait-actions {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+    .extrait-action {
+        padding: 0.35rem 0.6rem !important;
+        font-size: 0.8rem !important;
+    }
+    .extrait-action span:not(.like-icon):not(.icon):not(.like-count):not(.share-count):not(.collections-count) {
+        display: none !important;
+    }
+    .extrait-action .share-count,
+    .extrait-action .collections-count,
+    .extrait-action .like-count {
+        display: inline-flex !important;
+        font-size: 0.75rem !important;
     }
     
     /* ══════════════════════════════════════════

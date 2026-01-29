@@ -91,6 +91,14 @@ async function loadTrendingFeed() {
             }
         }
         
+        // Charger les compteurs de partages et collections AVANT le rendu
+        if (typeof loadExtraitShareInfoBatch === 'function') {
+            await loadExtraitShareInfoBatch(extraitIds);
+        }
+        if (typeof loadExtraitCollectionsInfoBatch === 'function') {
+            await loadExtraitCollectionsInfoBatch(extraitIds);
+        }
+
         container.innerHTML = extraits.map((extrait, index) => {
             const username = extrait.profiles?.username || 'Anonyme';
             const avatar = extrait.profiles?.avatar_url || getAvatarSymbol(username);
@@ -100,7 +108,11 @@ async function loadTrendingFeed() {
             const isHot = likesCount >= 5 || commentsCount >= 3;
             const timeAgo = formatTimeAgo(new Date(extrait.created_at));
             const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
-            
+            const shareInfo = typeof extraitSharesCache !== 'undefined' && extraitSharesCache.get(extrait.id);
+            const shareCount = shareInfo?.count || 0;
+            const collInfo = typeof extraitCollectionsCache !== 'undefined' && extraitCollectionsCache.get(extrait.id);
+            const collCount = collInfo?.count || 0;
+
             return `
                 <div class="trending-card" data-extrait-id="${extrait.id}" onclick="openTrendingExtrait('${extrait.id}')" style="cursor: pointer;">
                     <div class="trending-card-header">
@@ -131,25 +143,18 @@ async function loadTrendingFeed() {
                             <button class="extrait-action share-btn" onclick="event.stopPropagation(); shareExtraitFromCard('${extrait.id}')">
                                 <span class="icon">↗︎</span>
                                 <span>Partager</span>
-                                <span class="share-count" id="shareCount-${extrait.id}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${extrait.id}')">0</span>
+                                <span class="share-count ${shareCount === 0 ? 'is-zero' : ''}" id="shareCount-${extrait.id}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${extrait.id}')">${shareCount}</span>
                             </button>
                             <button class="extrait-action collection-btn" onclick="event.stopPropagation(); openCollectionPickerForExtrait('${extrait.id}')">
                                 <span class="icon">▦</span>
                                 <span>Collections</span>
-                                <span class="collections-count" id="collectionsCount-${extrait.id}" onclick="event.stopPropagation(); event.preventDefault(); showExtraitCollections('${extrait.id}')">0</span>
+                                <span class="collections-count ${collCount === 0 ? 'is-zero' : ''}" id="collectionsCount-${extrait.id}" onclick="event.stopPropagation(); event.preventDefault(); showExtraitCollections('${extrait.id}')">${collCount}</span>
                             </button>
                         </div>
                     </div>
                 </div>
             `;
         }).join('');
-
-        if (typeof loadExtraitCollectionsInfoBatch === 'function') {
-            loadExtraitCollectionsInfoBatch(extraitIds);
-        }
-        if (typeof loadExtraitShareInfoBatch === 'function') {
-            loadExtraitShareInfoBatch(extraitIds);
-        }
         
     } catch (err) {
         console.error('Erreur chargement tendances:', err);
