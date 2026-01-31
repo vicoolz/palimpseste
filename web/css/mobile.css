@@ -612,6 +612,22 @@
         margin-bottom: 2px !important;
     }
 
+    /* Style spécifique pour le bouton déconnexion mobile - pleine largeur, hauteur réduite */
+    .drawer-logout-mobile {
+        grid-column: span 2 !important;
+        flex-direction: row !important;
+        min-height: 48px !important;
+        padding: 10px 12px !important;
+        background: rgba(239, 68, 68, 0.1) !important;
+        border-color: rgba(239, 68, 68, 0.3) !important;
+        color: #ef4444 !important;
+    }
+
+    .drawer-logout-mobile:hover,
+    .drawer-logout-mobile:active {
+        background: rgba(239, 68, 68, 0.2) !important;
+    }
+
     /* Style spécifique pour la ligne préférences (langue / settings) */
     .drawer-preferences-row {
         grid-column: span 2 !important;
