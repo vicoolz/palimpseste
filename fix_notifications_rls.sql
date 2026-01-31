@@ -2,24 +2,23 @@
 -- 🔧 FIX: Notifications RLS Policy
 -- ═══════════════════════════════════════════════════════════════════════════
 -- 
--- Erreur: "new row violates row-level security policy for table notifications"
--- 
--- Ce script corrige les politiques RLS pour la table notifications.
+-- Ce script configure les politiques RLS STRICTES pour la table notifications.
 -- Exécutez ce script dans Supabase SQL Editor.
 --
 -- ═══════════════════════════════════════════════════════════════════════════
 
--- 1. Supprimer les anciennes politiques (ignorer les erreurs si elles n'existent pas)
+-- 1. Supprimer les anciennes politiques
 DROP POLICY IF EXISTS "Les utilisateurs voient leurs notifications" ON notifications;
 DROP POLICY IF EXISTS "Les utilisateurs peuvent créer des notifications" ON notifications;
 DROP POLICY IF EXISTS "Les utilisateurs peuvent marquer leurs notifications comme lues" ON notifications;
 DROP POLICY IF EXISTS "Les utilisateurs peuvent supprimer leurs notifications" ON notifications;
 DROP POLICY IF EXISTS "notifications_select_own" ON notifications;
 DROP POLICY IF EXISTS "notifications_insert_authenticated" ON notifications;
+DROP POLICY IF EXISTS "notifications_insert_any" ON notifications;
 DROP POLICY IF EXISTS "notifications_update_own" ON notifications;
 DROP POLICY IF EXISTS "notifications_delete_own" ON notifications;
 
--- 2. S'assurer que RLS est activé
+-- 2. Activer RLS
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- 3. Politique SELECT : voir ses propres notifications
@@ -27,8 +26,8 @@ CREATE POLICY "notifications_select_own"
     ON notifications FOR SELECT
     USING (auth.uid() = user_id);
 
--- 4. Politique INSERT : tout utilisateur connecté peut créer une notification
--- La condition vérifie que from_user_id correspond à l'utilisateur connecté
+-- 4. Politique INSERT : STRICTE - auth.uid() doit correspondre à from_user_id
+-- Cela garantit que seul l'utilisateur authentifié peut créer des notifications en son nom
 CREATE POLICY "notifications_insert_authenticated"
     ON notifications FOR INSERT
     WITH CHECK (
@@ -47,15 +46,13 @@ CREATE POLICY "notifications_delete_own"
     ON notifications FOR DELETE
     USING (auth.uid() = user_id);
 
--- 7. Vérifier que la table existe avec la bonne structure
-SELECT column_name, data_type 
-FROM information_schema.columns 
-WHERE table_name = 'notifications'
-ORDER BY ordinal_position;
+-- 7. Vérifier les politiques créées
+SELECT policyname, cmd, qual, with_check 
+FROM pg_policies 
+WHERE tablename = 'notifications';
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- 📝 NOTE: Si vous obtenez encore des erreurs 403, vérifiez dans Supabase:
--- 1. Authentication > Policies > notifications
--- 2. Assurez-vous que les 4 politiques ci-dessus sont bien créées
--- 3. Vérifiez que l'utilisateur est bien connecté (auth.uid() != NULL)
+-- 📝 IMPORTANT: Les notifications fonctionnent maintenant avec RLS strict.
+-- Le client JS doit avoir une session active (auth.uid() != NULL).
+-- Le code a été mis à jour pour refresh la session avant insert.
 -- ═══════════════════════════════════════════════════════════════════════════

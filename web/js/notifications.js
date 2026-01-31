@@ -268,21 +268,38 @@ async function handleNotifClick(notifId, type, extraitId, fromUserId, fromName) 
             .eq('id', notifId);
     }
     
-    // Fermer le dropdown
-    document.getElementById('notifDropdown').classList.remove('open');
+    // Fermer le dropdown et la modal mobile
+    document.getElementById('notifDropdown')?.classList.remove('open');
+    closeMobileNotifications();
     
     // Action selon le type
-    if (type === 'like' || type === 'comment' || type === 'comment_like' || type === 'mention' || type === 'reply' || type === 'reaction') {
+    if (type === 'like' || type === 'comment' || type === 'comment_like' || type === 'mention' || type === 'reply' || type === 'reaction' || type === 'collection_add' || type === 'share') {
+        // Ouvrir l'extrait concerné
         if (extraitId && typeof viewExtraitById === 'function') {
-            viewExtraitById(extraitId);
+            await viewExtraitById(extraitId);
+            // Si c'est un commentaire ou mention, ouvrir aussi les commentaires
+            if (type === 'comment' || type === 'mention' || type === 'reply' || type === 'comment_like') {
+                setTimeout(() => {
+                    if (typeof toggleComments === 'function') {
+                        toggleComments(extraitId);
+                    }
+                }, 300);
+            }
+        } else {
+            toast('Extrait introuvable');
         }
     } else if (type === 'follow') {
         if (typeof openUserProfile === 'function') {
             openUserProfile(fromUserId, fromName);
         }
     } else if (type === 'message') {
+        // Ouvrir la messagerie et la conversation avec cet utilisateur
         if (typeof openMessaging === 'function') {
-            openMessaging();
+            await openMessaging();
+            // Ouvrir la conversation avec l'expéditeur
+            if (typeof openConversation === 'function') {
+                setTimeout(() => openConversation(fromUserId, fromName), 300);
+            }
         }
     }
     
@@ -362,6 +379,26 @@ async function createNotification(userId, type, extraitId = null, content = null
     }
     
     console.log(`📩 Création notification: type=${type}, pour user=${userId}, extrait=${extraitId}`);
+
+    // Vérifier la session pour s'assurer que auth.uid() est disponible côté RLS
+    try {
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError) {
+            console.warn('⚠️ Erreur récupération session:', sessionError.message || sessionError);
+        }
+        if (!sessionData?.session?.user) {
+            const { data: refreshData, error: refreshError } = await supabaseClient.auth.refreshSession();
+            if (refreshError) {
+                console.warn('⚠️ Erreur refresh session:', refreshError.message || refreshError);
+            }
+            if (!refreshData?.session?.user) {
+                console.warn('❌ Session Supabase absente, insert bloqué par RLS');
+                return false;
+            }
+        }
+    } catch (e) {
+        console.warn('⚠️ Exception check session:', e);
+    }
     
     try {
         const { data, error } = await supabaseClient

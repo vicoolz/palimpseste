@@ -35,7 +35,13 @@ function initSupabase() {
             setTimeout(initSupabase, 500 * _supabaseInitRetries);
             return false;
         }
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true
+            }
+        });
         // Supabase prêt
         
         // Écouter les changements d'auth
