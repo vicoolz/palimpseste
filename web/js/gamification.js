@@ -681,6 +681,43 @@ function updateFunStat() {
 // ═══════════════════════════════════════════════════════════
 
 /**
+ * Vérifie si l'utilisateur est parmi les 100 premiers (badge Pionnier)
+ * @returns {Promise<boolean>}
+ */
+async function checkFoundingMember() {
+    // Déjà acquis ?
+    if (hasAchievement('founding')) return true;
+    
+    // Pas connecté ?
+    if (!window.supabaseClient || !window.currentUser) return false;
+    
+    try {
+        // Compter le nombre total d'utilisateurs dans profiles
+        const { count, error } = await window.supabaseClient
+            .from('profiles')
+            .select('*', { count: 'exact', head: true });
+        
+        if (error) {
+            console.error('❌ Erreur vérification Pionnier:', error);
+            return false;
+        }
+        
+        console.log('👥 Nombre d\'utilisateurs:', count);
+        
+        // Si moins de 100 utilisateurs, on est un pionnier !
+        if (count !== null && count <= 100) {
+            unlockAchievement('founding');
+            return true;
+        }
+        
+        return false;
+    } catch (e) {
+        console.error('❌ Exception vérification Pionnier:', e);
+        return false;
+    }
+}
+
+/**
  * Vérifie toutes les conditions de déblocage des badges
  * À appeler après chaque action significative (lecture, like, etc.)
  */
@@ -697,6 +734,11 @@ function checkAchievements() {
     const unlockedCount = state.achievements?.length || 0;
     const totalBadges = getVisibleAchievementIds().length;
     const legendTarget = Math.max(0, totalBadges - 1);
+    
+    // Vérifier le badge Pionnier de manière asynchrone (ne bloque pas)
+    if (!hasAchievement('founding') && window.currentUser) {
+        checkFoundingMember();
+    }
     
     const checks = [
         // Badges spécifiques utilisateurs
@@ -1223,6 +1265,7 @@ window.pureRandomJump = pureRandomJump;
 window.randomJump = randomJump;
 window.updateFunStat = updateFunStat;
 window.checkAchievements = checkAchievements;
+window.checkFoundingMember = checkFoundingMember;
 window.unlockAchievement = unlockAchievement;
 window.renderAchievements = renderAchievements;
 window.toggleBadgesView = toggleBadgesView;
