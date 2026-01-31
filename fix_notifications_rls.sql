@@ -14,6 +14,10 @@ DROP POLICY IF EXISTS "Les utilisateurs voient leurs notifications" ON notificat
 DROP POLICY IF EXISTS "Les utilisateurs peuvent créer des notifications" ON notifications;
 DROP POLICY IF EXISTS "Les utilisateurs peuvent marquer leurs notifications comme lues" ON notifications;
 DROP POLICY IF EXISTS "Les utilisateurs peuvent supprimer leurs notifications" ON notifications;
+DROP POLICY IF EXISTS "notifications_select_own" ON notifications;
+DROP POLICY IF EXISTS "notifications_insert_authenticated" ON notifications;
+DROP POLICY IF EXISTS "notifications_update_own" ON notifications;
+DROP POLICY IF EXISTS "notifications_delete_own" ON notifications;
 
 -- 2. S'assurer que RLS est activé
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
@@ -25,7 +29,6 @@ CREATE POLICY "notifications_select_own"
 
 -- 4. Politique INSERT : tout utilisateur connecté peut créer une notification
 -- La condition vérifie que from_user_id correspond à l'utilisateur connecté
--- ET que user_id est différent de from_user_id (pas de notif pour soi-même)
 CREATE POLICY "notifications_insert_authenticated"
     ON notifications FOR INSERT
     WITH CHECK (
@@ -45,7 +48,6 @@ CREATE POLICY "notifications_delete_own"
     USING (auth.uid() = user_id);
 
 -- 7. Vérifier que la table existe avec la bonne structure
--- (Ce SELECT échouera si la table n'existe pas, vous saurez qu'il faut la créer)
 SELECT column_name, data_type 
 FROM information_schema.columns 
 WHERE table_name = 'notifications'
