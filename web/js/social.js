@@ -75,7 +75,8 @@ function getLikeCount(extraitId) {
 }
 
 function openSocialFeed() {
-    document.getElementById('socialOverlay').classList.add('open');
+    var overlay = document.getElementById('socialOverlay');
+    overlay.classList.add('open');
     // Charger le cache des likes si pas encore fait
     if (!likesLoaded && currentUser) {
         loadUserLikesCache();

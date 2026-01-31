@@ -1983,6 +1983,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadUserLikesCache();
     }
     updateLikeCount();
+
+    // Fermer les overlays en tapant en dehors du contenu
+    document.querySelectorAll('.favorites-overlay').forEach(function(overlay) {
+        overlay.addEventListener('click', function(e) {
+            if (e.target !== overlay) return;
+            if (overlay.id === 'socialOverlay' && typeof closeSocialFeed === 'function') {
+                closeSocialFeed();
+            } else {
+                overlay.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+        });
+    });
 });
 
 // Double-tap pour liker (style Instagram)
