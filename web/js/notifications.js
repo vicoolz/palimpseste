@@ -319,7 +319,7 @@ async function handleNotifClick(notifId, type, extraitId, fromUserId, fromName) 
 
 /**
  * Ouvrir un extrait depuis une notification
- * Gère le switch d'onglet et l'affichage robuste
+ * Gère l'ouverture de l'overlay et l'affichage de l'extrait spécifique
  */
 async function openExtraitFromNotification(extraitId) {
     if (!supabaseClient || !extraitId) return false;
@@ -345,15 +345,19 @@ async function openExtraitFromNotification(extraitId) {
             extrait.profiles = profileMap.get(extrait.user_id) || null;
         }
         
-        // Ouvrir le feed social (overlay)
-        if (typeof openSocialFeed === 'function') {
-            openSocialFeed();
+        // IMPORTANT: Mettre l'extrait AVANT d'ouvrir l'overlay
+        // pour éviter que loadSocialFeed() ne l'écrase
+        if (typeof window.socialExtraits !== 'undefined') {
+            window.socialExtraits = [extrait];
         }
         
-        // Afficher l'extrait dans le feed
-        if (typeof socialExtraits !== 'undefined') {
-            socialExtraits = [extrait];
+        // Ouvrir l'overlay social SANS recharger le feed
+        const overlay = document.getElementById('socialOverlay');
+        if (overlay) {
+            overlay.classList.add('open');
         }
+        
+        // Afficher l'extrait unique
         if (typeof renderSocialFeed === 'function') {
             await renderSocialFeed();
         }

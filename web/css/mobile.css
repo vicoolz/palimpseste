@@ -218,7 +218,7 @@
         max-width: 360px !important;
         max-height: 82vh !important;
         overflow-y: auto !important;
-        z-index: 250 !important;
+        z-index: 2500 !important;
         background: var(--bg-card) !important;
         border: 2px solid var(--border) !important;
         border-radius: 16px !important;
@@ -226,12 +226,14 @@
         padding: 14px 16px !important;
         opacity: 0 !important;
         transition: opacity 0.25s, transform 0.25s !important;
+        pointer-events: auto !important;
     }
     
     .mobile-profile-panel.open {
         display: block !important;
         opacity: 1 !important;
         transform: translate(-50%, -50%) scale(1) !important;
+        pointer-events: auto !important;
     }
 
     /* Messagerie: actions via menu ⋯ sur mobile */
@@ -348,6 +350,10 @@
         font-weight: 600 !important;
         cursor: pointer !important;
         box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3) !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: rgba(255,255,255,0.2) !important;
+        opacity: 1 !important;
     }
     
     .mobile-profile-btn-primary:active {
@@ -365,6 +371,10 @@
         color: var(--text) !important;
         font-size: 0.9rem !important;
         cursor: pointer !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: rgba(255,255,255,0.2) !important;
+        opacity: 1 !important;
     }
     
     .mobile-profile-btn-secondary:active {
@@ -439,7 +449,7 @@
         right: 0 !important;
         bottom: 0 !important;
         background: rgba(0, 0, 0, 0.6) !important;
-        z-index: 1199 !important;
+        z-index: 2400 !important;
         opacity: 0 !important;
         visibility: hidden !important;
         transition: opacity 0.3s, visibility 0.3s !important;
