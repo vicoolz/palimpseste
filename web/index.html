@@ -222,6 +222,10 @@
             <button class="drawer-action-btn theme-toggle-drawer" onclick="toggleTheme();">
                 <i data-lucide="sun" class="drawer-icon" id="drawerThemeIcon"></i> <span id="drawerThemeText">Mode clair</span>
             </button>
+            <!-- Bouton déconnexion (visible seulement si connecté) -->
+            <button class="drawer-action-btn drawer-logout-mobile" id="drawerLogoutBtn" onclick="logout(); closeMobileDrawer();" style="display: none;">
+                <i data-lucide="log-out" class="drawer-icon"></i> Déconnexion
+            </button>
             <div class="drawer-preferences-row">
                  <div class="drawer-lang-selector" style="flex: 1;">
                     <i data-lucide="globe" class="drawer-icon"></i>

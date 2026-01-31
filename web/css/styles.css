@@ -273,6 +273,18 @@
     box-shadow: 0 0 0 var(--pixel-shadow);
 }
 
+/* Bouton déconnexion mobile - style distinct */
+.drawer-logout-mobile {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    margin-top: 0.5rem;
+}
+
+.drawer-logout-mobile:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
 .drawer-action-btn span {
     font-size: 1.1rem;
 }

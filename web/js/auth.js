@@ -551,6 +551,42 @@ async function onUserLoggedIn() {
     // S'assurer que le profil existe dans la table profiles
     await ensureProfileExists();
 
+    // ═══════════════════════════════════════════════════════════════════
+    // 🔄 VÉRIFIER SI C'EST UN CHANGEMENT D'UTILISATEUR
+    // Si oui, réinitialiser le state local pour éviter de mélanger les badges
+    // ═══════════════════════════════════════════════════════════════════
+    const lastUserId = localStorage.getItem('palimpseste_last_user');
+    const isNewUser = lastUserId && lastUserId !== currentUser.id;
+    
+    if (isNewUser) {
+        console.log('👤 Changement d\'utilisateur détecté, réinitialisation du state local...');
+        // Réinitialiser le state local (les badges seront chargés depuis le cloud)
+        if (typeof state !== 'undefined') {
+            state.achievements = [];
+            state.readCount = 0;
+            state.authorStats = {};
+            state.genreStats = {};
+            state.likedGenreStats = {};
+            state.likedAuthorStats = {};
+            state.likedAuthors = new Set();
+            state.readingPath = [];
+            state.readingStats = {
+                totalWordsRead: 0,
+                totalReadingTime: 0,
+                streak: 0,
+                lastReadDate: null,
+                sessionsToday: 0,
+                bestStreak: 0,
+                dailyWords: {}
+            };
+            // Sauvegarder le state vide
+            if (typeof saveState === 'function') saveState();
+        }
+    }
+    
+    // Mémoriser l'utilisateur courant
+    localStorage.setItem('palimpseste_last_user', currentUser.id);
+
     // Mettre à jour last_seen
     updateLastSeen();
 
@@ -612,6 +648,10 @@ async function onUserLoggedIn() {
     
     // Mettre à jour le panneau profil mobile
     if (typeof updateMobileProfilePanel === 'function') updateMobileProfilePanel();
+    
+    // Afficher le bouton déconnexion mobile
+    const drawerLogoutBtn = document.getElementById('drawerLogoutBtn');
+    if (drawerLogoutBtn) drawerLogoutBtn.style.display = '';
 }
 
 function onUserLoggedOut() {
@@ -624,6 +664,10 @@ function onUserLoggedOut() {
     
     document.getElementById('profileLoggedOut').style.display = 'block';
     document.getElementById('profileLoggedIn').style.display = 'none';
+    
+    // Cacher le bouton déconnexion mobile
+    const drawerLogoutBtn = document.getElementById('drawerLogoutBtn');
+    if (drawerLogoutBtn) drawerLogoutBtn.style.display = 'none';
     
     // Reset mobile avatar
     const mobileAvatar = document.getElementById('mobileAvatar');
