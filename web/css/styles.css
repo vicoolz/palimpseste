@@ -6297,8 +6297,9 @@ cursor: not-allowed;
     opacity: 0.35;
 }
 
+/* Sur mobile, cacher le menu ⋯ car les actions sont toujours visibles */
 @media (hover: none) {
-    .msg-menu-btn { display: flex; }
+    .msg-menu-btn { display: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════
