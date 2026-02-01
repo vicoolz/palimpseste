@@ -157,6 +157,7 @@ async function loadExtraitShareInfoBatch(extraitIds) {
         let shares = [];
         if (extrait.text_hash) {
             shares = sharesByHash.filter(s => {
+                if (s.id === extrait.id) return false; // exclure l'extrait lui-même
                 if (s.text_hash !== extrait.text_hash) return false;
                 if (extrait.source_url) return s.source_url === extrait.source_url;
                 return (s.source_title || '') === (extrait.source_title || '')
@@ -172,7 +173,7 @@ async function loadExtraitShareInfoBatch(extraitIds) {
                 query = query.eq('source_title', extrait.source_title || '').eq('source_author', extrait.source_author || '');
             }
             const { data } = await query.order('created_at', { ascending: false });
-            shares = data || [];
+            shares = (data || []).filter(s => s.id !== extrait.id);
         }
 
         const info = { hasShares: shares.length > 0, count: shares.length, shares };

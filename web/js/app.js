@@ -1481,7 +1481,7 @@ function updateCardLikeCount(cardId, count) {
     }
     if (!countEl) return;
     countEl.textContent = count || 0;
-    countEl.style.display = count > 0 ? 'inline-flex' : 'none';
+    countEl.classList.toggle('is-zero', !count);
 }
 
 async function loadCardLikeCount(cardId, url) {
@@ -1902,7 +1902,7 @@ async function toggleLike(cardId, btn, forceLike = false) {
         }
         if (likeCountEl) {
             likeCountEl.textContent = newCount;
-            likeCountEl.style.display = newCount > 0 ? 'inline-flex' : 'none';
+            likeCountEl.classList.toggle('is-zero', newCount === 0);
         }
 
         if (wasLiked) {
@@ -1946,7 +1946,7 @@ async function toggleLike(cardId, btn, forceLike = false) {
         if (likeBtn) likeBtn.classList.toggle('active', isNowLiked);
         if (countEl) {
             countEl.textContent = realCount || 0;
-            countEl.style.display = (realCount || 0) > 0 ? 'inline-flex' : 'none';
+            countEl.classList.toggle('is-zero', !realCount);
         }
         toast('Erreur de synchronisation');
     } finally {

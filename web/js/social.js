@@ -502,9 +502,9 @@ async function toggleLikeExtrait(extraitId) {
         }
         if (likeCountEl) {
             likeCountEl.textContent = realCount;
-            likeCountEl.style.display = realCount > 0 ? 'inline-flex' : 'none';
+            likeCountEl.classList.toggle('is-zero', realCount === 0);
         }
-        
+
         toast('Erreur de synchronisation');
     } finally {
         delete pendingLikeOperations[extraitId];
