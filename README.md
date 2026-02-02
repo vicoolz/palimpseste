@@ -8,7 +8,7 @@ An infinite scroll reader for world literature, with social features.
 
 ## About
 
-Palimpseste lets you drift through literary excerpts from antiquity to the 20th century. Texts are pulled from 7 digital libraries across 12 languages and displayed in a continuous feed. Filter by genre, era, or tone — or let serendipity guide you.
+Palimpseste lets you drift through literary excerpts from antiquity to the 20th century. Texts are pulled from 7 digital libraries across 12 languages and displayed in a continuous feed. Filter by genre, era, or tone, or let serendipity guide you.
 
 The app includes a social layer: share passages you love, follow other readers, build collections, and discuss interpretations.
 
@@ -22,13 +22,13 @@ This is an experiment in making great literature as accessible and engaging as a
 
 ### Open Source by Design
 
-Open source is not just a technical choice — it's essential to this project's identity.
+Open source is not just a technical choice. It's essential to this project's identity.
 
 **Open texts:** Palimpseste's philosophy is to curate and share quality literature free from copyright restrictions. All content comes from public domain sources (Wikisource, Project Gutenberg, Gallica, Archive.org, Perseus...). 
 
 **Open code:** The platform itself is fully open source. In an era where social networks are opaque systems designed to extract value from users, transparency matters. Anyone can inspect how Palimpseste works, suggest improvements, or fork it to build something new. The community owns this project as much as its creator.
 
-This dual openness — of content and code — reflects a belief that knowledge and the tools to share it should be commons, not commodities.
+This dual openness (of content and code) reflects a belief that knowledge and the tools to share it should be commons, not commodities.
 
 ### Features
 
@@ -138,11 +138,11 @@ Three-dimensional filtering:
 
 This project is still in its early stages. The goal is to grow a community of readers and eventually deploy a more polished version.
 
-Contributions, feedback, and ideas are welcome — whether it's code, translations, or simply sharing the project with others who might enjoy it.
+Contributions, feedback, and ideas are welcome: code, translations, or simply sharing the project with others who might enjoy it.
 
 ### Future Considerations
 
-If the project gains traction, one idea worth exploring would be allowing users to submit their own texts, stories, or poems. However, this would require careful thought and would only be considered in a later phase. The priority is to preserve the quality and depth of the reading experience — Palimpseste should never become another Twitter.
+If the project gains traction, one idea worth exploring would be allowing users to submit their own texts, stories, or poems. However, this would require careful thought and would only be considered in a later phase. The priority is to preserve the quality and depth of the reading experience.
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/palimpseste.git
