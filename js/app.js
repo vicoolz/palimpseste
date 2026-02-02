@@ -1167,6 +1167,8 @@ async function loadNewTextsOnTop() {
     // hideNewTextsBanner(); // Removed
     } finally {
         state.loading = false;
+        // Nettoyer les cartes en bas (on charge en haut, donc les vieilles sont en bas)
+        cleanupOldCards(false);
 
         const indicator = document.getElementById('topLoadingIndicator');
         if (indicator) indicator.remove();
@@ -1307,22 +1309,29 @@ async function loadMore() {
     } finally {
         document.getElementById('loading').style.display = 'none';
         state.loading = false;
-        // Nettoyer les anciennes cartes si trop nombreuses (garder max 50)
-        cleanupOldCards();
+        // Nettoyer les cartes en haut (on scroll vers le bas, donc les vieilles sont en haut)
+        cleanupOldCards(true);
     }
 }
 
 // Nettoyer les cartes anciennes pour éviter l'accumulation en mémoire
 const MAX_CARDS = 50;
-function cleanupOldCards() {
+function cleanupOldCards(fromTop = false) {
     const feed = document.getElementById('feed');
     if (!feed) return;
     const cards = feed.querySelectorAll('.card');
     if (cards.length > MAX_CARDS) {
-        // Supprimer les cartes les plus anciennes (en bas)
         const toRemove = cards.length - MAX_CARDS;
-        for (let i = cards.length - 1; i >= cards.length - toRemove; i--) {
-            cards[i].remove();
+        if (fromTop) {
+            // Supprimer les cartes en haut (quand on scroll vers le bas)
+            for (let i = 0; i < toRemove; i++) {
+                cards[i].remove();
+            }
+        } else {
+            // Supprimer les cartes en bas (quand on charge en haut)
+            for (let i = cards.length - 1; i >= cards.length - toRemove; i--) {
+                cards[i].remove();
+            }
         }
         console.log(`🧹 Nettoyage: ${toRemove} cartes supprimées (${MAX_CARDS} max)`);
     }
