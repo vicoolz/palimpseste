@@ -25,6 +25,7 @@ CREATE INDEX idx_analytics_user_id ON analytics_events(user_id);
 CREATE INDEX idx_analytics_event_type ON analytics_events(event_type);
 CREATE INDEX idx_analytics_created_at ON analytics_events(created_at DESC);
 CREATE INDEX idx_analytics_session ON analytics_events(session_id);
+CREATE INDEX idx_analytics_ip ON analytics_events(ip_address) WHERE ip_address IS NOT NULL;
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- 🔒 SÉCURITÉ RLS - TRÈS IMPORTANT
@@ -115,6 +116,36 @@ WHERE created_at > NOW() - INTERVAL '1 hour'
 GROUP BY session_id, user_id
 ORDER BY last_activity DESC;
 
+-- Vue : Visiteurs par jour (connectés + anonymes via IP)
+CREATE OR REPLACE VIEW analytics_daily_visitors AS
+SELECT 
+    DATE(created_at) as date,
+    COUNT(DISTINCT user_id) FILTER (WHERE user_id IS NOT NULL) as logged_in_users,
+    COUNT(DISTINCT ip_address) FILTER (WHERE user_id IS NULL AND ip_address IS NOT NULL) as anonymous_visitors,
+    COUNT(DISTINCT COALESCE(user_id::text, ip_address)) as total_unique_visitors,
+    COUNT(*) as total_events
+FROM analytics_events 
+GROUP BY DATE(created_at)
+ORDER BY date DESC;
+
+-- Vue : Visiteurs anonymes les plus actifs (par IP)
+CREATE OR REPLACE VIEW analytics_anonymous_visitors AS
+SELECT 
+    ip_address,
+    COUNT(*) as event_count,
+    COUNT(DISTINCT session_id) as sessions,
+    COUNT(DISTINCT DATE(created_at)) as active_days,
+    MIN(created_at) as first_seen,
+    MAX(created_at) as last_seen,
+    array_agg(DISTINCT event_type) as event_types
+FROM analytics_events 
+WHERE user_id IS NULL 
+  AND ip_address IS NOT NULL
+  AND created_at > NOW() - INTERVAL '30 days'
+GROUP BY ip_address
+ORDER BY event_count DESC
+LIMIT 100;
+
 -- ═══════════════════════════════════════════════════════════════════════════
 -- 📊 FONCTIONS UTILES
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -130,12 +161,27 @@ BEGIN
         'active_users_today', (
             SELECT COUNT(DISTINCT user_id) 
             FROM analytics_events 
-            WHERE created_at > CURRENT_DATE
+            WHERE user_id IS NOT NULL AND created_at > CURRENT_DATE
         ),
         'active_users_week', (
             SELECT COUNT(DISTINCT user_id) 
             FROM analytics_events 
-            WHERE created_at > NOW() - INTERVAL '7 days'
+            WHERE user_id IS NOT NULL AND created_at > NOW() - INTERVAL '7 days'
+        ),
+        'anonymous_visitors_today', (
+            SELECT COUNT(DISTINCT ip_address) 
+            FROM analytics_events 
+            WHERE user_id IS NULL AND ip_address IS NOT NULL AND created_at > CURRENT_DATE
+        ),
+        'anonymous_visitors_week', (
+            SELECT COUNT(DISTINCT ip_address) 
+            FROM analytics_events 
+            WHERE user_id IS NULL AND ip_address IS NOT NULL AND created_at > NOW() - INTERVAL '7 days'
+        ),
+        'total_visitors_today', (
+            SELECT COUNT(DISTINCT COALESCE(user_id::text, ip_address)) 
+            FROM analytics_events 
+            WHERE created_at > CURRENT_DATE
         ),
         'total_logins_today', (
             SELECT COUNT(*) 
