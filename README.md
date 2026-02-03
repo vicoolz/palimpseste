@@ -4,6 +4,8 @@ An infinite scroll reader for world literature, with social features.
 
 **[Live Demo](https://palimpseste.vercel.app)** · [Installation](#installation) · [Contributing](#contributing)
 
+> ⚠️ **Note:** This is my first web app project. Expect bugs, rough edges, and unconventional code. Feedback and contributions are very welcome!
+
 ---
 
 ## About
@@ -36,9 +38,11 @@ This dual openness (of content and code) reflects a belief that knowledge and th
 |---------|--------|----------------|
 | Infinite scroll feed | Share excerpts | Personal collections |
 | 7 literary sources | Likes & comments | Reading statistics |
-| 12 content languages | Follow users | 50+ badges |
-| Hierarchical filters | Trending feed | 6 interface languages |
-| Full-text reader | Private messaging | Theme (light/dark) |
+| 12 content languages | Follow users | 6 interface languages |
+| Hierarchical filters | Trending feed | Theme (light/dark) |
+| Full-text reader | Private messaging* | |
+
+*\*Private messages are not end-to-end encrypted. Do not share sensitive information.*
 
 ---
 
