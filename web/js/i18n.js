@@ -1527,31 +1527,29 @@ function applyTranslations() {
     if (searchInput) searchInput.placeholder = t('search_placeholder');
     
     // Drawer mobile - actions rapides
-    const drawerTrending = document.querySelector('.drawer-action-btn[onclick*="openTrendingFeed"]');
+    const drawerTrending = document.querySelector('.drawer-action-btn[onclick*="openTrendingFeed"] span');
     if (drawerTrending) {
-        const textNode = [...drawerTrending.childNodes].find(n => n.nodeType === 3);
-        if (textNode) textNode.textContent = ' ' + t('trending');
-        else drawerTrending.innerHTML = drawerTrending.innerHTML.replace(/Tendances/g, t('trending'));
+        drawerTrending.textContent = t('trending');
     }
     
-    const drawerFav = document.querySelector('.drawer-action-btn[onclick*="openFavoritesView"]');
+    const drawerFav = document.querySelector('.drawer-action-btn[onclick*="openFavoritesView"] span');
     if (drawerFav) {
-        drawerFav.innerHTML = drawerFav.innerHTML.replace(/Mes likés/g, t('my_likes'));
+        drawerFav.textContent = t('my_likes');
     }
-    
-    const drawerCollections = document.querySelector('.drawer-action-btn[onclick*="openCollectionsView"]');
+
+    const drawerCollections = document.querySelector('.drawer-action-btn[onclick*="openCollectionsView"] span');
     if (drawerCollections) {
-        drawerCollections.innerHTML = drawerCollections.innerHTML.replace(/Collections/g, t('collections'));
+        drawerCollections.textContent = t('collections');
     }
     
-    const drawerSocial = document.querySelector('.drawer-action-btn[onclick*="openSocialFeed"]');
+    const drawerSocial = document.querySelector('.drawer-action-btn[onclick*="openSocialFeed"] span');
     if (drawerSocial) {
-        drawerSocial.innerHTML = drawerSocial.innerHTML.replace(/Social/g, t('community'));
+        drawerSocial.textContent = t('community');
     }
-    
-    const drawerMessages = document.querySelector('.drawer-action-btn[onclick*="openMessaging"]');
+
+    const drawerMessages = document.querySelector('.drawer-action-btn[onclick*="openMessaging"] span');
     if (drawerMessages) {
-        drawerMessages.innerHTML = drawerMessages.innerHTML.replace(/Messages/g, t('messages'));
+        drawerMessages.textContent = t('messages');
     }
     
     // Theme toggle drawer

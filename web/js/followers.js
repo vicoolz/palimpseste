@@ -1181,7 +1181,7 @@ async function loadProfileExtraits(userId) {
                 const hasFullText = fullTexte.length > PREVIEW_LENGTH;
 
                 return `
-                <div class="extrait-card" data-id="${e.id}" data-full-text="${esc(fullTexte)}">
+                <div class="extrait-card" data-id="${e.id}" data-full-text="${escapeAttr(fullTexte)}">
                     <div class="extrait-header">
                         <div class="extrait-avatar" onclick="openUserProfile('${e.user_id}', '${safeUsername}')" style="cursor:pointer">${avatarSymbol}</div>
                         <div class="extrait-user-info" onclick="openUserProfile('${e.user_id}', '${safeUsername}')" style="cursor:pointer">
@@ -1191,7 +1191,6 @@ async function loadProfileExtraits(userId) {
                     </div>
                     <div class="extrait-text" id="extraitText-${e.id}">${esc(textPreview)}</div>
                     ${hasFullText ? `<button class="btn-voir-plus" onclick="toggleProfileExtraitText(this, '${e.id}')">${t('show_more') || 'Voir plus'}</button>` : ''}
-                    ${e.source_url ? `<button class="btn-voir-plus btn-full-text" onclick="loadFullTextFromSource(this)" id="voirPlus-${e.id}" data-extrait-id="${e.id}" data-source-url="${esc(e.source_url)}" data-source-title="${esc(e.source_title || '')}">${t('view_full_text')}</button>` : ''}
                     <div class="extrait-source">
                         <strong>${esc(e.source_author || '')}</strong> — ${esc(e.source_title || '')}
                         ${e.source_url ? `<a href="${e.source_url}" target="_blank" class="source-link">🔗</a>` : ''}
@@ -1339,7 +1338,7 @@ async function loadProfileLikes(userId) {
                 const hasFullTextLikes = fullTexteLikes.length > PREVIEW_LENGTH_LIKES;
 
                 return `
-                <div class="extrait-card" data-id="${e.id}" data-full-text="${esc(fullTexteLikes)}">
+                <div class="extrait-card" data-id="${e.id}" data-full-text="${escapeAttr(fullTexteLikes)}">
                     <div class="extrait-header">
                         <div class="extrait-avatar" onclick="openUserProfile('${e.user_id}', '${safeUsername}')" style="cursor:pointer">${avatarSymbol}</div>
                         <div class="extrait-user-info" onclick="openUserProfile('${e.user_id}', '${safeUsername}')" style="cursor:pointer">
@@ -1349,7 +1348,6 @@ async function loadProfileLikes(userId) {
                     </div>
                     <div class="extrait-text" id="extraitText-${e.id}">${esc(textPreviewLikes)}</div>
                     ${hasFullTextLikes ? `<button class="btn-voir-plus" onclick="toggleProfileExtraitText(this, '${e.id}')">${t('show_more') || 'Voir plus'}</button>` : ''}
-                    ${e.source_url ? `<button class="btn-voir-plus" onclick="loadFullTextFromSource(this)" id="voirPlus-${e.id}" data-extrait-id="${e.id}" data-source-url="${esc(e.source_url)}" data-source-title="${esc(e.source_title || '')}">${t('view_full_text')}</button>` : ''}
                     <div class="extrait-source">
                         <strong>${esc(e.source_author || '')}</strong> — ${esc(e.source_title || '')}
                         ${e.source_url ? `<a href="${e.source_url}" target="_blank" class="source-link">🔗</a>` : ''}
