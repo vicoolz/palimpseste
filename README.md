@@ -63,7 +63,8 @@ palimpseste/
 │       ├── messaging.js     # Private messages
 │       └── ...              # notifications, gamification, collections
 ├── api/                     # Serverless CORS proxy
-└── supabase_setup.sql       # Database schema
+├── supabase_setup.sql       # Database schema & functions
+└── monitoring_setup.sql     # Analytics (optional)
 ```
 
 ---
@@ -103,13 +104,9 @@ Access at `http://localhost:8080`
 Social features require a Supabase instance.
 
 1. Create a project at [supabase.com](https://supabase.com)
-2. Execute SQL scripts in order:
-   ```
-   supabase_setup.sql
-   create_notification_rpc.sql
-   fix_notifications_rls.sql
-   ```
-3. Configure `web/js/config.js`:
+2. Execute `supabase_setup.sql` in SQL Editor (contains all tables, RLS, and functions)
+3. *(Optional)* Execute `monitoring_setup.sql` for analytics tracking
+4. Configure `web/js/config.js`:
    ```javascript
    const SUPABASE_URL = 'https://your-project.supabase.co';
    const SUPABASE_ANON_KEY = 'your-anon-key';

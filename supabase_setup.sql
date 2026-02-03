@@ -54,6 +54,8 @@ CREATE TABLE extraits (
 -- Sécuriser l'ajout des colonnes si la table existe déjà sans ces champs
 ALTER TABLE extraits ADD COLUMN IF NOT EXISTS text_hash TEXT;
 ALTER TABLE extraits ADD COLUMN IF NOT EXISTS text_length INTEGER;
+-- Colonne is_silent: true si extrait créé automatiquement (pour like/collection), pas un vrai partage
+ALTER TABLE extraits ADD COLUMN IF NOT EXISTS is_silent BOOLEAN DEFAULT false;
 
 -- Table des likes
 CREATE TABLE likes (
@@ -71,6 +73,7 @@ CREATE INDEX idx_extraits_likes_count ON extraits(likes_count DESC);
 CREATE INDEX IF NOT EXISTS idx_extraits_text_hash ON extraits(text_hash);
 CREATE INDEX IF NOT EXISTS idx_extraits_user_text_hash ON extraits(user_id, text_hash);
 CREATE INDEX IF NOT EXISTS idx_extraits_source_hash ON extraits(source_url, text_hash);
+CREATE INDEX IF NOT EXISTS idx_extraits_is_silent ON extraits(is_silent) WHERE is_silent = false OR is_silent IS NULL;
 CREATE INDEX idx_likes_user_id ON likes(user_id);
 CREATE INDEX idx_likes_extrait_id ON likes(extrait_id);
 CREATE INDEX IF NOT EXISTS idx_likes_extrait_created ON likes(extrait_id, created_at DESC);
@@ -480,6 +483,42 @@ CREATE POLICY "Les utilisateurs peuvent marquer leurs notifications comme lues"
 CREATE POLICY "Les utilisateurs peuvent supprimer leurs notifications"
     ON notifications FOR DELETE
     USING (auth.uid() = user_id);
+
+-- Fonction RPC pour créer des notifications (SECURITY DEFINER bypasse RLS)
+CREATE OR REPLACE FUNCTION create_notification(
+    p_user_id UUID,
+    p_type TEXT,
+    p_extrait_id UUID DEFAULT NULL,
+    p_content TEXT DEFAULT NULL
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_notification_id UUID;
+    v_from_user_id UUID;
+BEGIN
+    v_from_user_id := auth.uid();
+    IF v_from_user_id IS NULL THEN
+        RAISE EXCEPTION 'Non authentifié';
+    END IF;
+    
+    -- Ne pas créer de notification pour soi-même
+    IF p_user_id = v_from_user_id THEN
+        RETURN NULL;
+    END IF;
+    
+    INSERT INTO notifications (user_id, from_user_id, type, extrait_id, content, created_at)
+    VALUES (p_user_id, v_from_user_id, p_type, p_extrait_id, p_content, NOW())
+    RETURNING id INTO v_notification_id;
+    
+    RETURN v_notification_id;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION create_notification(UUID, TEXT, UUID, TEXT) TO authenticated;
 
 -- Activer Realtime sur notifications
 ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
