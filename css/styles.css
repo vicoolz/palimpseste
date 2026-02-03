@@ -1578,18 +1578,31 @@ padding: 160px 2rem 4rem 2rem;
 transition: padding-top 0.3s ease;
 }
 
-/* Ajuster le padding quand les filtres sont repliés */
+/* Ajuster le padding quand les filtres sont repliés - géré dynamiquement par JS */
 body.filters-collapsed main {
-padding-top: 60px;
+/* Valeur de fallback - sera ajustée par adjustMainPadding() */
+padding-top: 116px;
 }
 
-/* Desktop padding adaptatif v2 - 26/01/2026 */
+/* Desktop padding adaptatif - géré dynamiquement par JS sur desktop */
+/* Ces valeurs sont des fallbacks, le JS calcule la vraie hauteur */
 @media (min-width: 901px) {
+    main#feed,
     main {
-        padding-top: 160px !important;
+        transition: padding-top 0.3s ease !important;
     }
-    body.filters-collapsed main {
-        padding-top: 60px !important;
+}
+
+/* Cacher les éléments mobiles sur desktop */
+@media (min-width: 901px) {
+    .mobile-profile-panel,
+    .mobile-profile-subtitle,
+    .mobile-profile-content,
+    #mobileProfileLoggedOut,
+    #mobileProfileLoggedIn,
+    .mobile-nav,
+    .mobile-drawer {
+        display: none !important;
     }
 }
 

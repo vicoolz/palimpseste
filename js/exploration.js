@@ -845,6 +845,23 @@ function closeAllFilterGroups() {
 }
 
 /**
+ * Ajuste le padding-top du main en fonction de la hauteur réelle de l'exploration
+ */
+function adjustMainPadding() {
+    const main = document.getElementById('feed');
+    const container = document.getElementById('explorationContainer');
+    if (!main || !container || window.innerWidth <= 900) return;
+    
+    // Hauteur du header (64px) + hauteur exploration + marge (10px)
+    const headerHeight = 64;
+    const explorationHeight = container.offsetHeight;
+    const margin = 10;
+    const newPadding = headerHeight + explorationHeight + margin;
+    
+    main.style.paddingTop = newPadding + 'px';
+}
+
+/**
  * Toggle manuel de la rétraction
  */
 function toggleExplorationCollapse() {
@@ -863,6 +880,11 @@ function toggleExplorationCollapse() {
     
     // Ajouter/retirer la classe sur body pour adapter le padding du main
     document.body.classList.toggle('filters-collapsed', isExplorationCollapsed);
+    
+    // Ajuster le padding du main en continu pendant la transition
+    adjustMainPadding();
+    const adjustInterval = setInterval(adjustMainPadding, 16); // ~60fps
+    setTimeout(() => clearInterval(adjustInterval), 400); // Arrêter après la transition
     
     if (isExplorationCollapsed) {
         closeAllFilterGroups();
@@ -884,6 +906,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('filters-collapsed');
         isExplorationCollapsed = true;
     }
+    
+    // Ajuster le padding initial après un court délai (attendre le rendu)
+    setTimeout(adjustMainPadding, 10);
+    setTimeout(adjustMainPadding, 100);
+    
+    // Réajuster lors du redimensionnement
+    window.addEventListener('resize', adjustMainPadding);
 });
 
 // Exports globaux pour le nouveau système
