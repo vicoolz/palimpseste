@@ -16,7 +16,7 @@
 let authorConnections = {};
 
 let state = {
-    likes: new Set(), readCount: 0, loading: false, cache: new Map(),
+    likes: new Set(), readCount: 0, loading: false, prefetching: false, cache: new Map(),
     textPool: [], shownPages: new Set(), cardIdx: 0,
     activeSearchTerm: null, searchOffset: 0, // Le contexte courant de l'exploration (null = drift)
     authorStats: {}, genreStats: {},
@@ -1255,7 +1255,7 @@ async function loadMore() {
     while (loaded < 3 && attempts < 15) {
         attempts++;
         const isExploringCategory = currentCategoryPath.length > 0;
-        if (state.textPool.length < 3 && !isExploringCategory) {
+        if (state.textPool.length < 5 && !isExploringCategory) {
             await fillPool();
         }
         if (state.textPool.length === 0) break;
@@ -1296,6 +1296,12 @@ async function loadMore() {
         state.loading = false;
         // Nettoyer les cartes en haut (on scroll vers le bas, donc les vieilles sont en haut)
         cleanupOldCards(true);
+        
+        // Préchargement en arrière-plan si le pool est bas
+        if (state.textPool.length < 8 && !state.prefetching) {
+            state.prefetching = true;
+            fillPool().finally(() => { state.prefetching = false; });
+        }
     }
 }
 
