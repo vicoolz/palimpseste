@@ -182,7 +182,7 @@
         <button class="mobile-nav-item" onclick="pureRandomJump()" data-nav="random" title="Hasard">
             <i data-lucide="shuffle" class="mobile-nav-icon"></i>
         </button>
-        <button class="mobile-nav-item" onclick="openTrendingFeed()" data-nav="trending" title="Tendances">
+        <button class="mobile-nav-item" onclick="openTrendingFeed()" data-nav="trending">
             <i data-lucide="flame" class="mobile-nav-icon"></i>
         </button>
         <button class="mobile-nav-item" onclick="openMessaging()" data-nav="messages" title="Messages">
@@ -205,19 +205,24 @@
         <!-- Actions rapides (visible surtout sur mobile) -->
         <div class="drawer-quick-actions">
             <button class="drawer-action-btn" onclick="openTrendingFeed(); closeMobileDrawer();">
-                <i data-lucide="flame" class="drawer-icon"></i> Tendances
+                <i data-lucide="flame" class="drawer-icon"></i>
+                <span>Tendances</span>
             </button>
             <button class="drawer-action-btn" onclick="openFavoritesView(); closeMobileDrawer();" id="drawerFavBtn">
-                <i data-lucide="heart" class="drawer-icon"></i> Mes likés
+                <i data-lucide="heart" class="drawer-icon"></i>
+                <span>Mes likés</span>
             </button>
             <button class="drawer-action-btn" onclick="openCollectionsView(); closeMobileDrawer();" id="drawerCollectionsBtn">
-                <i data-lucide="folder-heart" class="drawer-icon"></i> Collections
+                <i data-lucide="folder-heart" class="drawer-icon"></i>
+                <span>Collections</span>
             </button>
             <button class="drawer-action-btn" onclick="openSocialFeed(); closeMobileDrawer();">
-                <i data-lucide="users" class="drawer-icon"></i> Social
+                <i data-lucide="users" class="drawer-icon"></i>
+                <span>Social</span>
             </button>
             <button class="drawer-action-btn" onclick="openMessaging(); closeMobileDrawer();">
-                <i data-lucide="mail" class="drawer-icon"></i> Messages
+                <i data-lucide="mail" class="drawer-icon"></i>
+                <span>Messages</span>
             </button>
             <button class="drawer-action-btn theme-toggle-drawer" onclick="toggleTheme();">
                 <i data-lucide="sun" class="drawer-icon" id="drawerThemeIcon"></i> <span id="drawerThemeText">Mode clair</span>
