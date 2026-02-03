@@ -845,20 +845,15 @@ function closeAllFilterGroups() {
 }
 
 /**
- * Ajuste le padding-top du main en fonction de la hauteur réelle de l'exploration
+ * Ajuste le padding-top du main via CSS variable (instantané)
  */
 function adjustMainPadding() {
-    const main = document.getElementById('feed');
     const container = document.getElementById('explorationContainer');
-    if (!main || !container || window.innerWidth <= 900) return;
+    if (!container || window.innerWidth <= 900) return;
     
-    // Hauteur du header (64px) + hauteur exploration + marge (10px)
-    const headerHeight = 64;
+    // Met à jour la variable CSS - le navigateur applique instantanément
     const explorationHeight = container.offsetHeight;
-    const margin = 10;
-    const newPadding = headerHeight + explorationHeight + margin;
-    
-    main.style.paddingTop = newPadding + 'px';
+    document.documentElement.style.setProperty('--exploration-height', explorationHeight + 'px');
 }
 
 /**
@@ -878,13 +873,22 @@ function toggleExplorationCollapse() {
         toggleText.textContent = isExplorationCollapsed ? t('expand_filters') : t('collapse_filters');
     }
     
-    // Ajouter/retirer la classe sur body pour adapter le padding du main
+    // Ajouter/retirer la classe sur body
     document.body.classList.toggle('filters-collapsed', isExplorationCollapsed);
     
-    // Ajuster le padding du main en continu pendant la transition
-    adjustMainPadding();
-    const adjustInterval = setInterval(adjustMainPadding, 16); // ~60fps
-    setTimeout(() => clearInterval(adjustInterval), 400); // Arrêter après la transition
+    // Ajuster le padding via CSS variable (avec RAF pour fluidité)
+    const animate = () => {
+        adjustMainPadding();
+        if (container.offsetHeight > 42 && isExplorationCollapsed) {
+            requestAnimationFrame(animate);
+        } else if (container.offsetHeight < 150 && !isExplorationCollapsed) {
+            requestAnimationFrame(animate);
+        }
+    };
+    requestAnimationFrame(animate);
+    
+    // Fallback: arrêter après 400ms
+    setTimeout(adjustMainPadding, 400);
     
     if (isExplorationCollapsed) {
         closeAllFilterGroups();
@@ -907,9 +911,10 @@ document.addEventListener('DOMContentLoaded', () => {
         isExplorationCollapsed = true;
     }
     
-    // Ajuster le padding initial après un court délai (attendre le rendu)
-    setTimeout(adjustMainPadding, 10);
-    setTimeout(adjustMainPadding, 100);
+    // Ajuster le padding initial
+    adjustMainPadding();
+    // Réajuster après le rendu complet
+    requestAnimationFrame(adjustMainPadding);
     
     // Réajuster lors du redimensionnement
     window.addEventListener('resize', adjustMainPadding);

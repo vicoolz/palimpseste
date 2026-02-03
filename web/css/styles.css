@@ -1569,28 +1569,19 @@ padding: 0.25rem;
 .search-clear.visible { display: block; }
 .search-clear:hover { color: var(--text); }
 
+/* Variable CSS pour la hauteur de l'exploration (mise à jour par JS) */
+:root {
+    --exploration-height: 150px; /* Valeur par défaut */
+}
+
 main {
 margin-left: 260px;
 max-width: 720px;
 margin-right: auto;
 margin-left: calc(260px + (100% - 260px - 720px) / 2);
-padding: 160px 2rem 4rem 2rem;
-transition: padding-top 0.3s ease;
-}
-
-/* Ajuster le padding quand les filtres sont repliés - géré dynamiquement par JS */
-body.filters-collapsed main {
-/* Valeur de fallback - sera ajustée par adjustMainPadding() */
-padding-top: 116px;
-}
-
-/* Desktop padding adaptatif - géré dynamiquement par JS sur desktop */
-/* Ces valeurs sont des fallbacks, le JS calcule la vraie hauteur */
-@media (min-width: 901px) {
-    main#feed,
-    main {
-        transition: padding-top 0.3s ease !important;
-    }
+padding: 2rem;
+padding-top: calc(64px + var(--exploration-height) + 10px); /* header + exploration + marge */
+padding-bottom: 4rem;
 }
 
 /* Cacher les éléments mobiles sur desktop */
