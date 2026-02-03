@@ -1795,10 +1795,19 @@ function showMore(cardId) {
     if (!fullEl || !btnEl) return;
     
     let remaining = card.dataset.remaining || '';
+    const sourceUrl = card.dataset.url || '';
+    
+    // Fonction pour remplacer le bouton par un lien vers la source
+    const replaceWithSourceLink = () => {
+        if (sourceUrl) {
+            btnEl.outerHTML = `<a href="${escapeHtml(sourceUrl)}" target="_blank" class="btn-source-link">🔗 Voir la source</a>`;
+        } else {
+            btnEl.style.display = 'none';
+        }
+    };
     
     if (!remaining) {
-        // Cacher le bouton si plus de texte à afficher
-        btnEl.style.display = 'none';
+        replaceWithSourceLink();
         return;
     }
     
@@ -1818,8 +1827,8 @@ function showMore(cardId) {
     // Marquer comme complet
     card.dataset.remaining = '';
     
-    // Cacher le bouton
-    btnEl.style.display = 'none';
+    // Remplacer le bouton par un lien vers la source
+    replaceWithSourceLink();
     
     // NE PAS scroller - garder l'écran stable pour ne pas gêner la lecture
 }

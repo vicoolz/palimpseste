@@ -2562,6 +2562,28 @@ transition: transform 0.3s;
 transform: translateX(3px);
 }
 
+/* Lien vers la source après lecture complète */
+.btn-source-link {
+display: inline-flex;
+align-items: center;
+gap: 0.5rem;
+margin-top: 1.25rem;
+padding: 0.6rem 1.25rem;
+background: transparent;
+border: 1px solid var(--muted);
+color: var(--muted);
+font-size: 0.7rem;
+font-weight: 600;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+text-decoration: none;
+transition: all 0.2s ease;
+}
+.btn-source-link:hover {
+border-color: var(--accent);
+color: var(--accent);
+}
+
 /* Chunks de texte r?v?l?s progressivement */
 .text-chunk {
 margin-top: 1rem;
