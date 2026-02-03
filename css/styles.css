@@ -5444,6 +5444,28 @@ transition: all 0.2s ease;
 border-color: var(--accent);
 color: var(--accent);
 }
+
+/* Bouton de repli flottant en bas du texte déplié */
+.collapse-text-btn {
+    display: block;
+    width: 100%;
+    margin-top: 1rem;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+.collapse-text-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--bg-card);
+}
+
 .extrait-source {
 font-size: 0.8rem;
 color: var(--muted);
