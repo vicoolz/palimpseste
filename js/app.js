@@ -673,7 +673,6 @@ async function showCardCollections(cardId) {
 function loadState() {
     try {
         const d = JSON.parse(localStorage.getItem('palimpseste') || '{}');
-        console.log('📦 loadState - favoris chargés:', d.favorites?.length || 0, d.favorites);
         
         // Charger favoris d'abord
         state.favorites = d.favorites || [];
@@ -701,7 +700,6 @@ function loadState() {
             bestStreak: 0,
             dailyWords: {}
         };
-        console.log('📦 Stats de lecture chargées:', state.readingStats);
         // Vérifier et mettre à jour le streak au chargement
         checkAndUpdateStreak();
     } catch(e) {
@@ -768,8 +766,6 @@ function checkAndUpdateStreak() {
     const today = getTodayKey();
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     
-    console.log('🔥 checkAndUpdateStreak:', { today, yesterday, lastReadDate: stats.lastReadDate, streak: stats.streak });
-    
     if (!stats.lastReadDate) {
         stats.streak = 0;
     } else if (stats.lastReadDate === today) {
@@ -781,7 +777,6 @@ function checkAndUpdateStreak() {
         const lastDate = new Date(stats.lastReadDate);
         const todayDate = new Date(today);
         const daysDiff = Math.floor((todayDate - lastDate) / 86400000);
-        console.log('⚠️ Streak potentiellement cassé, écart:', daysDiff, 'jours');
         if (daysDiff > 1) {
             stats.streak = 0;
         }
@@ -792,8 +787,6 @@ function recordReading(wordCount) {
     const stats = state.readingStats;
     const today = getTodayKey();
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    
-    console.log('📖 recordReading avant:', { wordCount, today, yesterday, lastReadDate: stats.lastReadDate, streak: stats.streak, totalWords: stats.totalWordsRead });
     
     // Ajouter les mots lus
     stats.totalWordsRead = (stats.totalWordsRead || 0) + wordCount;
@@ -1324,7 +1317,6 @@ function cleanupOldCards(fromTop = false) {
                 cards[i].remove();
             }
         }
-        console.log(`🧹 Nettoyage: ${toRemove} cartes supprimées (${MAX_CARDS} max)`);
     }
 }
 
@@ -1901,7 +1893,7 @@ async function syncLikesFromSupabase() {
             saveLikedSourcesLocal();
             updateLikeCount();
             sourceLikesSynced = true;
-            console.log('✅ Likes synchronisés depuis Supabase:', data.length);
+            // Likes synchronisés depuis Supabase
         } else {
             sourceLikesSynced = true; // Pas de données mais sync faite
         }
@@ -2848,7 +2840,7 @@ async function exploreKeyword(keyword) {
 // ═══════════════════════════════════════════════════════════
 
 function openSourceSettingsModal() {
-    console.log('Opening source settings modal');
+    
     const modal = document.getElementById('sourceSettingsModal');
     if (modal) {
         modal.classList.add('open');
