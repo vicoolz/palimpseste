@@ -1754,15 +1754,11 @@ async function fillPool() {
         state.activeSourceFilter = ['wikisource'];
     }
 
-    console.log('🔍 fillPool() - Sources actives:', state.activeSourceFilter);
-
     // Contexte d'exploration (Kaléidoscope) : si des filtres sont actifs, on évite
     // d'ajouter des contenus "random" non alignés (PoetryDB/Gutenberg/Archive).
     const filterKeywords = window.getActiveFilterKeywords ? window.getActiveFilterKeywords() : [];
     const hasExplorationFilters = Array.isArray(filterKeywords) && filterKeywords.length > 0;
     const hasSearchContext = !!state.activeSearchTerm || hasExplorationFilters;
-
-    console.log('🔍 fillPool() - Contexte:', { hasSearchContext, hasExplorationFilters, searchTerm: state.activeSearchTerm, selectedLang });
 
     // Helper pour vérifier si la source est autorisée
     const isSourceAllowed = (s) => state.activeSourceFilter.includes(s) || state.activeSourceFilter.includes('all');
@@ -1773,8 +1769,6 @@ async function fillPool() {
     const strictAltSourceMode = Array.isArray(state.activeSourceFilter)
         && state.activeSourceFilter.length === 1
         && altSourceIds.includes(state.activeSourceFilter[0]);
-    
-    console.log('🔍 fillPool() - Mode strict source unique:', strictAltSourceMode);
 
     // === 1. POETRYDB (si anglais actif) - Qualité garantie ===
     const poetryLangOk = (selectedLang === 'all' || selectedLang === 'en') || (strictAltSourceMode && state.activeSourceFilter[0] === 'poetrydb');
@@ -1819,8 +1813,8 @@ async function fillPool() {
     const archiveSupportedLangs = ['all', 'fr', 'en', 'de', 'it', 'es', 'pt', 'ru', 'zh', 'ja', 'ar', 'la', 'grc', 'el', 'sa', 'he', 'ang', 'fro'];
     const archiveLangOk = archiveSupportedLangs.includes(selectedLang) || (strictAltSourceMode && state.activeSourceFilter[0] === 'archive');
     const archiveAllowed = isSourceAllowed('archive');
-    console.log('📚 Archive.org - Conditions:', { archiveLangOk, archiveAllowed, selectedLang, strictAltSourceMode });
     if ((!hasSearchContext || strictAltSourceMode) && archiveLangOk && archiveAllowed) {
+        console.log('📚 Archive.org - Loading...');
         try {
             // Combiner Archive.org classique et Open Library
             const archiveTexts = await fetchArchiveOrg();
@@ -1847,10 +1841,9 @@ async function fillPool() {
     const sacredLangOk = (selectedLang === 'all' || selectedLang === 'en' || sacredOriginalLangs.includes(selectedLang)) || (strictAltSourceMode && state.activeSourceFilter[0] === 'sacredtexts');
     const sacredAllowed = isSourceAllowed('sacredtexts');
     const sacredConditionOk = (!hasSearchContext || strictAltSourceMode);
-    console.log('🕉️ Sacred Texts - Conditions:', { sacredLangOk, sacredAllowed, sacredConditionOk, hasSearchContext, strictAltSourceMode });
     if (sacredConditionOk && sacredLangOk && sacredAllowed) {
         try {
-            console.log('🕉️ Calling fetchSacredTexts()...');
+            console.log('🕉️ Sacred Texts - Loading...');
             const sacredTexts = await fetchSacredTexts();
             console.log('🕉️ fetchSacredTexts returned:', sacredTexts.length, 'items');
             for (const item of sacredTexts) {
@@ -1871,10 +1864,9 @@ async function fillPool() {
     const gallicaLangOk = (selectedLang === 'all' || selectedLang === 'fr') || (strictAltSourceMode && state.activeSourceFilter[0] === 'gallica');
     const gallicaAllowed = isSourceAllowed('gallica');
     const gallicaConditionOk = (!hasSearchContext || strictAltSourceMode);
-    console.log('📚 Gallica - Conditions:', { gallicaLangOk, gallicaAllowed, gallicaConditionOk, hasSearchContext, strictAltSourceMode });
     if (gallicaConditionOk && gallicaLangOk && gallicaAllowed) {
         try {
-            console.log('📚 Calling fetchGallica()...');
+            console.log('📚 Gallica - Loading...');
             const gallicaTexts = await fetchGallica();
             console.log('📚 fetchGallica returned:', gallicaTexts.length, 'items');
             for (const item of gallicaTexts) {
@@ -1899,10 +1891,9 @@ async function fillPool() {
     // Pour les langues perseusOnly, on autorise Perseus même si pas dans la liste des sources
     const perseusAllowed = isPerseusOnlyLang || isSourceAllowed('perseus');
     const perseusConditionOk = isPerseusOnlyLang || (!hasSearchContext || strictAltSourceMode);
-    console.log('🏛️ Perseus - Conditions:', { perseusLangOk, perseusAllowed, perseusConditionOk, hasSearchContext, strictAltSourceMode, isPerseusOnlyLang });
     if (perseusConditionOk && perseusLangOk && perseusAllowed) {
         try {
-            console.log('🏛️ Calling fetchPerseus()...');
+            console.log('🏛️ Perseus - Loading...');
             const perseusTexts = await fetchPerseus();
             console.log('🏛️ fetchPerseus returned:', perseusTexts.length, 'items');
             for (const item of perseusTexts) {
