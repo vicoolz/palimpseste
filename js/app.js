@@ -362,7 +362,7 @@ async function init() {
     // Initialiser le thème (clair/sombre) AVANT tout rendu
     initTheme();
     
-    // Initialiser Supabase (social features)
+    // Initialiser Supabase (social features) - NON BLOQUANT
     initSupabase();
     
     // Vérifier si c'est un retour depuis un email de reset password
@@ -389,18 +389,23 @@ async function init() {
     const langSelect = document.getElementById('langSelect');
     if (langSelect) langSelect.value = getSelectedLang();
     
-    // Charger les likes locaux (et Supabase si déjà connecté)
-    if (typeof loadLikedSources === 'function') await loadLikedSources();
+    // Charger les likes en arrière-plan (NON BLOQUANT)
+    if (typeof loadLikedSources === 'function') {
+        loadLikedSources().catch(e => console.warn('loadLikedSources deferred:', e));
+    }
     
+    // Mise à jour UI légère en parallèle (pas d'await)
     updateStats();
     updateConnections();
-    
     renderReadingPath();
     renderFavorites();
     updateFavCount();
     updateFunStat();
     
+    // ⚡ CHARGEMENT RAPIDE: Afficher le loader et lancer immédiatement fillPool + loadMore
     document.getElementById('loading').style.display = 'block';
+    
+    // Lancer fillPool et loadMore dès que possible
     await fillPool();
     document.getElementById('loading').style.display = 'none';
     await loadMore();
