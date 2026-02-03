@@ -399,8 +399,8 @@ async function renderSocialFeed() {
                         </button>
                     ` : ''}
                 </div>
-                <div class="extrait-text" id="extraitText-${extrait.id}" data-full-text="${hasFullText ? escapeHtml(fullTexte) : ''}" data-preview-text="${escapeHtml(textPreview)}">${escapeHtml(textPreview)}</div>
-                ${extrait.source_url || hasFullText ? `<button class="btn-voir-plus" onclick="loadFullTextFromSource(this)" id="voirPlus-${extrait.id}" data-extrait-id="${extrait.id}" data-source-url="${escapeHtml(extrait.source_url || '')}" data-source-title="${escapeHtml(extrait.source_title || '')}">${t('view_full_text')}</button>` : ''}
+                <div class="extrait-text" id="extraitText-${extrait.id}" data-full-text="${hasFullText ? escapeAttr(fullTexte) : ''}" data-preview-text="${escapeAttr(textPreview)}">${escapeHtml(textPreview)}</div>
+                ${extrait.source_url || hasFullText ? `<button class="btn-voir-plus" onclick="loadFullTextFromSource(this)" id="voirPlus-${extrait.id}" data-extrait-id="${extrait.id}" data-source-url="${escapeAttr(extrait.source_url || '')}" data-source-title="${escapeAttr(extrait.source_title || '')}">${t('view_full_text')}</button>` : ''}
                 <div class="extrait-source">
                     <strong>${escapeHtml(extrait.source_author)}</strong> — ${escapeHtml(extrait.source_title)}
                     ${extrait.source_url ? `<a href="${extrait.source_url}" target="_blank" class="source-link">🔗</a>` : ''}

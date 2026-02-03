@@ -144,8 +144,8 @@ async function loadTrendingFeed() {
                         <div class="trending-rank">${rankEmoji}</div>
                     </div>
                     <div class="trending-card-body">
-                        <div class="trending-text" id="extraitText-${extrait.id}" data-full-text="${hasFullText ? escapeHtml(fullTexte) : ''}" data-preview-text="${escapeHtml(textPreview)}">${escapeHtml(textPreview)}</div>
-                        ${extrait.source_url || hasFullText ? `<button class="btn-voir-plus" onclick="event.stopPropagation(); loadFullTextFromSource(this)" id="voirPlus-${extrait.id}" data-extrait-id="${extrait.id}" data-source-url="${escapeHtml(extrait.source_url || '')}" data-source-title="${escapeHtml(extrait.source_title || '')}">${t('view_full_text')}</button>` : ''}
+                        <div class="trending-text" id="extraitText-${extrait.id}" data-full-text="${hasFullText ? escapeAttr(fullTexte) : ''}" data-preview-text="${escapeAttr(textPreview)}">${escapeHtml(textPreview)}</div>
+                        ${extrait.source_url || hasFullText ? `<button class="btn-voir-plus" onclick="event.stopPropagation(); loadFullTextFromSource(this)" id="voirPlus-${extrait.id}" data-extrait-id="${extrait.id}" data-source-url="${escapeAttr(extrait.source_url || '')}" data-source-title="${escapeAttr(extrait.source_title || '')}">${t('view_full_text')}</button>` : ''}
                         ${extrait.source_author || extrait.source_title ? `
                             <div class="trending-source">
                                 <strong>${escapeHtml(extrait.source_author || '')}</strong>
