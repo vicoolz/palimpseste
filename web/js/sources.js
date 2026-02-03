@@ -1011,11 +1011,8 @@ async function fetchArchiveOrg() {
             language = langMapping[selectedLang];
         } else {
             // Langue non supportée par Archive.org, utiliser fr/en par défaut
-            console.log(`Archive.org: langue '${selectedLang}' non mappée, utilisation de fre/eng`);
             language = '(fre OR eng)';
         }
-        
-        console.log(`📚 Archive.org searching with language: ${language}`);
 
         // 2. Paramètres aléatoires pour varier les résultats à chaque appel
         // Page aléatoire étendue pour explorer le catalogue en profondeur
@@ -1250,8 +1247,6 @@ const SACRED_TEXTS_CATALOG = [
 
 async function fetchSacredTexts() {
     try {
-        console.log('🕉️ Fetching Sacred Texts...');
-        
         // Filtrer selon la langue sélectionnée
         // Sacred Texts contient principalement des traductions anglaises
         // mais on peut aussi filtrer par langue d'origine pour les utilisateurs intéressés
@@ -1261,11 +1256,9 @@ async function fetchSacredTexts() {
             filteredCatalog = SACRED_TEXTS_CATALOG.filter(item => 
                 item.lang === selectedLang || item.originalLang === selectedLang
             );
-            console.log(`  → Filtered for lang '${selectedLang}':`, filteredCatalog.length, 'texts');
         }
         
         if (filteredCatalog.length === 0) {
-            console.log('  ✗ No texts available for selected language');
             return [];
         }
         
@@ -1277,14 +1270,12 @@ async function fetchSacredTexts() {
             try {
                 // sacred-texts.com (avec www)
                 const url = `https://www.sacred-texts.com${item.path}`;
-                console.log('  → Trying:', item.title);
                 
                 // Utiliser le helper fetchWithCorsProxy
                 const res = await fetchWithCorsProxy(url, 6000);
                 let html = res ? await res.text() : null;
                 
                 if (html && html.length > 500) {
-                    console.log('  ✓ Got HTML for', item.title, '- length:', html.length);
                     // Parser le HTML pour extraire le texte
                     const div = document.createElement('div');
                     div.innerHTML = html;
@@ -1303,15 +1294,12 @@ async function fetchSacredTexts() {
                                .replace(/^\s*\d+\s*$/gm, '') // Supprimer les numéros de vers seuls
                                .trim();
                     
-                    console.log('  → Text extracted, length:', text.length);
-                    
                     // Prendre un extrait
                     if (text.length > 300) {
                         let excerpt = text.substring(0, 2500);
                         const lastPara = excerpt.lastIndexOf('\n\n');
                         if (lastPara > 1500) excerpt = excerpt.substring(0, lastPara);
                         
-                        console.log('  ✓ Adding Sacred Text:', item.title);
                         results.push({
                             title: item.title,
                             text: excerpt + '\n\n[...] (Read more on Sacred Texts)',
@@ -1323,18 +1311,13 @@ async function fetchSacredTexts() {
                             categories: [item.category],
                             isPreloaded: true
                         });
-                    } else {
-                        console.log('  ✗ Text too short:', text.length);
                     }
-                } else {
-                    console.log('  ✗ No HTML or too short for', item.title);
                 }
             } catch (e) {
-                console.warn('Sacred Texts fetch error:', e);
+                // Erreur silencieuse, on continue
             }
         }
         
-        console.log('🕉️ Sacred Texts returned', results.length, 'texts');
         return results;
     } catch (e) {
         console.error('Sacred Texts error:', e);
@@ -1348,8 +1331,6 @@ async function fetchSacredTexts() {
 
 // Helper pour fetch avec proxy CORS (utilise le proxy Vercel en prod, proxies publics en local)
 async function fetchWithCorsProxy(url, timeoutMs = ARCHIVE_TIMEOUT_MS) {
-    console.log('    📡 fetchWithCorsProxy:', url.substring(0, 80) + '...');
-    
     const isGallica = url.includes('gallica.bnf.fr');
 
     // En production (Vercel), utiliser notre propre proxy en PRIORITÉ
@@ -1358,21 +1339,13 @@ async function fetchWithCorsProxy(url, timeoutMs = ARCHIVE_TIMEOUT_MS) {
             const proxyUrl = isGallica
                 ? `/api/gallica-proxy?url=${encodeURIComponent(url)}`
                 : `/api/archive-proxy?url=${encodeURIComponent(url)}`;
-            console.log('    → Trying Vercel proxy...');
             const res = await fetchWithTimeout(proxyUrl, {}, timeoutMs);
             if (res.ok) {
-                console.log('    ✓ Vercel proxy succeeded, status:', res.status);
                 return res;
-            } else {
-                const errorText = await res.text().catch(() => 'Unknown error');
-                console.log('    ✗ Vercel proxy error:', res.status, errorText.substring(0, 100));
             }
         } catch (e) {
-            console.log('    ✗ Vercel proxy failed:', e.message);
+            // Fallback silencieux vers proxies publics
         }
-        
-        // Fallback: essayer les proxies publics même en production
-        console.log('    → Falling back to public CORS proxies...');
     }
     
     // Essayer les proxies CORS publics (local ou fallback en prod)
@@ -1385,19 +1358,15 @@ async function fetchWithCorsProxy(url, timeoutMs = ARCHIVE_TIMEOUT_MS) {
         const proxyFn = proxies[i];
         try {
             const proxiedUrl = proxyFn(url);
-            console.log(`    → Trying public proxy ${i + 1}...`);
             const res = await fetchWithTimeout(proxiedUrl, {}, timeoutMs);
             if (res.ok) {
-                console.log(`    ✓ Proxy ${i + 1} succeeded`);
                 return res;
-            } else {
-                console.log(`    ✗ Proxy ${i + 1} returned status:`, res.status);
             }
         } catch (e) {
-            console.log(`    ✗ Proxy ${i + 1} failed:`, e.message);
+            // Continue au prochain proxy
         }
     }
-    console.warn('    ✗ All CORS proxies failed for:', url.substring(0, 80));
+    console.warn('CORS proxies failed for:', url.substring(0, 80));
     return null;
 }
 
@@ -1413,12 +1382,10 @@ const GALLICA_ENABLED = false;
 async function fetchGallica() {
     // Gallica désactivé par configuration
     if (!GALLICA_ENABLED) {
-        console.log('📚 Gallica désactivé (flag GALLICA_ENABLED=false)');
         return [];
     }
     
     try {
-        console.log('📚 Fetching Gallica...');
         // Termes de recherche pour Gallica - utiliser dc.title ou dc.subject (pas de noms d'auteurs en dur)
         const searchTerms = [
             { field: 'dc.title', term: 'fables' },
@@ -1438,33 +1405,24 @@ async function fetchGallica() {
             { field: 'dc.subject', term: 'philosophie' },
         ];
         const search = searchTerms[Math.floor(Math.random() * searchTerms.length)];
-        console.log('  → Search:', search.field, '=', search.term);
         
         // API SRU de Gallica - UN SEUL document pour éviter le rate limiting
         const startRecord = Math.floor(Math.random() * 200) + 1;
         const sruUrl = `https://gallica.bnf.fr/SRU?operation=searchRetrieve&version=1.2&maximumRecords=1&startRecord=${startRecord}&query=${search.field} all "${search.term}"`;
-        console.log('  → SRU URL:', sruUrl);
         
         // Vérifier le cache
         const cacheKey = `sru:${search.field}:${search.term}:${startRecord}`;
         const cached = gallicaCache.get(cacheKey);
         if (cached && Date.now() - cached.timestamp < GALLICA_CACHE_DURATION) {
-            console.log('  → Using cached SRU response');
             return cached.results;
         }
         
         const res = await fetchWithCorsProxy(sruUrl);
         if (!res) {
-            console.log('  ✗ No response from Gallica SRU');
             return [];
         }
         
         const xmlText = await res.text();
-        console.log('  → Got XML response, length:', xmlText.length);
-        
-        // Extraire le nombre de résultats
-        const numRecordsMatch = xmlText.match(/<srw:numberOfRecords>(\d+)<\/srw:numberOfRecords>/);
-        console.log('  → Total records available:', numRecordsMatch ? numRecordsMatch[1] : 'unknown');
         
         // Parser le XML avec gestion des namespaces SRU
         const parser = new DOMParser();
@@ -1473,19 +1431,14 @@ async function fetchGallica() {
         // Vérifier les erreurs de parsing XML
         const parseError = xmlDoc.querySelector('parsererror');
         if (parseError) {
-            console.error('  ✗ XML parse error:', parseError.textContent);
             return [];
         }
         
         // Méthode robuste: extraire les records via regex puis parser individuellement
         const recordMatches = xmlText.match(/<srw:record>[\s\S]*?<\/srw:record>/gi);
         if (!recordMatches || recordMatches.length === 0) {
-            console.log('  ✗ No records found in XML');
-            console.log('  → XML preview:', xmlText.substring(0, 800));
             return [];
         }
-        
-        console.log('  → Found', recordMatches.length, 'records');
         
         const results = [];
         
@@ -1501,14 +1454,11 @@ async function fetchGallica() {
             const creator = creatorMatch ? creatorMatch[1].trim() : 'Inconnu';
             const identifier = identifierMatch ? identifierMatch[1].trim() : null;
             
-            console.log('    → Record:', title.substring(0, 50));
-            
             if (identifier) {
                 // Extraire l'ARK ID depuis l'identifier
                 const arkMatch = identifier.match(/(ark:\/\d+\/\w+)/);
                 if (arkMatch) {
                     const arkId = arkMatch[1];
-                    console.log('      → ARK ID:', arkId);
                     
                     // URL du texte OCR - Gallica expose le texte via /texteBrut
                     const textUrl = `https://gallica.bnf.fr/${arkId}/texteBrut`;
@@ -1516,11 +1466,9 @@ async function fetchGallica() {
                     // Essayer de récupérer le texte (aussi via proxy CORS)
                     let text = null;
                     try {
-                        console.log('      → Fetching text from:', textUrl);
                         const textRes = await fetchWithCorsProxy(textUrl, 10000);
                         if (textRes) {
                             let html = await textRes.text();
-                            console.log('      → Got response, length:', html?.length);
                             
                             // Gallica /texteBrut retourne une page HTML - extraire le contenu textuel
                             const div = document.createElement('div');
@@ -1536,12 +1484,9 @@ async function fetchGallica() {
                             }
                             
                             text = contentEl.innerText || contentEl.textContent || '';
-                            console.log('      → Extracted text, length:', text.length);
-                        } else {
-                            console.log('      ✗ No text response');
                         }
                     } catch (e) {
-                        console.log('      ✗ Text fetch error:', e.message);
+                        // Erreur silencieuse
                     }
                     
                     if (text && text.length > 500) {
@@ -1571,7 +1516,6 @@ async function fetchGallica() {
                             }
                             
                             if (excerpt.length > 300) {
-                                console.log('      ✓ Adding Gallica text:', title.substring(0, 40));
                                 results.push({
                                     title: title.substring(0, 100),
                                     text: excerpt + '\n\n[...] (Lire la suite sur Gallica)',
@@ -1581,29 +1525,18 @@ async function fetchGallica() {
                                     lang: 'fr',
                                     isPreloaded: true
                                 });
-                            } else {
-                                console.log('      ✗ Excerpt too short after cleaning:', excerpt.length);
                             }
-                        } else {
-                            console.log('      ✗ Text looks like JSON/UI, skipping');
                         }
-                    } else {
-                        console.log('      ✗ Text too short or empty:', text?.length);
                     }
-                } else {
-                    console.log('      ✗ No ARK ID in:', identifier.substring(0, 50));
                 }
-            } else {
-                console.log('      ✗ No identifier');
             }
         } catch (e) {
-            console.warn('Gallica record parse error:', e);
+            // Erreur silencieuse
         }
         
         // Mettre en cache les résultats
         gallicaCache.set(cacheKey, { results, timestamp: Date.now() });
         
-        console.log('📚 Gallica returned', results.length, 'texts');
         return results;
     } catch (e) {
         console.error('Gallica error:', e);
