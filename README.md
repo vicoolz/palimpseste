@@ -103,7 +103,6 @@ Social features require a Supabase instance.
    ```
    supabase_setup.sql
    create_notification_rpc.sql
-   sync_badges.sql
    fix_notifications_rls.sql
    ```
 3. Configure `web/js/config.js`:
