@@ -1703,143 +1703,116 @@ async function fillPool() {
         && state.activeSourceFilter.length === 1
         && altSourceIds.includes(state.activeSourceFilter[0]);
 
+    // ⚡ OPTIMISATION: Lancer toutes les sources en PARALLÈLE pour un chargement rapide
+    const sourcePromises = [];
+
     // === 1. POETRYDB (si anglais actif) - Qualité garantie ===
     const poetryLangOk = (selectedLang === 'all' || selectedLang === 'en') || (strictAltSourceMode && state.activeSourceFilter[0] === 'poetrydb');
     if ((!hasSearchContext || strictAltSourceMode) && poetryLangOk && isSourceAllowed('poetrydb')) {
-        try {
-            const poems = await fetchPoetryDB();
-            for (const poem of poems) {
-                if (!state.shownPages.has('poetrydb:' + poem.title)) {
-                    // Ajouter EN PRIORITÉ (pas de scories!)
-                    state.textPool.unshift({
-                        title: poem.title,
-                        text: poem.text,
-                        author: poem.author,
-                        lang: 'en',
-                        source: 'poetrydb',
-                        isPreloaded: true // Texte déjà chargé
-                    });
+        sourcePromises.push(
+            fetchPoetryDB().then(poems => {
+                for (const poem of poems) {
+                    if (!state.shownPages.has('poetrydb:' + poem.title)) {
+                        state.textPool.unshift({
+                            title: poem.title,
+                            text: poem.text,
+                            author: poem.author,
+                            lang: 'en',
+                            source: 'poetrydb',
+                            isPreloaded: true
+                        });
+                    }
                 }
-            }
-        } catch (e) {
-            console.error('PoetryDB fillPool error:', e);
-        }
+            }).catch(e => console.error('PoetryDB fillPool error:', e))
+        );
     }
     
     // === 1.5 PROJECT GUTENBERG - Classiques du domaine public ===
     if ((!hasSearchContext || strictAltSourceMode) && isSourceAllowed('gutenberg')) {
-        try {
-            const gutenbergTexts = await fetchGutenberg();
-            for (const item of gutenbergTexts) {
-                state.textPool.unshift({
-                    ...item,
-                    isPreloaded: true
-                });
-            }
-        } catch (e) {
-            console.error('Gutenberg fillPool error:', e);
-        }
+        sourcePromises.push(
+            fetchGutenberg().then(gutenbergTexts => {
+                for (const item of gutenbergTexts) {
+                    state.textPool.unshift({ ...item, isPreloaded: true });
+                }
+            }).catch(e => console.error('Gutenberg fillPool error:', e))
+        );
     }
     
     // === 1.6 ARCHIVE.ORG + OPEN LIBRARY - Internet Archive ===
-    // Langues supportées: fr, en, de, it, es, pt, ru, zh, ja, ar, la, grc, el, sa, he, ang, fro
     const archiveSupportedLangs = ['all', 'fr', 'en', 'de', 'it', 'es', 'pt', 'ru', 'zh', 'ja', 'ar', 'la', 'grc', 'el', 'sa', 'he', 'ang', 'fro'];
     const archiveLangOk = archiveSupportedLangs.includes(selectedLang) || (strictAltSourceMode && state.activeSourceFilter[0] === 'archive');
     const archiveAllowed = isSourceAllowed('archive');
     if ((!hasSearchContext || strictAltSourceMode) && archiveLangOk && archiveAllowed) {
         console.log('📚 Archive.org - Loading...');
-        try {
-            // Combiner Archive.org classique et Open Library
-            const archiveTexts = await fetchArchiveOrg();
-            const openLibraryTexts = await fetchOpenLibrary();
-            const combinedTexts = [...archiveTexts, ...openLibraryTexts];
-            
-            for (const item of combinedTexts) {
-                state.textPool.unshift({
-                    ...item,
-                    isPreloaded: true
-                });
-            }
-        } catch (e) {
-            console.error('Archive.org fillPool error:', e);
-        }
+        sourcePromises.push(
+            Promise.all([fetchArchiveOrg(), fetchOpenLibrary()]).then(([archiveTexts, openLibraryTexts]) => {
+                const combinedTexts = [...archiveTexts, ...openLibraryTexts];
+                for (const item of combinedTexts) {
+                    state.textPool.unshift({ ...item, isPreloaded: true });
+                }
+            }).catch(e => console.error('Archive.org fillPool error:', e))
+        );
     }
     
     // === 1.7 SACRED TEXTS ARCHIVE - Textes religieux et mystiques ===
-    // ⚠️ ATTENTION: Sacred Texts est un site ANGLOPHONE uniquement
-    // Tous les textes sont en anglais (traductions de textes anciens)
-    // On l'active si: langue = 'all' ou 'en', OU si l'utilisateur cherche des textes d'une langue ancienne
-    // (car quelqu'un cherchant du sanskrit ou du grec ancien acceptera probablement une traduction anglaise)
     const sacredOriginalLangs = ['pi', 'zh', 'sa', 'fa', 'ar', 'la', 'grc', 'egy', 'he', 'non', 'enm', 'cop', 'ang'];
     const sacredLangOk = (selectedLang === 'all' || selectedLang === 'en' || sacredOriginalLangs.includes(selectedLang)) || (strictAltSourceMode && state.activeSourceFilter[0] === 'sacredtexts');
     const sacredAllowed = isSourceAllowed('sacredtexts');
     const sacredConditionOk = (!hasSearchContext || strictAltSourceMode);
     if (sacredConditionOk && sacredLangOk && sacredAllowed) {
-        try {
-            console.log('🕉️ Sacred Texts - Loading...');
-            const sacredTexts = await fetchSacredTexts();
-            console.log('🕉️ fetchSacredTexts returned:', sacredTexts.length, 'items');
-            for (const item of sacredTexts) {
-                if (!state.shownPages.has('sacred:' + item.title)) {
-                    state.textPool.unshift({
-                        ...item,
-                        isPreloaded: true
-                    });
+        console.log('🕉️ Sacred Texts - Loading...');
+        sourcePromises.push(
+            fetchSacredTexts().then(sacredTexts => {
+                console.log('🕉️ fetchSacredTexts returned:', sacredTexts.length, 'items');
+                for (const item of sacredTexts) {
+                    if (!state.shownPages.has('sacred:' + item.title)) {
+                        state.textPool.unshift({ ...item, isPreloaded: true });
+                    }
                 }
-            }
-        } catch (e) {
-            console.error('Sacred Texts fillPool error:', e);
-        }
+            }).catch(e => console.error('Sacred Texts fillPool error:', e))
+        );
     }
     
     // === 1.8 GALLICA (BnF) - Bibliothèque nationale de France ===
-    // En mode strict (source unique sélectionnée), on ignore la contrainte de langue
     const gallicaLangOk = (selectedLang === 'all' || selectedLang === 'fr') || (strictAltSourceMode && state.activeSourceFilter[0] === 'gallica');
     const gallicaAllowed = isSourceAllowed('gallica');
     const gallicaConditionOk = (!hasSearchContext || strictAltSourceMode);
     if (gallicaConditionOk && gallicaLangOk && gallicaAllowed) {
-        try {
-            console.log('📚 Gallica - Loading...');
-            const gallicaTexts = await fetchGallica();
-            console.log('📚 fetchGallica returned:', gallicaTexts.length, 'items');
-            for (const item of gallicaTexts) {
-                if (!state.shownPages.has('gallica:' + item.title)) {
-                    state.textPool.unshift({
-                        ...item,
-                        isPreloaded: true
-                    });
+        console.log('📚 Gallica - Loading...');
+        sourcePromises.push(
+            fetchGallica().then(gallicaTexts => {
+                console.log('📚 fetchGallica returned:', gallicaTexts.length, 'items');
+                for (const item of gallicaTexts) {
+                    if (!state.shownPages.has('gallica:' + item.title)) {
+                        state.textPool.unshift({ ...item, isPreloaded: true });
+                    }
                 }
-            }
-        } catch (e) {
-            console.error('Gallica fillPool error:', e);
-        }
+            }).catch(e => console.error('Gallica fillPool error:', e))
+        );
     }
     
     // === 1.9 PERSEUS DIGITAL LIBRARY - Classiques grecs/latins ===
-    // En mode strict (source unique sélectionnée), on ignore la contrainte de langue
-    // Langues supportées: en (traductions), la (latin), grc (grec ancien)
-    // Pour les langues perseusOnly (comme grc), Perseus est TOUJOURS activé
     const isPerseusOnlyLang = isPerseusOnlyLanguage();
     const perseusLangOk = isPerseusOnlyLang || (selectedLang === 'all' || ['en', 'la', 'grc', 'el'].includes(selectedLang)) || (strictAltSourceMode && state.activeSourceFilter[0] === 'perseus');
-    // Pour les langues perseusOnly, on autorise Perseus même si pas dans la liste des sources
     const perseusAllowed = isPerseusOnlyLang || isSourceAllowed('perseus');
     const perseusConditionOk = isPerseusOnlyLang || (!hasSearchContext || strictAltSourceMode);
     if (perseusConditionOk && perseusLangOk && perseusAllowed) {
-        try {
-            console.log('🏛️ Perseus - Loading...');
-            const perseusTexts = await fetchPerseus();
-            console.log('🏛️ fetchPerseus returned:', perseusTexts.length, 'items');
-            for (const item of perseusTexts) {
-                if (!state.shownPages.has('perseus:' + item.title)) {
-                    state.textPool.unshift({
-                        ...item,
-                        isPreloaded: true
-                    });
+        console.log('🏛️ Perseus - Loading...');
+        sourcePromises.push(
+            fetchPerseus().then(perseusTexts => {
+                console.log('🏛️ fetchPerseus returned:', perseusTexts.length, 'items');
+                for (const item of perseusTexts) {
+                    if (!state.shownPages.has('perseus:' + item.title)) {
+                        state.textPool.unshift({ ...item, isPreloaded: true });
+                    }
                 }
-            }
-        } catch (e) {
-            console.error('Perseus fillPool error:', e);
-        }
+            }).catch(e => console.error('Perseus fillPool error:', e))
+        );
+    }
+
+    // ⚡ Attendre que toutes les sources alternatives soient chargées EN PARALLÈLE
+    if (sourcePromises.length > 0) {
+        await Promise.all(sourcePromises);
     }
     
     // === 2. WIKISOURCE (sources traditionnelles) ===
@@ -1862,7 +1835,8 @@ async function fillPool() {
     // Mélanger les sources
     const shuffledSources = [...activeSources].slice(0).sort(() => Math.random() - 0.5).slice(0, 3);
     
-    for (const ws of shuffledSources) {
+    // ⚡ OPTIMISATION: Charger toutes les Wikisources EN PARALLÈLE
+    const wikisourcePromises = shuffledSources.map(async (ws) => {
         // A) Stratégie de remplissage
         // 1. Si un terme de recherche est actif (ex: clic sur hashtag), on l'utilise en priorité
         // 2. Sinon, on alterne entre mots-clés génériques et hasard total
@@ -2013,7 +1987,10 @@ async function fillPool() {
                 }
              } catch (e) { console.error('Search error:', e); }
         }
-    }
+    });
+    
+    // ⚡ Attendre toutes les Wikisources en parallèle
+    await Promise.all(wikisourcePromises);
 }
 
 // ═══════════════════════════════════════════════════════════
