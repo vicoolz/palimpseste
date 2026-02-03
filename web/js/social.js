@@ -728,6 +728,7 @@ async function loadFullTextFromSource(btnOrId, sourceUrlParam, sourceTitleParam)
     if (textEl.dataset.fullText) {
         const isExpanded = textEl.dataset.expanded === 'true';
         if (isExpanded) {
+            // Replier
             const previewText = textEl.dataset.previewText || '';
             textEl.innerHTML = '';
             textEl.textContent = previewText;
@@ -737,6 +738,7 @@ async function loadFullTextFromSource(btnOrId, sourceUrlParam, sourceTitleParam)
                 btnEl.classList.remove('exhausted');
             }
         } else {
+            // Déplier
             const fullText = textEl.dataset.fullText;
             textEl.innerHTML = '';
             const chunkEl = document.createElement('div');
@@ -744,11 +746,31 @@ async function loadFullTextFromSource(btnOrId, sourceUrlParam, sourceTitleParam)
             chunkEl.style.animation = 'fadeIn 0.4s ease';
             chunkEl.textContent = fullText;
             textEl.appendChild(chunkEl);
+            
+            // Ajouter un bouton de repli flottant
+            const collapseBtn = document.createElement('button');
+            collapseBtn.className = 'collapse-text-btn';
+            collapseBtn.innerHTML = '▲ Replier';
+            collapseBtn.onclick = () => {
+                const previewText = textEl.dataset.previewText || '';
+                textEl.innerHTML = '';
+                textEl.textContent = previewText;
+                textEl.dataset.expanded = 'false';
+                if (btnEl) {
+                    btnEl.innerHTML = t('view_full_text');
+                    btnEl.classList.remove('exhausted');
+                }
+            };
+            textEl.appendChild(collapseBtn);
+            
             textEl.dataset.expanded = 'true';
             if (btnEl) {
                 btnEl.innerHTML = t('collapse');
                 btnEl.classList.remove('exhausted');
             }
+            
+            // Observer pour auto-replier quand le texte sort de la vue
+            setupAutoCollapseObserver(textEl, btnEl);
         }
         requestAnimationFrame(() => {
             if (scrollEl) scrollEl.scrollTop = scrollTop;
@@ -1025,6 +1047,23 @@ async function loadFullTextFromSource(btnOrId, sourceUrlParam, sourceTitleParam)
             chunkEl.style.animation = 'fadeIn 0.4s ease';
             chunkEl.textContent = fullText;
             textEl.appendChild(chunkEl);
+            
+            // Ajouter un bouton de repli flottant en bas du texte
+            const collapseBtn = document.createElement('button');
+            collapseBtn.className = 'collapse-text-btn';
+            collapseBtn.innerHTML = '▲ Replier';
+            collapseBtn.onclick = () => {
+                const previewText = textEl.dataset.previewText || '';
+                textEl.innerHTML = '';
+                textEl.textContent = previewText;
+                textEl.dataset.expanded = 'false';
+                if (btnEl) {
+                    btnEl.innerHTML = t('view_full_text');
+                    btnEl.classList.remove('exhausted');
+                }
+            };
+            textEl.appendChild(collapseBtn);
+            
             textEl.dataset.fullText = fullText;
             textEl.dataset.expanded = 'true';
 
@@ -1032,6 +1071,9 @@ async function loadFullTextFromSource(btnOrId, sourceUrlParam, sourceTitleParam)
                 btnEl.innerHTML = t('collapse');
                 btnEl.classList.remove('exhausted');
             }
+            
+            // Observer pour auto-replier quand le texte sort de la vue
+            setupAutoCollapseObserver(textEl, btnEl);
 
             requestAnimationFrame(() => {
                 if (scrollEl) scrollEl.scrollTop = scrollTop;
@@ -1301,6 +1343,57 @@ async function toggleFollowFromLikers(userId, btn) {
         btn.classList.add('following');
         btn.textContent = '✓ Suivi';
     }
+}
+
+// ═══════════════════════════════════════════════════════════
+// 📜 AUTO-REPLI DES TEXTES DÉPLIÉS AU SCROLL
+// ═══════════════════════════════════════════════════════════
+
+let autoCollapseObserver = null;
+
+/**
+ * Configure un observer pour auto-replier le texte quand il sort de la vue
+ */
+function setupAutoCollapseObserver(textEl, btnEl) {
+    // Nettoyer l'ancien observer si existant
+    if (textEl._autoCollapseObserver) {
+        textEl._autoCollapseObserver.disconnect();
+    }
+    
+    // Créer un observer qui vérifie si l'élément est visible
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            // Si le texte est déplié ET sort complètement de la vue (avec marge)
+            if (!entry.isIntersecting && textEl.dataset.expanded === 'true') {
+                // Délai pour éviter les replis intempestifs lors du scroll rapide
+                setTimeout(() => {
+                    // Revérifier qu'il est toujours hors vue et déplié
+                    const rect = textEl.getBoundingClientRect();
+                    const isStillOutOfView = rect.bottom < -100 || rect.top > window.innerHeight + 100;
+                    
+                    if (isStillOutOfView && textEl.dataset.expanded === 'true') {
+                        // Replier le texte
+                        const previewText = textEl.dataset.previewText || '';
+                        textEl.innerHTML = '';
+                        textEl.textContent = previewText;
+                        textEl.dataset.expanded = 'false';
+                        if (btnEl) {
+                            btnEl.innerHTML = typeof t === 'function' ? t('view_full_text') : 'Voir le texte complet';
+                            btnEl.classList.remove('exhausted');
+                        }
+                        console.log('📜 Texte auto-replié (hors vue)');
+                    }
+                }, 500); // Délai de 500ms
+            }
+        });
+    }, {
+        // Marge de 200px autour de la vue pour anticiper
+        rootMargin: '200px 0px 200px 0px',
+        threshold: 0
+    });
+    
+    observer.observe(textEl);
+    textEl._autoCollapseObserver = observer;
 }
 
 // Rendre les fonctions accessibles globalement
