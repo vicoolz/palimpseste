@@ -12,14 +12,24 @@ function initFilterDrawer() {
     
     if (!drawer || !toggle) return;
     
-    // Tap pour toggle
-    toggle.addEventListener('click', (e) => {
+    // Tap pour toggle - support iOS avec touchend
+    const handleToggle = (e) => {
         e.preventDefault();
+        e.stopPropagation();
         toggleFilterDrawer();
-    });
+    };
     
-    // Fermer via overlay
-    overlay?.addEventListener('click', closeFilterDrawer);
+    toggle.addEventListener('click', handleToggle);
+    toggle.addEventListener('touchend', handleToggle, { passive: false });
+    
+    // Fermer via overlay - support iOS
+    const handleOverlayClose = (e) => {
+        e.preventDefault();
+        closeFilterDrawer();
+    };
+    
+    overlay?.addEventListener('click', handleOverlayClose);
+    overlay?.addEventListener('touchend', handleOverlayClose, { passive: false });
     
     // Démarrer fermé
     drawer.classList.add('collapsed');
