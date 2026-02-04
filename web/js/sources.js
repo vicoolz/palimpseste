@@ -632,23 +632,20 @@ async function fetchGutenberg() {
     try {
         const fetchTextWithCorsFallback = async (rawUrl) => {
             if (!rawUrl) return null;
-            // 1) tentative directe
+            
+            // Utiliser notre proxy Gutenberg pour contourner CORS
+            const proxyUrl = `/api/gutenberg-proxy?url=${encodeURIComponent(rawUrl)}`;
+            
             try {
-                const res = await fetch(rawUrl);
+                const res = await fetch(proxyUrl);
                 if (res.ok) return await res.text();
-            } catch (_) {
-                // Souvent un blocage CORS -> on tentera le fallback
+                
+                // Si le proxy échoue, on log l'erreur mais on continue
+                console.warn('Gutenberg proxy failed for:', rawUrl, res.status);
+            } catch (err) {
+                console.warn('Gutenberg fetch error:', err.message);
             }
-
-            // 2) fallback via proxy CORS (r.jina.ai)
-            // Format attendu : https://r.jina.ai/http(s)://...
-            try {
-                const proxied = `https://r.jina.ai/${rawUrl}`;
-                const res2 = await fetch(proxied);
-                if (res2.ok) return await res2.text();
-            } catch (_) {
-                return null;
-            }
+            
             return null;
         };
 
