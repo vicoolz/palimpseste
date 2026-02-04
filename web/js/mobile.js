@@ -506,3 +506,6 @@ window.mobileNavTo = mobileNavTo;
 window.updateMobileAvatar = updateMobileAvatar;
 window.updateMobileNotifBadge = updateMobileNotifBadge;
 window.updateMobileProfilePanel = updateMobileProfilePanel;
+window.toggleFilterDrawer = toggleFilterDrawer;
+window.openFilterDrawer = openFilterDrawer;
+window.closeFilterDrawer = closeFilterDrawer;
