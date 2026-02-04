@@ -1799,6 +1799,86 @@
     .user-profile-content.header-hidden .profile-content {
         padding-top: 0.5rem !important;
     }
+    
+    /* ══════════════════════════════════════════
+       MESSAGERIE MOBILE
+       ══════════════════════════════════════════ */
+    
+    /* Panel messagerie en plein écran */
+    .msg-panel {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 100vh !important;
+        max-height: 100dvh !important;
+        z-index: 2000 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    /* Vue conversation */
+    .chat-view {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        max-height: 100vh !important;
+        max-height: 100dvh !important;
+    }
+    
+    /* Header chat fixe en haut */
+    .chat-header {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
+        flex-shrink: 0 !important;
+        background: var(--bg-card) !important;
+    }
+    
+    /* Zone messages avec scroll */
+    .chat-messages {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 80px !important;
+    }
+    
+    /* Zone input fixe en bas - IMPORTANT pour iOS */
+    .chat-input-area {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        padding: 10px 12px !important;
+        padding-bottom: calc(10px + var(--mobile-safe-bottom)) !important;
+        background: var(--bg-card) !important;
+        border-top: 1px solid var(--border) !important;
+        z-index: 100 !important;
+        display: flex !important;
+        gap: 8px !important;
+        align-items: center !important;
+    }
+    
+    /* Input adaptatif */
+    .chat-input {
+        flex: 1 !important;
+        min-width: 0 !important;
+        font-size: 16px !important; /* Empêche le zoom auto sur iOS */
+        padding: 10px 14px !important;
+        border-radius: 20px !important;
+    }
+    
+    /* Bouton envoyer visible */
+    .chat-send {
+        flex-shrink: 0 !important;
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        font-size: 1.2rem !important;
+    }
 }
 
 /* HIDE DESKTOP SETTINGS ON MOBILE ONLY */
