@@ -404,7 +404,8 @@ async function publishExtrait() {
     const { textHash, textLength } = buildExtraitKey(rawText, pendingShare.title, pendingShare.author, pendingShare.sourceUrl);
     
     // Garder trace des IDs AVANT de fermer le modal (pendingShare sera réinitialisé)
-    const originalExtraitId = pendingShare.cardId;
+    // originalExtraitId = extraitId de la base de données (UUID), pas cardId (DOM ID comme "card-0")
+    const originalExtraitId = pendingShare.extraitId;
     const extraitIdToUpdate = pendingShare.extraitId;
     const cardIdToUpdate = pendingShare.cardId;
     
