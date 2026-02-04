@@ -395,7 +395,7 @@ async function renderSocialFeed() {
                     </div>
                     ${currentUser && extrait.user_id !== currentUser.id ? `
                         <button class="btn-follow-small ${isFollowing ? 'following' : ''}" onclick="toggleFollow('${extrait.user_id}', event)">
-                            ${isFollowing ? t('followed') : t('follow_short')}
+                            ${isFollowing ? '✓ ' + t('followed') : t('follow_short')}
                         </button>
                     ` : ''}
                 </div>

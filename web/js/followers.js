@@ -23,14 +23,23 @@ let currentActivityFilter = 'all'; // 'all', 'following', 'mine', 'likes', 'comm
  * Charger la liste des personnes qu'on suit
  */
 async function loadUserFollowing() {
-    if (!currentUser || !supabaseClient) return;
+    if (!currentUser || !supabaseClient) {
+        console.log('👥 loadUserFollowing - pas de currentUser ou supabaseClient');
+        return;
+    }
     
-    const { data } = await supabaseClient
+    const { data, error } = await supabaseClient
         .from('follows')
         .select('following_id')
         .eq('follower_id', currentUser.id);
     
+    if (error) {
+        console.error('👥 loadUserFollowing - erreur:', error);
+        return;
+    }
+    
     userFollowing = new Set(data?.map(f => f.following_id) || []);
+    console.log('👥 loadUserFollowing - chargé:', userFollowing.size, 'abonnements');
 }
 
 /**
@@ -76,9 +85,41 @@ async function toggleFollow(userId, event) {
         await createNotification(userId, 'follow');
     }
     
+    // Mettre à jour TOUS les boutons de suivi pour cet utilisateur dans la page
+    updateAllFollowButtons(userId);
+    
     // Rafraîchir le feed si on est sur l'onglet amis
     if (currentSocialTab === 'friends') {
         loadSocialFeed();
+    }
+}
+
+/**
+ * Met à jour tous les boutons de suivi pour un utilisateur donné
+ */
+function updateAllFollowButtons(userId) {
+    const isNowFollowing = userFollowing.has(userId);
+    
+    // Chercher tous les boutons qui ont un onclick avec cet userId
+    document.querySelectorAll(`[onclick*="'${userId}'"]`).forEach(btn => {
+        if (btn.classList.contains('btn-follow-small') || 
+            btn.classList.contains('liker-follow-btn') ||
+            btn.classList.contains('btn-follow')) {
+            btn.classList.toggle('following', isNowFollowing);
+            // Utiliser follow_short qui inclut déjà le + devant
+            btn.innerHTML = isNowFollowing 
+                ? '✓ ' + (typeof t === 'function' ? t('followed') : 'Suivi')
+                : (typeof t === 'function' ? t('follow_short') : '+ Suivre');
+        }
+    });
+    
+    // Aussi mettre à jour le bouton du profil modal si ouvert
+    const profileFollowBtn = document.getElementById('profileFollowBtn');
+    if (profileFollowBtn && currentProfileUserId === userId) {
+        profileFollowBtn.classList.toggle('following', isNowFollowing);
+        profileFollowBtn.textContent = isNowFollowing 
+            ? (typeof t === 'function' ? t('unfollow') : 'Ne plus suivre')
+            : (typeof t === 'function' ? t('follow') : 'Suivre');
     }
 }
 
@@ -117,6 +158,10 @@ async function loadDiscoverUsers() {
         container.innerHTML = '<div class="social-empty">⚠️ Non connecté</div>';
         return;
     }
+    
+    // S'assurer que userFollowing est à jour
+    await loadUserFollowing();
+    console.log('👥 loadDiscoverUsers - userFollowing size:', userFollowing.size);
     
     // Récupérer tous les profils avec leur nombre d'extraits
     const { data: profiles, error } = await supabaseClient
@@ -197,7 +242,7 @@ function renderUserCard(userId, username, subtitle, showFollowButton = true, tog
             </div>
             ${showFollowButton ? `
                 <button class="btn-follow-small ${isFollowing ? 'following' : ''}" onclick="${toggleFn}('${userId}', event)">
-                    ${isFollowing ? '✓ ' + t('followed') : '+ ' + t('follow_btn')}
+                    ${isFollowing ? '✓ ' + t('followed') : t('follow_short')}
                 </button>
             ` : ''}
         </div>
@@ -672,6 +717,11 @@ async function openUserProfile(userId, username, defaultTab = 'extraits') {
     
     currentProfileUserId = userId;
     currentProfileTab = defaultTab;
+    
+    // S'assurer que userFollowing est à jour AVANT d'afficher le bouton
+    if (currentUser) {
+        await loadUserFollowing();
+    }
     
     // Charger les infos du profil
     const { data: profile } = await supabaseClient

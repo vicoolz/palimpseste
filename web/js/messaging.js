@@ -417,9 +417,24 @@ async function markMessagesAsRead(fromUserId) {
     if (!supabaseClient || !currentUser) return;
     
     try {
+        // Marquer les messages comme lus
         await supabaseClient.rpc('mark_messages_read', { p_from_user_id: fromUserId });
         
+        // AUSSI marquer les notifications de type 'message' de cet utilisateur comme lues
+        await supabaseClient
+            .from('notifications')
+            .update({ read_at: new Date().toISOString() })
+            .eq('user_id', currentUser.id)
+            .eq('from_user_id', fromUserId)
+            .eq('type', 'message')
+            .is('read_at', null);
+        
         updateUnreadBadge();
+        
+        // Mettre à jour le badge des notifications aussi
+        if (typeof updateNotifBadge === 'function') {
+            updateNotifBadge();
+        }
     } catch (err) {
         console.error('Erreur marquage lu:', err);
     }
