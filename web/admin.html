@@ -368,6 +368,7 @@
         let currentUser = null;
         let allEvents = [];
         let adminSessionId = null; // Pour identifier "ma" session
+        let adminVisitorId = null; // Pour identifier "mon" visitor_id (navigateur)
         let currentFilter = 'all'; // Filtre actuel
         
         // Générer/récupérer l'ID de session admin
@@ -379,6 +380,11 @@
                 sessionStorage.setItem('admin_session_id', sessionId);
             }
             return sessionId;
+        }
+        
+        // Récupérer le visitor_id du navigateur actuel (même que dans monitoring.js)
+        function getAdminVisitorId() {
+            return localStorage.getItem('palimpseste_visitor_id');
         }
         
         // Initialisation
@@ -395,10 +401,12 @@
                 
                 currentUser = session.user;
                 adminSessionId = getAdminSessionId();
+                adminVisitorId = getAdminVisitorId();
                 
-                // Afficher l'indicateur de session
+                // Afficher l'indicateur de session et visitor_id
                 document.getElementById('mySessionIndicator').innerHTML = 
-                    `🔍 Ma session: <code style="font-size: 0.7rem;">${adminSessionId.substring(0, 8)}...</code>`;
+                    `🔍 Mon visitor_id: <code style="font-size: 0.7rem;">${adminVisitorId || 'aucun'}</code><br>
+                     🔍 Ma session: <code style="font-size: 0.7rem;">${adminSessionId.substring(0, 8)}...</code>`;
                 
                 await loadDashboard();
                 
@@ -1082,7 +1090,21 @@
             
             // Masquer mes événements si coché
             if (hideMyEvents) {
-                filtered = filtered.filter(e => e.user_id !== currentUser?.id);
+                filtered = filtered.filter(e => {
+                    // Si connecté, filtrer par user_id
+                    if (currentUser?.id && e.user_id === currentUser.id) {
+                        return false;
+                    }
+                    // Sinon, filtrer par visitor_id (navigateur)
+                    if (adminVisitorId && e.event_data?.visitor_id === adminVisitorId) {
+                        return false;
+                    }
+                    // Fallback: filtrer par session_id
+                    if (adminSessionId && e.session_id === adminSessionId) {
+                        return false;
+                    }
+                    return true;
+                });
             }
             
             renderEvents(filtered);
