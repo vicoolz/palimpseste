@@ -284,6 +284,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function mobileNavTo(section) {
+    // 📊 Tracking analytics
+    if (typeof trackPageView === 'function') {
+        trackPageView(section);
+    }
+    
     // Mettre à jour l'état actif
     document.querySelectorAll('.mobile-nav-item').forEach(item => {
         item.classList.remove('active');

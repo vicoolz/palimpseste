@@ -450,6 +450,11 @@ async function publishExtrait() {
         closeShareModal();
         toast('🐦 Extrait publié !');
         
+        // 📊 Tracking analytics
+        if (typeof trackShare === 'function') {
+            trackShare(newExtrait?.id || originalExtraitId, 'share');
+        }
+        
         // Notifier l'auteur de l'extrait original (si c'est un repartage) - en arrière-plan
         if (originalExtraitId && typeof createNotification === 'function') {
             (async () => {

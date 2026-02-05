@@ -541,6 +541,11 @@ async function toggleLikeExtrait(extraitId) {
 
             if (error) throw error;
             
+            // 📊 Tracking analytics
+            if (typeof trackSocial === 'function') {
+                trackSocial('like', 'extrait', extraitId);
+            }
+            
             // Notifier l'auteur de l'extrait
             const extrait = socialExtraits.find(e => e.id === extraitId);
             if (extrait && extrait.user_id !== currentUser.id && typeof createNotification === 'function') {

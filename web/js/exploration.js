@@ -781,8 +781,21 @@ async function applyFilters() {
 
     // Si recherche libre seule: une seule requête, et on verrouille le contexte
     if (!hasAnyFilterKeywords && freeTerm) {
+        // 📊 Tracking analytics
+        if (typeof trackExploration === 'function') {
+            trackExploration('free_search', { term: freeTerm });
+        }
         await exploreAuthor(freeTerm, true, 'free');
         return;
+    }
+    
+    // 📊 Tracking analytics pour exploration avec filtres
+    if (typeof trackExploration === 'function') {
+        trackExploration('filtered', { 
+            forme: activeFilters.forme.join(','),
+            epoque: activeFilters.epoque.join(','),
+            ton: activeFilters.ton.join(',')
+        });
     }
 
     for (const q of uniqueQueries) {

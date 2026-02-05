@@ -126,6 +126,12 @@ async function performSearch() {
     // Afficher les résultats
     renderSearchTabs();
     renderSearchResults('all');
+    
+    // 📊 Tracking analytics
+    const totalResults = Object.values(searchResults).flat().length;
+    if (typeof trackSearch === 'function') {
+        trackSearch(query, 'multi-source', totalResults);
+    }
 }
 
 function getAllNonUserResults() {
