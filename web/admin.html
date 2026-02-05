@@ -115,6 +115,55 @@
         .badge-search { background: #3498db33; color: #3498db; }
         .badge-share { background: #9b59b633; color: #9b59b6; }
         .badge-other { background: #95a5a633; color: #95a5a6; }
+        .badge-me { background: #f39c1233; color: #f39c12; }
+        .badge-anon { background: #9b59b633; color: #9b59b6; }
+        
+        /* Badges d'activité */
+        .activity-badges { display: flex; flex-wrap: wrap; gap: 4px; }
+        .activity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        .activity-badge .count { font-weight: 700; }
+        .act-start { background: #1abc9c22; color: #1abc9c; }
+        .act-search { background: #3498db33; color: #3498db; }
+        .act-page { background: #9b59b633; color: #9b59b6; }
+        .act-explore { background: #e67e2233; color: #e67e22; }
+        .act-share { background: #e91e6333; color: #e91e63; }
+        .act-social { background: #00bcd433; color: #00bcd4; }
+        
+        /* Légende */
+        .activity-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        .activity-legend .activity-badge { cursor: help; }
+        
+        .session-row-me {
+            background: rgba(243, 156, 18, 0.1) !important;
+            border-left: 3px solid #f39c12;
+        }
+        
+        .session-fingerprint {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .device-info {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
         
         .online-indicator {
             display: inline-block;
@@ -236,10 +285,35 @@
             <div class="stat-value" id="sharesToday">-</div>
             <div class="stat-label">Partages aujourd'hui</div>
         </div>
+        <div class="stat-card">
+            <div class="stat-value" id="anonSessionsToday">-</div>
+            <div class="stat-label">Sessions anonymes (24h)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="loggedSessionsToday">-</div>
+            <div class="stat-label">Sessions connectées (24h)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="uniqueVisitors">-</div>
+            <div class="stat-label">👤 Visiteurs uniques (24h)</div>
+            <div id="visitorBreakdown" style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;"></div>
+        </div>
     </div>
     
     <div class="section">
-        <h2>👥 Utilisateurs actifs en temps réel</h2>
+        <h2>👻 Visiteurs anonymes (dernière heure)</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+            <strong>visitor_id</strong> = même navigateur (persiste)<br>
+            <strong>session_id</strong> = même onglet (temporaire)<br>
+            <span id="mySessionIndicator" style="color: var(--accent);"></span>
+        </p>
+        <div id="anonymousVisitorsContainer">
+            <div class="loading">Chargement...</div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>👥 Utilisateurs connectés en temps réel</h2>
         <div id="activeUsersContainer">
             <div class="loading">Chargement...</div>
         </div>
@@ -254,11 +328,24 @@
     
     <div class="section">
         <h2>📜 Événements récents</h2>
+        <div id="myActivitySummary" style="background: rgba(243, 156, 18, 0.1); border-left: 3px solid #f39c12; padding: 10px 15px; margin-bottom: 1rem; border-radius: 0 8px 8px 0; display: none;">
+            <!-- Résumé de mon activité -->
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="hideMyEvents" checked onchange="applyFilters()">
+                <span>Masquer mes événements</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="aggregateMode" checked onchange="applyFilters()">
+                <span>📊 Mode agrégé (résumé)</span>
+            </label>
+        </div>
         <div class="time-filter">
             <button class="active" onclick="filterEvents('all')">Tous</button>
-            <button onclick="filterEvents('login')">Connexions</button>
             <button onclick="filterEvents('search')">Recherches</button>
             <button onclick="filterEvents('share')">Partages</button>
+            <button onclick="filterEvents('others')">👥 Autres utilisateurs</button>
         </div>
         <div id="eventsContainer">
             <div class="loading">Chargement...</div>
@@ -280,6 +367,19 @@
         let supabaseClient = null;
         let currentUser = null;
         let allEvents = [];
+        let adminSessionId = null; // Pour identifier "ma" session
+        let currentFilter = 'all'; // Filtre actuel
+        
+        // Générer/récupérer l'ID de session admin
+        function getAdminSessionId() {
+            let sessionId = sessionStorage.getItem('admin_session_id');
+            if (!sessionId) {
+                sessionId = crypto.randomUUID ? crypto.randomUUID() : 
+                    'admin-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                sessionStorage.setItem('admin_session_id', sessionId);
+            }
+            return sessionId;
+        }
         
         // Initialisation
         async function init() {
@@ -294,6 +394,12 @@
                 }
                 
                 currentUser = session.user;
+                adminSessionId = getAdminSessionId();
+                
+                // Afficher l'indicateur de session
+                document.getElementById('mySessionIndicator').innerHTML = 
+                    `🔍 Ma session: <code style="font-size: 0.7rem;">${adminSessionId.substring(0, 8)}...</code>`;
+                
                 await loadDashboard();
                 
             } catch (e) {
@@ -313,7 +419,9 @@
             await loadAllProfiles();
             await Promise.all([
                 loadStats(),
+                loadSessionStats(),
                 loadActiveUsers(),
+                loadAnonymousVisitors(),
                 loadNewUsers(),
                 loadRecentEvents(),
                 loadEventTypes()
@@ -339,6 +447,287 @@
             if (!userId) return 'Anonyme';
             const profile = profilesCache.get(userId);
             return profile?.username || userId.substring(0, 8) + '...';
+        }
+        
+        // Charger les statistiques de sessions
+        async function loadSessionStats() {
+            try {
+                const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                
+                const { data: events, error } = await supabaseClient
+                    .from('analytics_events')
+                    .select('session_id, user_id')
+                    .gte('created_at', oneDayAgo);
+                
+                if (error) throw error;
+                
+                // Compter les sessions uniques anonymes vs connectées
+                const sessionMap = new Map();
+                (events || []).forEach(e => {
+                    if (e.session_id && !sessionMap.has(e.session_id)) {
+                        sessionMap.set(e.session_id, e.user_id);
+                    }
+                });
+                
+                let anonCount = 0;
+                let loggedCount = 0;
+                sessionMap.forEach((userId) => {
+                    if (userId) loggedCount++;
+                    else anonCount++;
+                });
+                
+                document.getElementById('anonSessionsToday').textContent = anonCount;
+                document.getElementById('loggedSessionsToday').textContent = loggedCount;
+                
+                // Compter les visiteurs uniques (par visitor_id dans event_data)
+                // On doit récupérer event_data pour avoir le visitor_id
+                const { data: eventsWithData, error: err2 } = await supabaseClient
+                    .from('analytics_events')
+                    .select('session_id, user_id, event_data')
+                    .gte('created_at', oneDayAgo);
+                
+                if (err2) throw err2;
+                
+                const realVisitors = new Set();      // Vrais visitor_id (nouveau système)
+                const fallbackSessions = new Set();  // Anciennes sessions sans visitor_id
+                const loggedUsers = new Set();       // Utilisateurs connectés
+                
+                (eventsWithData || []).forEach(e => {
+                    // Utilisateurs connectés = toujours fiables
+                    if (e.user_id) {
+                        loggedUsers.add(e.user_id);
+                        return;
+                    }
+                    
+                    // Anonymes : vérifier si on a un visitor_id
+                    const visitorId = e.event_data?.visitor_id;
+                    if (visitorId) {
+                        realVisitors.add(visitorId);
+                    } else if (e.session_id) {
+                        fallbackSessions.add(e.session_id);
+                    }
+                });
+                
+                // Total fiable = utilisateurs connectés + vrais visitor_id
+                const reliableCount = loggedUsers.size + realVisitors.size;
+                const totalWithFallback = reliableCount + fallbackSessions.size;
+                
+                // Affichage
+                if (fallbackSessions.size > 0) {
+                    // On a des anciennes données → afficher avec avertissement
+                    document.getElementById('uniqueVisitors').innerHTML = 
+                        `${reliableCount} <span style="font-size: 0.6em; color: var(--text-muted);">(+${fallbackSessions.size}?)</span>`;
+                    document.getElementById('visitorBreakdown').innerHTML = 
+                        `✅ ${loggedUsers.size} connecté(s) + ${realVisitors.size} anonyme(s) identifié(s)<br>` +
+                        `⚠️ +${fallbackSessions.size} session(s) non traçable(s) <small>(anciennes données)</small>`;
+                } else {
+                    document.getElementById('uniqueVisitors').textContent = reliableCount;
+                    document.getElementById('visitorBreakdown').innerHTML = 
+                        `✅ ${loggedUsers.size} connecté(s) + ${realVisitors.size} anonyme(s)`;
+                }
+                
+            } catch (e) {
+                console.error('Session stats error:', e);
+                document.getElementById('anonSessionsToday').textContent = '-';
+                document.getElementById('loggedSessionsToday').textContent = '-';
+                document.getElementById('uniqueVisitors').textContent = '-';
+                document.getElementById('visitorBreakdown').textContent = '';
+            }
+        }
+        
+        // Charger les visiteurs anonymes
+        async function loadAnonymousVisitors() {
+            const container = document.getElementById('anonymousVisitorsContainer');
+            
+            try {
+                const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+                
+                const { data: events, error } = await supabaseClient
+                    .from('analytics_events')
+                    .select('session_id, user_agent, created_at, event_type, event_data')
+                    .gte('created_at', oneHourAgo)
+                    .is('user_id', null)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                // Grouper par session_id ET extraire visitor_id
+                const sessionMap = new Map();
+                const visitorToSessions = new Map(); // Pour regrouper les sessions du même visiteur
+                
+                (events || []).forEach(e => {
+                    if (!e.session_id) return;
+                    
+                    const visitorId = e.event_data?.visitor_id || null;
+                    
+                    if (!sessionMap.has(e.session_id)) {
+                        sessionMap.set(e.session_id, {
+                            session_id: e.session_id,
+                            visitor_id: visitorId,
+                            user_agent: e.user_agent,
+                            first_seen: e.created_at,
+                            last_seen: e.created_at,
+                            event_count: 0,
+                            events: []
+                        });
+                    }
+                    
+                    const session = sessionMap.get(e.session_id);
+                    if (!session.visitor_id && visitorId) session.visitor_id = visitorId;
+                    session.event_count++;
+                    if (new Date(e.created_at) < new Date(session.first_seen)) {
+                        session.first_seen = e.created_at;
+                    }
+                    if (new Date(e.created_at) > new Date(session.last_seen)) {
+                        session.last_seen = e.created_at;
+                    }
+                    session.events.push({ type: e.event_type, data: e.event_data });
+                });
+                
+                // Compter combien de sessions par visitor_id
+                sessionMap.forEach(session => {
+                    if (session.visitor_id) {
+                        if (!visitorToSessions.has(session.visitor_id)) {
+                            visitorToSessions.set(session.visitor_id, []);
+                        }
+                        visitorToSessions.get(session.visitor_id).push(session.session_id);
+                    }
+                });
+                
+                const sessions = Array.from(sessionMap.values())
+                    .sort((a, b) => new Date(b.last_seen) - new Date(a.last_seen));
+                
+                if (sessions.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted)">Aucun visiteur anonyme dans la dernière heure</p>';
+                    return;
+                }
+                
+                let html = `<table><thead><tr>
+                    <th>Visiteur</th>
+                    <th>Session</th>
+                    <th>Appareil</th>
+                    <th>Actions</th>
+                    <th>Dernière activité</th>
+                    <th>Activité</th>
+                </tr></thead><tbody>`;
+                
+                sessions.forEach(session => {
+                    const isMe = session.session_id === adminSessionId;
+                    const minutesAgo = Math.round((Date.now() - new Date(session.last_seen)) / 60000);
+                    const deviceInfo = parseUserAgent(session.user_agent);
+                    const sessionShort = session.session_id.substring(0, 8);
+                    const visitorShort = session.visitor_id ? session.visitor_id.substring(0, 10) : '-';
+                    
+                    // Nombre de sessions pour ce visiteur
+                    const sessionsCount = session.visitor_id ? 
+                        visitorToSessions.get(session.visitor_id)?.length || 1 : 1;
+                    
+                    // Résumé des activités
+                    const activitySummary = summarizeActivity(session.events);
+                    
+                    html += `<tr class="${isMe ? 'session-row-me' : ''}">
+                        <td>
+                            <span class="session-fingerprint" title="Visiteur unique (même navigateur)">${visitorShort}...</span>
+                            ${sessionsCount > 1 ? `<small style="color: var(--accent);">(${sessionsCount} sessions)</small>` : ''}
+                        </td>
+                        <td>
+                            <span class="session-fingerprint" title="Session (cet onglet)">${sessionShort}...</span>
+                            ${isMe ? '<span class="badge badge-me">👤 MOI</span>' : ''}
+                        </td>
+                        <td class="device-info">${deviceInfo}</td>
+                        <td>${session.event_count} events</td>
+                        <td>Il y a ${minutesAgo} min</td>
+                        <td>${activitySummary}</td>
+                    </tr>`;
+                });
+                
+                // Compter les visiteurs uniques
+                const uniqueVisitorCount = new Set(sessions.map(s => s.visitor_id || s.session_id)).size;
+                
+                html += '</tbody></table>';
+                html += `<p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text);">
+                    📊 <strong>${sessions.length}</strong> session(s) active(s) • 
+                    👤 <strong>${uniqueVisitorCount}</strong> visiteur(s) unique(s)
+                </p>`;
+                html += `<div class="activity-legend">
+                    <span style="font-size: 0.8rem; color: var(--text-muted); margin-right: 8px;">Légende :</span>
+                    <span class="activity-badge act-start" title="L'utilisateur vient d'arriver sur le site">🚀 Arrivée</span>
+                    <span class="activity-badge act-page" title="Pages ou sections consultées">📄 Pages vues</span>
+                    <span class="activity-badge act-search" title="Recherches dans Wikisource, Gutenberg...">🔍 Recherches</span>
+                    <span class="activity-badge act-explore" title="Explorations / dérives littéraires">🧭 Explorations</span>
+                    <span class="activity-badge act-share" title="Extraits partagés">📤 Partages</span>
+                    <span class="activity-badge act-social" title="Likes, commentaires, follows...">💬 Social</span>
+                </div>`;
+                container.innerHTML = html;
+                
+            } catch (e) {
+                console.error('Anonymous visitors error:', e);
+                container.innerHTML = '<p style="color: var(--text-muted)">Erreur lors du chargement des visiteurs anonymes</p>';
+            }
+        }
+        
+        // Parser le user agent pour obtenir des infos lisibles
+        function parseUserAgent(ua) {
+            if (!ua) return 'Inconnu';
+            
+            let device = '💻';
+            let browser = '';
+            let os = '';
+            
+            // Détecter mobile
+            if (/Mobile|Android|iPhone|iPad/i.test(ua)) {
+                device = '📱';
+            }
+            
+            // Détecter le navigateur
+            if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = 'Chrome';
+            else if (/Firefox/i.test(ua)) browser = 'Firefox';
+            else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
+            else if (/Edg/i.test(ua)) browser = 'Edge';
+            else browser = 'Autre';
+            
+            // Détecter l'OS
+            if (/Windows/i.test(ua)) os = 'Win';
+            else if (/Mac/i.test(ua)) os = 'Mac';
+            else if (/Linux/i.test(ua)) os = 'Linux';
+            else if (/Android/i.test(ua)) os = 'Android';
+            else if (/iPhone|iPad/i.test(ua)) os = 'iOS';
+            
+            return `${device} ${browser} (${os})`;
+        }
+        
+        // Résumer l'activité d'une session avec des badges colorés
+        function summarizeActivity(events) {
+            const counts = {};
+            events.forEach(e => {
+                counts[e.type] = (counts[e.type] || 0) + 1;
+            });
+            
+            const badges = [];
+            
+            // Ordre logique: démarrage, navigation, actions
+            if (counts.session_start) {
+                badges.push(`<span class="activity-badge act-start" title="Début de visite">🚀 Arrivée</span>`);
+            }
+            if (counts.page_view) {
+                badges.push(`<span class="activity-badge act-page" title="${counts.page_view} page(s) consultée(s)">📄 <span class="count">${counts.page_view}</span> page${counts.page_view > 1 ? 's' : ''}</span>`);
+            }
+            if (counts.search) {
+                badges.push(`<span class="activity-badge act-search" title="${counts.search} recherche(s) effectuée(s)">🔍 <span class="count">${counts.search}</span> recherche${counts.search > 1 ? 's' : ''}</span>`);
+            }
+            if (counts.exploration) {
+                badges.push(`<span class="activity-badge act-explore" title="${counts.exploration} exploration(s) / dérive(s)">🧭 <span class="count">${counts.exploration}</span> exploration${counts.exploration > 1 ? 's' : ''}</span>`);
+            }
+            if (counts.share) {
+                badges.push(`<span class="activity-badge act-share" title="${counts.share} partage(s)">📤 <span class="count">${counts.share}</span> partage${counts.share > 1 ? 's' : ''}</span>`);
+            }
+            if (counts.social) {
+                badges.push(`<span class="activity-badge act-social" title="Interactions sociales (likes, commentaires...)">💬 Social</span>`);
+            }
+            
+            return badges.length > 0 
+                ? `<div class="activity-badges">${badges.join('')}</div>` 
+                : '<span style="color: var(--text-muted)">—</span>';
         }
         
         async function loadStats() {
@@ -507,7 +896,8 @@
                 if (error) throw error;
                 
                 allEvents = events || [];
-                renderEvents(allEvents);
+                updateMyActivitySummary(); // Afficher mon résumé
+                applyFilters(); // Appliquer les filtres (checkbox cochées par défaut)
                 
             } catch (e) {
                 console.error('Events error:', e);
@@ -517,12 +907,29 @@
         
         function renderEvents(events) {
             const container = document.getElementById('eventsContainer');
+            const aggregateMode = document.getElementById('aggregateMode')?.checked;
+            const hideMyEvents = document.getElementById('hideMyEvents')?.checked;
+            
+            // Afficher/masquer le résumé de mon activité
+            const summaryDiv = document.getElementById('myActivitySummary');
+            if (summaryDiv) {
+                summaryDiv.style.display = hideMyEvents ? 'block' : 'none';
+            }
             
             if (events.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-muted)">Aucun événement</p>';
+                container.innerHTML = '<p style="color: var(--text-muted)">Aucun événement (hors les vôtres)</p>';
                 return;
             }
             
+            if (aggregateMode) {
+                renderAggregatedEvents(events, container);
+            } else {
+                renderDetailedEvents(events, container);
+            }
+        }
+        
+        // Affichage détaillé (liste complète)
+        function renderDetailedEvents(events, container) {
             let html = '<table><thead><tr><th>Date</th><th>Type</th><th>Utilisateur</th><th>Détails</th></tr></thead><tbody>';
             
             events.slice(0, 50).forEach(event => {
@@ -530,11 +937,19 @@
                 const badgeClass = getBadgeClass(event.event_type);
                 const details = formatEventData(event.event_data);
                 const username = getUserName(event.user_id);
+                const isMe = event.user_id === currentUser?.id;
+                const sessionShort = event.session_id ? event.session_id.substring(0, 6) : '-';
                 
-                html += `<tr>
+                let userDisplay = username;
+                if (!event.user_id) {
+                    userDisplay = `<span class="badge badge-anon">Anon</span> <span class="session-fingerprint">${sessionShort}</span>`;
+                }
+                if (isMe) userDisplay += ' <span class="badge badge-me">MOI</span>';
+                
+                html += `<tr class="${isMe ? 'session-row-me' : ''}">
                     <td>${date}</td>
                     <td><span class="badge ${badgeClass}">${event.event_type}</span></td>
-                    <td>${escapeHtml(username)}</td>
+                    <td>${userDisplay}</td>
                     <td>${details}</td>
                 </tr>`;
             });
@@ -543,20 +958,169 @@
             container.innerHTML = html;
         }
         
+        // Affichage agrégé (résumé par utilisateur)
+        function renderAggregatedEvents(events, container) {
+            // Grouper par utilisateur
+            const userStats = new Map();
+            
+            events.forEach(e => {
+                const userId = e.user_id || 'anon_' + (e.event_data?.visitor_id || e.session_id || 'unknown');
+                
+                if (!userStats.has(userId)) {
+                    userStats.set(userId, {
+                        user_id: e.user_id,
+                        username: getUserName(e.user_id),
+                        visitor_id: e.event_data?.visitor_id,
+                        session_id: e.session_id,
+                        events: {},
+                        last_seen: e.created_at,
+                        first_seen: e.created_at
+                    });
+                }
+                
+                const stats = userStats.get(userId);
+                stats.events[e.event_type] = (stats.events[e.event_type] || 0) + 1;
+                if (new Date(e.created_at) > new Date(stats.last_seen)) stats.last_seen = e.created_at;
+                if (new Date(e.created_at) < new Date(stats.first_seen)) stats.first_seen = e.created_at;
+            });
+            
+            // Trier par dernière activité
+            const sorted = Array.from(userStats.values())
+                .sort((a, b) => new Date(b.last_seen) - new Date(a.last_seen));
+            
+            let html = '<table><thead><tr><th>Utilisateur</th><th>Activité</th><th>Dernière action</th></tr></thead><tbody>';
+            
+            let realVisitorCount = 0;
+            let legacySessionCount = 0;
+            
+            sorted.forEach(stats => {
+                const isMe = stats.user_id === currentUser?.id;
+                let userDisplay = stats.username;
+                
+                if (!stats.user_id) {
+                    // Distinguer visitor_id (fiable) vs session_id (legacy)
+                    const hasVisitorId = stats.visitor_id && stats.visitor_id.startsWith('v_');
+                    
+                    if (hasVisitorId) {
+                        realVisitorCount++;
+                        const visitorShort = stats.visitor_id.substring(0, 10);
+                        userDisplay = `<span class="badge badge-anon" style="background: #1abc9c33; color: #1abc9c;">✓ Visiteur</span> <span class="session-fingerprint">${visitorShort}...</span>`;
+                    } else {
+                        legacySessionCount++;
+                        const sessionShort = stats.session_id?.substring(0, 6) || '?';
+                        userDisplay = `<span class="badge badge-anon" style="background: #95a5a633; color: #95a5a6;">? Session</span> <span class="session-fingerprint">${sessionShort}...</span>`;
+                    }
+                }
+                if (isMe) userDisplay += ' <span class="badge badge-me">MOI</span>';
+                
+                // Résumé des activités
+                const activityParts = [];
+                if (stats.events.login) activityParts.push(`<span class="badge badge-login">🔑 ${stats.events.login} login${stats.events.login > 1 ? 's' : ''}</span>`);
+                if (stats.events.search) activityParts.push(`<span class="badge badge-search">🔍 ${stats.events.search} recherche${stats.events.search > 1 ? 's' : ''}</span>`);
+                if (stats.events.share) activityParts.push(`<span class="badge badge-share">📤 ${stats.events.share} partage${stats.events.share > 1 ? 's' : ''}</span>`);
+                if (stats.events.page_view) activityParts.push(`<span class="badge badge-other">📄 ${stats.events.page_view} pages</span>`);
+                if (stats.events.exploration) activityParts.push(`<span class="badge badge-other">🧭 ${stats.events.exploration} explo</span>`);
+                if (stats.events.session_start) activityParts.push(`<span class="badge badge-other">🚀 ${stats.events.session_start} visite${stats.events.session_start > 1 ? 's' : ''}</span>`);
+                
+                const lastSeenDate = new Date(stats.last_seen).toLocaleString('fr-FR');
+                
+                html += `<tr class="${isMe ? 'session-row-me' : ''}">
+                    <td>${userDisplay}</td>
+                    <td><div style="display: flex; flex-wrap: wrap; gap: 4px;">${activityParts.join('')}</div></td>
+                    <td>${lastSeenDate}</td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            
+            // Compter les utilisateurs connectés
+            const loggedUsers = sorted.filter(s => s.user_id).length;
+            
+            html += `<div style="margin-top: 0.75rem; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 0.85rem;">
+                <strong>📊 Résumé :</strong><br>
+                👤 <strong>${loggedUsers}</strong> utilisateur(s) connecté(s)<br>
+                ✓ <strong>${realVisitorCount}</strong> visiteur(s) anonyme(s) identifié(s) <span style="color: #1abc9c;">(fiable)</span><br>
+                ? <strong>${legacySessionCount}</strong> session(s) non traçable(s) <span style="color: #95a5a6;">(anciennes données, peut-être 1 seule personne)</span>
+            </div>`;
+            container.innerHTML = html;
+        }
+        
+        function applyFilters() {
+            filterEvents(currentFilter);
+        }
+        
         function filterEvents(type) {
+            currentFilter = type;
+            
             // Update active button
             document.querySelectorAll('.time-filter button').forEach(btn => {
                 btn.classList.remove('active');
-                if (btn.textContent.toLowerCase().includes(type) || (type === 'all' && btn.textContent === 'Tous')) {
+                if ((type === 'all' && btn.textContent === 'Tous') ||
+                    (type === 'others' && btn.textContent.includes('Autres')) ||
+                    (type === 'search' && btn.textContent === 'Recherches') ||
+                    (type === 'share' && btn.textContent === 'Partages')) {
                     btn.classList.add('active');
                 }
             });
             
-            const filtered = type === 'all' 
-                ? allEvents 
-                : allEvents.filter(e => e.event_type === type);
+            const hideMyEvents = document.getElementById('hideMyEvents')?.checked;
+            
+            let filtered = allEvents;
+            
+            // Filtrer par type
+            switch(type) {
+                case 'all':
+                    break;
+                case 'others':
+                    filtered = filtered.filter(e => e.user_id !== currentUser?.id);
+                    break;
+                case 'search':
+                case 'share':
+                    filtered = filtered.filter(e => e.event_type === type);
+                    break;
+            }
+            
+            // Masquer mes événements si coché
+            if (hideMyEvents) {
+                filtered = filtered.filter(e => e.user_id !== currentUser?.id);
+            }
             
             renderEvents(filtered);
+        }
+        
+        // Afficher un résumé de mon activité (toujours visible)
+        function updateMyActivitySummary() {
+            const summaryDiv = document.getElementById('myActivitySummary');
+            if (!summaryDiv || !currentUser) return;
+            
+            const myEvents = allEvents.filter(e => e.user_id === currentUser.id);
+            if (myEvents.length === 0) {
+                summaryDiv.innerHTML = '<strong>👤 Votre activité :</strong> Aucun événement récent';
+                return;
+            }
+            
+            // Compter par type
+            const counts = {};
+            myEvents.forEach(e => {
+                counts[e.event_type] = (counts[e.event_type] || 0) + 1;
+            });
+            
+            const parts = [];
+            if (counts.login) parts.push(`🔑 ${counts.login} login${counts.login > 1 ? 's' : ''}`);
+            if (counts.search) parts.push(`🔍 ${counts.search} recherche${counts.search > 1 ? 's' : ''}`);
+            if (counts.share) parts.push(`📤 ${counts.share} partage${counts.share > 1 ? 's' : ''}`);
+            if (counts.page_view) parts.push(`📄 ${counts.page_view} page${counts.page_view > 1 ? 's' : ''}`);
+            if (counts.exploration) parts.push(`🧭 ${counts.exploration} exploration${counts.exploration > 1 ? 's' : ''}`);
+            if (counts.session_start) parts.push(`🚀 ${counts.session_start} visite${counts.session_start > 1 ? 's' : ''}`);
+            
+            const lastEvent = myEvents[0];
+            const lastTime = new Date(lastEvent.created_at).toLocaleString('fr-FR');
+            
+            summaryDiv.innerHTML = `
+                <strong>👤 Votre activité (masquée ci-dessous) :</strong> 
+                ${parts.join(' • ')} 
+                <span style="color: var(--text-muted); margin-left: 1rem;">Dernière action: ${lastTime}</span>
+            `;
         }
         
         async function loadEventTypes() {

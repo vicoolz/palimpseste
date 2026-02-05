@@ -5,12 +5,38 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-// Session ID unique pour cette visite
-const SESSION_ID = crypto.randomUUID ? crypto.randomUUID() : 
-    'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-        const r = Math.random() * 16 | 0;
-        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-    });
+// Génère un UUID
+function generateUUID() {
+    return crypto.randomUUID ? crypto.randomUUID() : 
+        'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+}
+
+// VISITOR_ID : Identifiant persistant du visiteur (stocké en localStorage)
+// → Permet de reconnaître un visiteur qui revient (même navigateur)
+function getOrCreateVisitorId() {
+    let visitorId = localStorage.getItem('palimpseste_visitor_id');
+    if (!visitorId) {
+        visitorId = 'v_' + generateUUID();
+        localStorage.setItem('palimpseste_visitor_id', visitorId);
+    }
+    return visitorId;
+}
+const VISITOR_ID = getOrCreateVisitorId();
+
+// SESSION_ID : Identifiant de session (stocké en sessionStorage)
+// → Persiste dans l'onglet, mais nouveau si nouvel onglet ou refresh complet
+function getOrCreateSessionId() {
+    let sessionId = sessionStorage.getItem('palimpseste_session_id');
+    if (!sessionId) {
+        sessionId = 's_' + generateUUID();
+        sessionStorage.setItem('palimpseste_session_id', sessionId);
+    }
+    return sessionId;
+}
+const SESSION_ID = getOrCreateSessionId();
 
 // Configuration du monitoring
 const MONITORING_CONFIG = {
@@ -64,7 +90,10 @@ async function trackEvent(eventType, eventData = {}) {
         const eventRecord = {
             user_id: currentUser?.id || null,
             event_type: eventType,
-            event_data: eventData,
+            event_data: {
+                ...eventData,
+                visitor_id: VISITOR_ID  // Ajout du visitor_id dans les données
+            },
             user_agent: navigator.userAgent,
             session_id: SESSION_ID
         };
