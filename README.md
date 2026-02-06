@@ -1,5 +1,9 @@
 ﻿# ❧ Palimpseste
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/vicoolz/palimpseste/pulls)
+
 An infinite scroll reader for world literature, with social features.
 
 **[Live Demo](https://palimpseste.vercel.app)** · [Installation](#installation) · [Contributing](#contributing)
@@ -140,12 +144,14 @@ This project is still in its early stages. The goal is to grow a community of re
 
 Contributions, feedback, and ideas are welcome: code, translations, or simply sharing the project with others who might enjoy it.
 
+**See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.**
+
 ### Future Considerations
 
 If the project gains traction, one idea worth exploring would be allowing users to submit their own texts, stories, or poems. However, this would require careful thought and would only be considered in a later phase. The priority is to preserve the quality and depth of the reading experience.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/palimpseste.git
+git clone https://github.com/vicoolz/palimpseste.git
 # test locally, then submit PR
 ```
 

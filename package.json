@@ -1,4 +1,27 @@
 {
+  "name": "palimpseste",
+  "version": "1.0.0",
+  "description": "An infinite scroll reader for world literature with social features. Explore texts from 7 digital libraries across 12 languages.",
+  "keywords": [
+    "literature",
+    "reading",
+    "infinite-scroll",
+    "public-domain",
+    "wikisource",
+    "gutenberg",
+    "social-reading",
+    "open-source"
+  ],
+  "homepage": "https://palimpseste.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vicoolz/palimpseste"
+  },
+  "bugs": {
+    "url": "https://github.com/vicoolz/palimpseste/issues"
+  },
+  "author": "vicoolz",
+  "license": "MIT",
   "engines": {
     "node": "24.x"
   }
