@@ -437,6 +437,9 @@ const translations = {
         'already_in_collection': '📌 Déjà dans cette collection',
         'added_to_collection': '📌 Ajouté à "{name}"',
         'removed_from_collection': 'Retiré de la collection',
+        'confirm_remove_title': 'Retirer de la collection ?',
+        'confirm_remove_message': 'Voulez-vous vraiment retirer cet extrait de la collection ?',
+        'confirm': 'Confirmer',
         'extrait_not_found': '❌ Extrait introuvable',
         'extrait_in_no_collection': '📌 Cet extrait n\'est dans aucune collection',
         'connect_to_use_collections': '📝 Connectez-vous pour utiliser les collections',
@@ -870,6 +873,9 @@ const translations = {
         'already_in_collection': '📌 Already in this collection',
         'added_to_collection': '📌 Added to "{name}"',
         'removed_from_collection': 'Removed from collection',
+        'confirm_remove_title': 'Remove from collection?',
+        'confirm_remove_message': 'Do you really want to remove this excerpt from the collection?',
+        'confirm': 'Confirm',
         'extrait_not_found': '❌ Excerpt not found',
         'extrait_in_no_collection': '📌 This excerpt is not in any collection',
         'connect_to_use_collections': '📝 Sign in to use collections',
@@ -1115,6 +1121,7 @@ const translations = {
         'share_extract': '📤 Diesen Auszug teilen',
         'add_comment': 'Kommentar hinzufügen... (optional)',
         'cancel': 'Abbrechen',
+        'confirm': 'Bestätigen',
         'publish': '🚀 Veröffentlichen',
         
         // Modal Likers
@@ -1387,6 +1394,7 @@ const translations = {
         'share_extract': '📤 Compartir este extracto',
         'add_comment': 'Añade un comentario... (opcional)',
         'cancel': 'Cancelar',
+        'confirm': 'Confirmar',
         'publish': '🚀 Publicar',
         
         // Modal Likers
@@ -1659,6 +1667,7 @@ const translations = {
         'share_extract': '📤 Condividi questo estratto',
         'add_comment': 'Aggiungi un commento... (opzionale)',
         'cancel': 'Annulla',
+        'confirm': 'Conferma',
         'publish': '🚀 Pubblica',
         
         // Modal Likers
@@ -1931,6 +1940,7 @@ const translations = {
         'share_extract': '📤 Compartilhar este extrato',
         'add_comment': 'Adicione um comentário... (opcional)',
         'cancel': 'Cancelar',
+        'confirm': 'Confirmar',
         'publish': '🚀 Publicar',
         
         // Modal Likers

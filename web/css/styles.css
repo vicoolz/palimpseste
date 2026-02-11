@@ -8269,7 +8269,97 @@ transition: all 0.2s;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   📚 COLLECTIONS - Listes personnalisées de favoris
+   � MODALE DE CONFIRMATION
+   ═══════════════════════════════════════════════════════════ */
+
+.confirm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: calc(var(--z-modal) + 10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.confirm-modal-overlay.visible {
+    opacity: 1;
+}
+
+.confirm-modal {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    width: 90%;
+    max-width: 340px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    transform: scale(0.9);
+    transition: transform 0.2s ease;
+}
+
+.confirm-modal-overlay.visible .confirm-modal {
+    transform: scale(1);
+}
+
+.confirm-modal-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+}
+
+.confirm-modal-message {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.25rem;
+    line-height: 1.4;
+}
+
+.confirm-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.confirm-modal-btn {
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: none;
+}
+
+.confirm-modal-btn.cancel {
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.confirm-modal-btn.cancel:hover {
+    background: var(--border);
+    color: var(--text);
+}
+
+.confirm-modal-btn.confirm {
+    background: var(--accent-tertiary);
+    color: #fff;
+}
+
+.confirm-modal-btn.confirm:hover {
+    filter: brightness(1.15);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   �📚 COLLECTIONS - Listes personnalisées de favoris
    ═══════════════════════════════════════════════════════════ */
 
 /* ====== MODAL PICKER DE COLLECTION ====== */

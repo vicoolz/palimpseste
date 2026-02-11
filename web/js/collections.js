@@ -261,6 +261,175 @@ async function deleteCollection(collectionId) {
 // ═══════════════════════════════════════════════════════════
 
 /**
+ * Résoudre ou créer un extrait pour un item de collection
+ * Permet d'activer les fonctionnalités sociales (like, share, collections) pour les items sans extrait
+ * @param {string} itemId - ID de l'item de collection
+ * @param {boolean} createIfMissing - Créer l'extrait si non trouvé
+ * @returns {Promise<string|null>} L'ID de l'extrait ou null
+ */
+async function resolveExtraitForCollectionItem(itemId, createIfMissing = true) {
+    if (!currentUser || !supabaseClient) return null;
+    
+    try {
+        // Charger les détails de l'item
+        const { data: item, error } = await supabaseClient
+            .from('collection_items')
+            .select(`
+                *,
+                extraits(id, texte, source_title, source_author, source_url),
+                source_likes(id, title, author, source_url, preview)
+            `)
+            .eq('id', itemId)
+            .single();
+        
+        if (error || !item) return null;
+        
+        // Si l'item a déjà un extrait, retourner son ID
+        if (item.extrait_id && item.extraits?.id) {
+            return item.extraits.id;
+        }
+        
+        // Déterminer les données de l'item
+        let title, author, sourceUrl, text;
+        if (item.source_likes) {
+            title = item.source_likes.title;
+            author = item.source_likes.author;
+            sourceUrl = item.source_likes.source_url;
+            text = item.source_likes.preview;
+        } else {
+            title = item.local_title;
+            author = item.local_author;
+            sourceUrl = item.local_url;
+            text = item.local_preview;
+        }
+        
+        if (!title && !text) return null;
+        
+        const textToStore = (text || '').substring(0, 10000);
+        const { textHash, textLength } = typeof buildExtraitKey === 'function' 
+            ? buildExtraitKey(textToStore, title, author, sourceUrl)
+            : { textHash: null, textLength: textToStore.length };
+        
+        // Chercher si un extrait existe déjà avec ces données
+        let query = supabaseClient
+            .from('extraits')
+            .select('id')
+            .eq('source_title', title || 'Sans titre')
+            .eq('source_author', author || 'Inconnu');
+        
+        if (sourceUrl) query = query.eq('source_url', sourceUrl);
+        if (textHash) query = query.eq('text_hash', textHash);
+        
+        const { data: existing } = await query.order('created_at', { ascending: false }).limit(1);
+        
+        if (existing?.[0]?.id) {
+            // Mettre à jour l'item de collection avec l'extrait trouvé
+            await supabaseClient
+                .from('collection_items')
+                .update({ extrait_id: existing[0].id })
+                .eq('id', itemId);
+            return existing[0].id;
+        }
+        
+        // Créer un nouvel extrait si demandé
+        if (createIfMissing) {
+            const { data: newExtrait, error: insertError } = await supabaseClient
+                .from('extraits')
+                .insert({
+                    user_id: currentUser.id,
+                    texte: textToStore || `[${title}]`,
+                    source_title: title || 'Sans titre',
+                    source_author: author || 'Inconnu',
+                    source_url: sourceUrl || '',
+                    text_hash: textHash || null,
+                    text_length: textLength || null,
+                    likes_count: 0,
+                    is_silent: true  // Créé automatiquement, pas un partage public
+                })
+                .select()
+                .single();
+            
+            if (!insertError && newExtrait?.id) {
+                // Mettre à jour l'item de collection
+                await supabaseClient
+                    .from('collection_items')
+                    .update({ extrait_id: newExtrait.id })
+                    .eq('id', itemId);
+                return newExtrait.id;
+            }
+        }
+        
+        return null;
+    } catch (err) {
+        console.error('Erreur resolveExtraitForCollectionItem:', err);
+        return null;
+    }
+}
+
+/**
+ * Handler pour les actions sur items de collection sans extrait
+ * Résout l'extrait puis exécute l'action demandée
+ */
+async function handleCollectionItemAction(itemId, action, itemData) {
+    const card = document.getElementById(`coll-item-${itemId}`);
+    if (card) card.style.opacity = '0.6';
+    
+    try {
+        // Résoudre ou créer l'extrait
+        const extraitId = await resolveExtraitForCollectionItem(itemId, true);
+        
+        if (!extraitId) {
+            toast(t('error_generic') || 'Erreur');
+            return;
+        }
+        
+        // Mettre à jour l'UI avec les boutons associés à l'extrait
+        const actionsEl = card?.querySelector('.extrait-actions');
+        if (actionsEl) {
+            actionsEl.setAttribute('data-extrait-id', extraitId);
+            // Mettre à jour les IDs des boutons
+            const likeBtn = actionsEl.querySelector('.like-btn');
+            const shareBtn = actionsEl.querySelector('.share-btn');
+            const collBtn = actionsEl.querySelector('.collection-btn');
+            if (likeBtn) {
+                likeBtn.id = `likeBtn-${extraitId}`;
+                likeBtn.setAttribute('data-extrait-id', extraitId);
+                likeBtn.onclick = () => { event.stopPropagation(); toggleLikeExtrait(extraitId); };
+            }
+            if (shareBtn) shareBtn.onclick = () => { event.stopPropagation(); shareExtraitFromCard(extraitId); };
+            if (collBtn) collBtn.onclick = () => { event.stopPropagation(); openCollectionPickerForExtrait(extraitId); };
+            
+            const likeCount = actionsEl.querySelector('.like-count');
+            const shareCount = actionsEl.querySelector('.share-count');
+            const collCount = actionsEl.querySelector('.collections-count');
+            if (likeCount) likeCount.id = `likeCount-${extraitId}`;
+            if (shareCount) shareCount.id = `shareCount-${extraitId}`;
+            if (collCount) collCount.id = `collectionsCount-${extraitId}`;
+        }
+        
+        // Exécuter l'action demandée
+        if (action === 'like' && typeof toggleLikeExtrait === 'function') {
+            await toggleLikeExtrait(extraitId);
+        } else if (action === 'share' && typeof shareExtraitFromCard === 'function') {
+            shareExtraitFromCard(extraitId);
+        } else if (action === 'collection' && typeof openCollectionPickerForExtrait === 'function') {
+            openCollectionPickerForExtrait(extraitId);
+        }
+        
+        // Hydrater l'UI
+        if (typeof hydrateExtraitLikesUI === 'function') hydrateExtraitLikesUI([extraitId]);
+        if (typeof loadExtraitCollectionsInfoBatch === 'function') loadExtraitCollectionsInfoBatch([extraitId]);
+        if (typeof loadExtraitShareInfoBatch === 'function') loadExtraitShareInfoBatch([extraitId]);
+        
+    } catch (err) {
+        console.error('Erreur handleCollectionItemAction:', err);
+        toast(t('error_generic') || 'Erreur');
+    } finally {
+        if (card) card.style.opacity = '1';
+    }
+}
+
+/**
  * Ajouter un texte à une collection
  * @param {string} collectionId - ID de la collection
  * @param {object} item - L'item à ajouter (extrait, source_like, ou local)
@@ -364,8 +533,17 @@ async function addToCollection(collectionId, item) {
 /**
  * Retirer un item d'une collection
  */
-async function removeFromCollection(collectionId, itemId) {
+async function removeFromCollection(collectionId, itemId, skipConfirm = false) {
     if (!currentUser || !supabaseClient) return false;
+    
+    // Popup de confirmation
+    if (!skipConfirm) {
+        const confirmed = await showConfirmModal(
+            t('confirm_remove_title') || 'Retirer de la collection ?',
+            t('confirm_remove_message') || 'Voulez-vous vraiment retirer cet extrait de la collection ?'
+        );
+        if (!confirmed) return false;
+    }
     
     try {
         let extraitIdToUpdate = null;
@@ -405,12 +583,76 @@ async function removeFromCollection(collectionId, itemId) {
             updateExtraitCollectionsButtons([extraitIdToUpdate]);
         }
         
+        // Retirer visuellement la carte avec animation
+        const card = document.getElementById(`coll-item-${itemId}`);
+        if (card) {
+            card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                card.remove();
+                // Vérifier si la collection est maintenant vide
+                const itemsContainer = document.getElementById('collectionItemsView');
+                if (itemsContainer && itemsContainer.querySelectorAll('.collection-item-card').length === 0) {
+                    itemsContainer.innerHTML = `
+                        <div class="collection-empty">
+                            <div class="collection-empty-icon">○</div>
+                            <div class="collection-empty-title">${t('empty_collection') || 'Collection vide'}</div>
+                            <div class="collection-empty-text">${t('collection_empty_text') || 'Cette collection ne contient pas encore de textes'}</div>
+                        </div>
+                    `;
+                }
+            }, 300);
+        }
+        
         toast(t('removed_from_collection'));
         return true;
     } catch (err) {
         console.error('Erreur retrait de collection:', err);
         return false;
     }
+}
+
+/**
+ * Afficher une modale de confirmation
+ */
+function showConfirmModal(title, message) {
+    return new Promise((resolve) => {
+        // Supprimer toute modale existante
+        const existing = document.querySelector('.confirm-modal-overlay');
+        if (existing) existing.remove();
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'confirm-modal-overlay';
+        overlay.innerHTML = `
+            <div class="confirm-modal">
+                <div class="confirm-modal-title">${escapeHtml(title)}</div>
+                <div class="confirm-modal-message">${escapeHtml(message)}</div>
+                <div class="confirm-modal-actions">
+                    <button class="confirm-modal-btn cancel" id="confirmModalCancel">${t('cancel') || 'Annuler'}</button>
+                    <button class="confirm-modal-btn confirm" id="confirmModalConfirm">${t('confirm') || 'Confirmer'}</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        // Animation d'entrée
+        requestAnimationFrame(() => overlay.classList.add('visible'));
+        
+        const close = (result) => {
+            overlay.classList.remove('visible');
+            setTimeout(() => overlay.remove(), 200);
+            resolve(result);
+        };
+        
+        overlay.querySelector('#confirmModalCancel').onclick = () => close(false);
+        overlay.querySelector('#confirmModalConfirm').onclick = () => close(true);
+        overlay.onclick = (e) => { if (e.target === overlay) close(false); };
+        
+        // Focus sur le bouton confirmer
+        overlay.querySelector('#confirmModalConfirm').focus();
+    });
 }
 
 /**
@@ -1014,22 +1256,20 @@ async function openCollection(collectionId) {
                                     <button class="collection-item-expand${shouldShowExpand ? '' : ' is-hidden'}" id="expand-btn-${itemId}" type="button" aria-expanded="false" aria-label="${t('show_full_text_aria')}" onmousedown="event.preventDefault()" onclick="event.preventDefault(); event.stopPropagation(); toggleCollectionItemText('${itemId}', this, event)"><span class="expand-icon">▾</span></button>
                                     ${item.note ? `<div class="collection-item-note"><span class="note-icon">¶</span> ${escapeHtml(item.note)}</div>` : ''}
                                 </div>
-                                ${extraitId ? `
-                                    <div class="extrait-actions" onclick="event.stopPropagation()">
-                                        <button class="extrait-action like-btn ${isLiked ? 'liked' : ''}" id="likeBtn-${extraitId}" onclick="event.stopPropagation(); toggleLikeExtrait('${extraitId}')" data-extrait-id="${extraitId}">
-                                            <span class="like-icon">${isLiked ? '♥' : '♡'}</span>
-                                            <span class="like-count ${likeCount === 0 ? 'is-zero' : ''}" id="likeCount-${extraitId}" onclick="event.stopPropagation(); showLikers('${extraitId}')">${likeCount}</span>
-                                        </button>
-                                        <button class="extrait-action share-btn" onclick="event.stopPropagation(); shareExtraitFromCard('${extraitId}')">
-                                            <span class="icon">⤴</span>
-                                            <span class="share-count is-zero" id="shareCount-${extraitId}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${extraitId}')">0</span>
-                                        </button>
-                                        <button class="extrait-action collection-btn" onclick="event.stopPropagation(); openCollectionPickerForExtrait('${extraitId}')">
-                                            <span class="icon">▦</span>
-                                            <span class="collections-count is-zero" id="collectionsCount-${extraitId}" onclick="event.stopPropagation(); event.preventDefault(); showExtraitCollections('${extraitId}')">0</span>
-                                        </button>
-                                    </div>
-                                ` : ''}
+                                <div class="extrait-actions" onclick="event.stopPropagation()" data-extrait-id="${extraitId || ''}">
+                                    <button class="extrait-action like-btn ${isLiked ? 'liked' : ''}" id="likeBtn-${extraitId || itemId}" onclick="event.stopPropagation(); ${extraitId ? `toggleLikeExtrait('${extraitId}')` : `handleCollectionItemAction('${itemId}', 'like')`}" data-extrait-id="${extraitId || ''}">
+                                        <span class="like-icon">${isLiked ? '♥' : '♡'}</span>
+                                        <span class="like-count ${likeCount === 0 ? 'is-zero' : ''}" id="likeCount-${extraitId || itemId}" onclick="event.stopPropagation(); ${extraitId ? `showLikers('${extraitId}')` : ''}">${likeCount}</span>
+                                    </button>
+                                    <button class="extrait-action share-btn" onclick="event.stopPropagation(); ${extraitId ? `shareExtraitFromCard('${extraitId}')` : `handleCollectionItemAction('${itemId}', 'share')`}">
+                                        <span class="icon">⤴</span>
+                                        <span class="share-count is-zero" id="shareCount-${extraitId || itemId}" onclick="event.stopPropagation(); event.preventDefault(); ${extraitId ? `showSharers('${extraitId}')` : ''}">0</span>
+                                    </button>
+                                    <button class="extrait-action collection-btn" onclick="event.stopPropagation(); ${extraitId ? `openCollectionPickerForExtrait('${extraitId}')` : `handleCollectionItemAction('${itemId}', 'collection')`}">
+                                        <span class="icon">▦</span>
+                                        <span class="collections-count is-zero" id="collectionsCount-${extraitId || itemId}" onclick="event.stopPropagation(); event.preventDefault(); ${extraitId ? `showExtraitCollections('${extraitId}')` : ''}">0</span>
+                                    </button>
+                                </div>
                                 <div class="collection-item-actions" onclick="event.stopPropagation()">
                                     ${url ? `<button class="item-action action-load" onclick="loadTextFromCollectionById('${itemId}')" title="${t('load_full_text')}" aria-label="${t('load_full_text')}">
                                         <span class="icon">↻</span>
@@ -1162,22 +1402,20 @@ async function openCollectionById(collectionId) {
                                         </div>
                                         <button class="collection-item-expand${shouldShowExpand ? '' : ' is-hidden'}" id="expand-btn-${itemId}" type="button" aria-expanded="false" aria-label="${t('show_full_text_aria')}" onmousedown="event.preventDefault()" onclick="event.preventDefault(); event.stopPropagation(); toggleCollectionItemText('${itemId}', this, event)"><span class="expand-icon">▾</span></button>
                                     </div>
-                                    ${extraitId ? `
-                                        <div class="extrait-actions" onclick="event.stopPropagation()">
-                                            <button class="extrait-action like-btn ${isLiked ? 'liked' : ''}" id="likeBtn-${extraitId}" onclick="event.stopPropagation(); toggleLikeExtrait('${extraitId}')" data-extrait-id="${extraitId}">
-                                                <span class="like-icon">${isLiked ? '♥' : '♡'}</span>
-                                                <span class="like-count ${likeCount === 0 ? 'is-zero' : ''}" id="likeCount-${extraitId}" onclick="event.stopPropagation(); showLikers('${extraitId}')">${likeCount}</span>
-                                            </button>
-                                            <button class="extrait-action share-btn" onclick="event.stopPropagation(); shareExtraitFromCard('${extraitId}')">
-                                                <span class="icon">⤴</span>
-                                                <span class="share-count is-zero" id="shareCount-${extraitId}" onclick="event.stopPropagation(); event.preventDefault(); showSharers('${extraitId}')">0</span>
-                                            </button>
-                                            <button class="extrait-action collection-btn" onclick="event.stopPropagation(); openCollectionPickerForExtrait('${extraitId}')">
-                                                <span class="icon">▦</span>
-                                                <span class="collections-count is-zero" id="collectionsCount-${extraitId}" onclick="event.stopPropagation(); event.preventDefault(); showExtraitCollections('${extraitId}')">0</span>
-                                            </button>
-                                        </div>
-                                    ` : ''}
+                                    <div class="extrait-actions" onclick="event.stopPropagation()" data-extrait-id="${extraitId || ''}">
+                                        <button class="extrait-action like-btn ${isLiked ? 'liked' : ''}" id="likeBtn-${extraitId || itemId}" onclick="event.stopPropagation(); ${extraitId ? `toggleLikeExtrait('${extraitId}')` : `handleCollectionItemAction('${itemId}', 'like')`}" data-extrait-id="${extraitId || ''}">
+                                            <span class="like-icon">${isLiked ? '♥' : '♡'}</span>
+                                            <span class="like-count ${likeCount === 0 ? 'is-zero' : ''}" id="likeCount-${extraitId || itemId}" onclick="event.stopPropagation(); ${extraitId ? `showLikers('${extraitId}')` : ''}">${likeCount}</span>
+                                        </button>
+                                        <button class="extrait-action share-btn" onclick="event.stopPropagation(); ${extraitId ? `shareExtraitFromCard('${extraitId}')` : `handleCollectionItemAction('${itemId}', 'share')`}">
+                                            <span class="icon">⤴</span>
+                                            <span class="share-count is-zero" id="shareCount-${extraitId || itemId}" onclick="event.stopPropagation(); event.preventDefault(); ${extraitId ? `showSharers('${extraitId}')` : ''}">0</span>
+                                        </button>
+                                        <button class="extrait-action collection-btn" onclick="event.stopPropagation(); ${extraitId ? `openCollectionPickerForExtrait('${extraitId}')` : `handleCollectionItemAction('${itemId}', 'collection')`}">
+                                            <span class="icon">▦</span>
+                                            <span class="collections-count is-zero" id="collectionsCount-${extraitId || itemId}" onclick="event.stopPropagation(); event.preventDefault(); ${extraitId ? `showExtraitCollections('${extraitId}')` : ''}">0</span>
+                                        </button>
+                                    </div>
                                     <div class="collection-item-actions" onclick="event.stopPropagation()">
                                         ${url ? `<button class="item-action action-load" onclick="loadTextFromCollectionById('${itemId}')" title="${t('load_full_text')}" aria-label="${t('load_full_text')}">
                                             <span class="icon">↻</span>
@@ -1912,6 +2150,8 @@ window.createCollection = createCollection;
 window.updateCollection = updateCollection;
 window.deleteCollection = deleteCollection;
 window.addToCollection = addToCollection;
+window.resolveExtraitForCollectionItem = resolveExtraitForCollectionItem;
+window.handleCollectionItemAction = handleCollectionItemAction;
 window.removeFromCollection = removeFromCollection;
 window.getItemCollections = getItemCollections;
 window.getExtraitCollectionsInfo = getExtraitCollectionsInfo;
