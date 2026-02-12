@@ -365,6 +365,19 @@ async function init() {
     // Initialiser Supabase (social features) - NON BLOQUANT
     initSupabase();
     
+    // ═══════════════════════════════════════════════════════════
+    // 🔗 DÉTECTION DES LIENS DE PARTAGE (query params)
+    // Les liens partagés utilisent ?eid=... (extrait ID) directement
+    // pour survivre au partage via WhatsApp, Messenger, etc.
+    // ═══════════════════════════════════════════════════════════
+    const shareParams = new URLSearchParams(window.location.search);
+    const sharedExtraitId = shareParams.get('eid');
+    if (sharedExtraitId) {
+        // Nettoyer l'URL sans recharger
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState(null, '', cleanUrl + '#/text/' + sharedExtraitId);
+    }
+    
     // Vérifier si c'est un retour depuis un email de reset password
     checkPasswordResetToken();
     
@@ -387,7 +400,11 @@ async function init() {
             if (typeof openUserProfile === 'function') openUserProfile(params.id);
         });
         Router.on('text/:id', (params) => {
-            if (typeof viewExtraitById === 'function') viewExtraitById(params.id);
+            // Ouvrir l'overlay social d'abord (comme la recherche), puis charger l'extrait
+            if (typeof openSocialFeed === 'function') openSocialFeed();
+            if (typeof viewExtraitById === 'function') {
+                setTimeout(() => viewExtraitById(params.id), 300);
+            }
         });
         Router.on('collection/:id', (params) => {
             if (typeof openCollectionById === 'function') openCollectionById(params.id);
@@ -3042,7 +3059,7 @@ function showSharedPreview(query) {
 
     if (!snippet) return;
 
-    const mainContent = document.getElementById('main-content') || document.querySelector('.content');
+    const mainContent = document.getElementById('feed') || document.getElementById('main-content') || document.querySelector('.content');
     if (!mainContent) return;
 
     const escapedText = snippet.replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -3071,13 +3088,13 @@ function showSharedPreview(query) {
                 ">&laquo; ${escapedText}&hellip; &raquo;</blockquote>
                 <p style="font-weight:600;color:var(--accent,#d4a574);margin:0 0 0.5rem;">&mdash; ${escapedAuthor}</p>
                 ${escapedSource ? `<p style="font-size:0.85rem;color:var(--text-muted,#888);margin:0 0 1.5rem;">${escapedSource}</p>` : ''}
-                <a href="#/" class="btn" style="
+                <a href="/" class="btn" style="
                     display:inline-block;padding:12px 28px;
                     background:var(--accent,#d4a574);color:#000;
                     border-radius:8px;text-decoration:none;font-weight:600;
                     margin-top:1rem;
                 ">
-                    ${typeof t === 'function' ? t('discover_palimpseste') : 'Decouvrir Palimpseste'} ->
+                    ${typeof t === 'function' ? t('discover_palimpseste') : 'Découvrir Palimpseste'} →
                 </a>
             </div>
         </div>
@@ -3091,7 +3108,7 @@ window.showSharedPreview = showSharedPreview;
 // ═══════════════════════════════════════════════════════════
 
 async function shareCardLink(cardIdOrEl) {
-    let text = '', author = 'Anonyme', title = '';
+    let text = '', author = 'Anonyme', title = '', extraitId = '';
 
     // Si c'est un élément DOM (bouton cliqué), remonter au conteneur le plus proche
     const el = (typeof cardIdOrEl === 'string') ? document.getElementById(cardIdOrEl) : cardIdOrEl;
@@ -3103,10 +3120,17 @@ async function shareCardLink(cardIdOrEl) {
         text = feedCard.dataset.text;
         author = feedCard.dataset.author || 'Anonyme';
         title = feedCard.dataset.title || '';
+        extraitId = feedCard.dataset.extraitId || '';
+        // Résoudre l'ID si absent (créer en base si nécessaire)
+        if (!extraitId && typeof resolveExtraitIdForCard === 'function') {
+            extraitId = await resolveExtraitIdForCard(feedCard, true) || '';
+        }
     } else {
         // Cas 2 : carte extrait (social, trending, profil, collections)
         const card = el.closest('.extrait-card, .trending-card, .collection-item-card');
         if (card) {
+            // ID de l'extrait en base
+            extraitId = card.dataset.id || card.dataset.extraitId || '';
             // Texte : data-full-text ou premier élément texte visible
             text = card.dataset.fullText
                 || card.querySelector('.extrait-text, .trending-text, .collection-item-preview')?.textContent
@@ -3127,15 +3151,23 @@ async function shareCardLink(cardIdOrEl) {
         }
     }
 
-    // Extrait court (150 chars max) pour l'aperçu
+    // Extrait court (150 chars max) pour l'aperçu dans le texte de partage
     const snippet = text.replace(/\s+/g, ' ').trim().substring(0, 150);
 
-    const params = new URLSearchParams();
-    params.set('t', snippet);
-    params.set('a', author);
-    if (title) params.set('s', title);
-
-    const shareUrl = `${window.location.origin}${window.location.pathname}#/preview?${params}`;
+    // Construire l'URL de partage avec l'ID de l'extrait
+    // Utilise des query params (pas de hash) pour survivre au partage
+    // via WhatsApp, Messenger, SMS etc. qui suppriment souvent le fragment #
+    let shareUrl;
+    if (extraitId) {
+        shareUrl = `${window.location.origin}${window.location.pathname}?eid=${encodeURIComponent(extraitId)}`;
+    } else {
+        // Fallback si pas d'ID : utiliser le hash (fonctionne en navigation directe)
+        const params = new URLSearchParams();
+        params.set('t', snippet);
+        params.set('a', author);
+        if (title) params.set('s', title);
+        shareUrl = `${window.location.origin}${window.location.pathname}#/preview?${params.toString()}`;
+    }
 
     // Web Share API (mobile) ou copie dans le presse-papier (desktop)
     const shareData = {
