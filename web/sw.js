@@ -12,14 +12,14 @@ const API_CACHE = CACHE_VERSION + '-api';
 // Assets statiques à pré-cacher
 const STATIC_ASSETS = [
     '/',
-    '/web/index.html',
-    '/web/css/variables.css',
-    '/web/css/base.css',
-    '/web/css/styles.css',
-    '/web/css/mobile.css',
-    '/web/manifest.json',
-    '/web/icons/icon-192.svg',
-    '/web/icons/icon-512.svg'
+    '/index.html',
+    '/css/variables.css',
+    '/css/base.css',
+    '/css/styles.css',
+    '/css/mobile.css',
+    '/manifest.json',
+    '/icons/icon-192.svg',
+    '/icons/icon-512.svg'
 ];
 
 // Installation: pré-cacher les assets statiques
