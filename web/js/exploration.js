@@ -1209,7 +1209,7 @@ async function setEpoque(epoqueId) {
             <p class="period-badge">${epoque.period}</p>
             <p>${epoque.description}</p>
             <div class="ambiance-tags">
-                ${epoque.keywords.slice(0, 6).map(a => `<span class="ambiance-tag" onclick="exploreFromAmbiance('${a.replace(/'/g, "\\'")}')" title="${t('tooltip_explore')} ${a}">${a}</span>`).join('')}
+                ${epoque.keywords.slice(0, 6).map(a => `<span class="ambiance-tag" onclick="exploreFromAmbiance('${escapeJsString(a)}')" title="${escapeAttr(t('tooltip_explore') + ' ' + a)}">${escapeHtml(a)}</span>`).join('')}
             </div>
         `;
         introEl.style.display = 'block';
@@ -1256,7 +1256,7 @@ async function setCourant(courantId) {
             <p class="period-badge">${courant.period}</p>
             <p>${courant.description}</p>
             <div class="ambiance-tags">
-                ${courant.keywords.slice(0, 6).map(a => `<span class="ambiance-tag" onclick="exploreFromAmbiance('${a.replace(/'/g, "\\'")}')" title="${t('tooltip_explore')} ${a}">${a}</span>`).join('')}
+                ${courant.keywords.slice(0, 6).map(a => `<span class="ambiance-tag" onclick="exploreFromAmbiance('${escapeJsString(a)}')" title="${escapeAttr(t('tooltip_explore') + ' ' + a)}">${escapeHtml(a)}</span>`).join('')}
             </div>
         `;
         introEl.style.display = 'block';
@@ -1306,7 +1306,7 @@ async function setAmbiance(ambianceId) {
                 <h2>${ambiance.icon} ${ambiance.name}</h2>
                 <p>${ambiance.description}</p>
                 <div class="ambiance-tags">
-                    ${ambiance.authors.slice(0, 5).map(a => `<span class="ambiance-tag" onclick="exploreFromAmbiance('${a.replace(/'/g, "\\'")}')" title="${t('tooltip_explore')} ${a}">${a}</span>`).join('')}
+                    ${ambiance.authors.slice(0, 5).map(a => `<span class="ambiance-tag" onclick="exploreFromAmbiance('${escapeJsString(a)}')" title="${escapeAttr(t('tooltip_explore') + ' ' + a)}">${escapeHtml(a)}</span>`).join('')}
                     ${ambiance.authors.length > 5 ? `<span class="ambiance-tag more-authors" title="${ambiance.authors.slice(5).join(', ')}">+${ambiance.authors.length - 5} ${t('authors')}</span>` : ''}
                 </div>
             `;

@@ -174,7 +174,7 @@ function renderReadingPath() {
     if (!container || !state.readingPath?.length) return;
     
     container.innerHTML = state.readingPath.map((node, i) => `
-        <span class="path-node" title="${node.title}">
+        <span class="path-node" title="${escapeAttr(node.title)}">
             ${node.author.split(' ').pop()}
         </span>
         ${i < state.readingPath.length - 1 ? '<span class="path-arrow">→</span>' : ''}

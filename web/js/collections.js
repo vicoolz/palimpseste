@@ -1269,7 +1269,7 @@ async function openCollection(collectionId) {
                                         <span class="icon">▦</span>
                                         <span class="collections-count is-zero" id="collectionsCount-${extraitId || itemId}" onclick="event.stopPropagation(); event.preventDefault(); ${extraitId ? `showExtraitCollections('${extraitId}')` : ''}">0</span>
                                     </button>
-                                    <button class="extrait-action btn-share-external" style="margin-left:auto" onclick="event.stopPropagation(); shareCardLink(this)}'), decodeURIComponent('${safeAuthor}'), decodeURIComponent('${safeTitle}'))" title="${t('share_link') || 'Partager le lien'}">
+                                    <button class="extrait-action btn-share-external" style="margin-left:auto" onclick="event.stopPropagation(); shareCardLink(this)" title="${t('share_link') || 'Partager le lien'}">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
                                     </button>
                                 </div>

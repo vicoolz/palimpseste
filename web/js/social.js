@@ -372,9 +372,9 @@ async function renderSocialFeed() {
         const commentsCount = getRealCommentsCount(extrait.id) !== null ? getRealCommentsCount(extrait.id) : (extrait.comments_count || 0);
 
         // Échapper les quotes pour éviter les erreurs de syntaxe JS
-        const safeUrl = (extrait.source_url || '').replace(/'/g, "\\'");
-        const safeTitle = (extrait.source_title || '').replace(/'/g, "\\'");
-        const safeUsername = (username || '').replace(/'/g, "\\'");
+        const safeUrl = escapeJsString(extrait.source_url || '');
+        const safeTitle = escapeJsString(extrait.source_title || '');
+        const safeUsername = escapeJsString(username || '');
         
         // Créer un aperçu court pour l'affichage (max 300 chars)
         const PREVIEW_LENGTH = 300;
@@ -938,8 +938,8 @@ async function loadFullTextFromSource(btnOrId, sourceUrlParam, sourceTitleParam)
                               null;
                 
                 if (txtUrl) {
-                    // Utiliser r.jina.ai comme proxy pour le texte brut
-                    const proxyUrl = `https://r.jina.ai/${txtUrl}`;
+                    // Utiliser notre proxy Vercel pour le texte brut Gutenberg
+                    const proxyUrl = `/api/gutenberg-proxy?url=${encodeURIComponent(txtUrl)}`;
                     const txtRes = await fetch(proxyUrl);
                     
                     if (txtRes.ok) {
@@ -962,12 +962,12 @@ async function loadFullTextFromSource(btnOrId, sourceUrlParam, sourceTitleParam)
                 }
             }
         } else {
-            // Autre URL - essayer avec r.jina.ai (meilleur proxy que corsproxy.io)
+            // Autre URL - utiliser notre proxy Vercel
             if (!textEl.dataset.previewText) {
                 textEl.dataset.previewText = textEl.textContent || '';
             }
             
-            const proxyUrl = `https://r.jina.ai/${sourceUrl}`;
+            const proxyUrl = `/api/proxy?url=${encodeURIComponent(sourceUrl)}`;
             const response = await fetch(proxyUrl);
             
             if (response.ok) {
@@ -1317,8 +1317,8 @@ async function showLikers(extraitId) {
             
             return `
                 <div class="liker-item">
-                    <div class="liker-avatar" onclick="openUserProfile('${like.user_id}', '${escapeHtml(username)}'); closeLikersModal();">${avatarSymbol}</div>
-                    <div class="liker-info" onclick="openUserProfile('${like.user_id}', '${escapeHtml(username)}'); closeLikersModal();">
+                    <div class="liker-avatar" onclick="openUserProfile('${like.user_id}', '${escapeJsString(username)}'); closeLikersModal();">${avatarSymbol}</div>
+                    <div class="liker-info" onclick="openUserProfile('${like.user_id}', '${escapeJsString(username)}'); closeLikersModal();">
                         <div class="liker-username">${escapeHtml(username)}${isMe ? ' <span style="color:var(--text-muted)">(vous)</span>' : ''}</div>
                         <div class="liker-time">${timeAgo}</div>
                     </div>

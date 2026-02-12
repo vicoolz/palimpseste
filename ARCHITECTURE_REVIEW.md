@@ -75,7 +75,7 @@ Classés par **impact / effort**.
 | # | Problème | Détail |
 |---|----------|--------|
 | 1 | innerHTML massif (534 usages) | Deux fonctions d'échappement coexistent (`esc()` dans app.js, `escapeHtml()` dans utils.js). Unifier et auditer systématiquement. |
-| 2 | Proxy CORS tiers (corsproxy.io) | Risque MitM. Créer une Vercel Edge Function `/api/proxy`. |
+| 2 | ~~Proxy CORS tiers (corsproxy.io)~~ | **Résolu.** `/api/proxy.js` générique créé, corsproxy.io / allorigins.win / r.jina.ai supprimés du code et de la CSP. |
 | 3 | Clé Supabase anon exposée | Par design, mais vérifier exhaustivité des policies RLS (SELECT/INSERT/UPDATE/DELETE sur chaque table). |
 
 ### P1 — Performance
@@ -91,11 +91,11 @@ Classés par **impact / effort**.
 
 | # | Problème | Détail |
 |---|----------|--------|
-| 8 | Compteurs dénormalisés sans triggers | `likes_count`, `comments_count`, etc. maintenus par RPC client. Ajouter des triggers `AFTER INSERT/DELETE`. |
-| 9 | ON DELETE CASCADE manquant | `profiles.id → auth.users`, `extraits.user_id → auth.users`. |
-| 10 | Contraintes CHECK manquantes | `sender_id != receiver_id`, `follower_id != following_id`. |
-| 11 | RLS collection_items INSERT | Ne vérifie pas que l'utilisateur possède la collection cible. |
-| 12 | Index manquants | `profiles.last_seen`, `follows(follower_id, created_at)`, `messages(sender_id, receiver_id)`, `extraits(user_id, created_at)`. |
+| 8 | ~~Compteurs dénormalisés sans triggers~~ | **Résolu.** Triggers `AFTER INSERT/DELETE` sur likes, comments, follows, collection_items. |
+| 9 | ~~ON DELETE CASCADE manquant~~ | **Résolu.** CASCADE présent sur toutes les FK. |
+| 10 | ~~Contraintes CHECK manquantes~~ | **Résolu.** `no_self_follow`, `no_self_message` en place. |
+| 11 | ~~RLS collection_items INSERT~~ | **Résolu.** Policy vérifie `collection_id IN (SELECT id FROM collections WHERE user_id = auth.uid())`. |
+| 12 | ~~Index manquants~~ | **Résolu.** 6 index additionnels ajoutés (profiles.last_seen, follows, messages, extraits, notifications). |
 
 ### P2 — Accessibilité avancée
 

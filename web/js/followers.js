@@ -231,13 +231,14 @@ async function loadDiscoverUsers() {
  */
 function renderUserCard(userId, username, subtitle, showFollowButton = true, toggleFn = 'toggleFollow') {
     const avatarSymbol = getAvatarSymbol(username || 'A');
-    const safeName = escapeHtml(username || 'Anonyme');
+    const safeName = escapeJsString(username || 'Anonyme');
+    const displayName = escapeHtml(username || 'Anonyme');
     const isFollowing = userFollowing.has(userId);
     return `
         <div class="discover-card">
             <div class="discover-avatar" onclick="openUserProfile('${userId}', '${safeName}')">${avatarSymbol}</div>
             <div class="discover-info" onclick="openUserProfile('${userId}', '${safeName}')">
-                <div class="discover-name">${safeName}</div>
+                <div class="discover-name">${displayName}</div>
                 <div class="discover-stats">${subtitle}</div>
             </div>
             ${showFollowButton ? `
@@ -553,10 +554,10 @@ function renderActivityItem(activity, userMap, extraitMap, authorMap) {
         
         return `
             <div class="activity-item ${highlight}" onclick="viewExtraitById('${activity.extrait_id}')">
-                <div class="activity-avatar" onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeHtml(actorName)}')">${actorSymbol}</div>
+                <div class="activity-avatar" onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeJsString(actorName)}')">${actorSymbol}</div>
                 <div class="activity-content">
                     <div class="activity-text">
-                        <strong onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeHtml(actorName)}')">${escapeHtml(actorName)}</strong> 
+                        <strong onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeJsString(actorName)}')">${escapeHtml(actorName)}</strong> 
                         ${t('activity_liked_extract')} <strong>${escapeHtml(sourceAuthor)}</strong>
                     </div>
                     <div class="activity-snippet">"${escapeHtml(snippet)}${snippet.length >= 80 ? '...' : ''}"</div>
@@ -575,10 +576,10 @@ function renderActivityItem(activity, userMap, extraitMap, authorMap) {
         
         return `
             <div class="activity-item ${highlight}" onclick="viewExtraitById('${activity.extrait_id}')">
-                <div class="activity-avatar comment" onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeHtml(actorName)}')">${actorSymbol}</div>
+                <div class="activity-avatar comment" onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeJsString(actorName)}')">${actorSymbol}</div>
                 <div class="activity-content">
                     <div class="activity-text">
-                        <strong onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeHtml(actorName)}')">${escapeHtml(actorName)}</strong> 
+                        <strong onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeJsString(actorName)}')">${escapeHtml(actorName)}</strong> 
                         ${t('activity_commented_extract')} <strong>${escapeHtml(sourceAuthor)}</strong>
                     </div>
                     <div class="activity-comment-preview">"${escapeHtml(commentPreview)}${commentPreview.length >= 100 ? '...' : ''}"</div>
@@ -594,13 +595,13 @@ function renderActivityItem(activity, userMap, extraitMap, authorMap) {
         const targetName = target?.username || t('someone');
         
         return `
-            <div class="activity-item ${highlight}" onclick="openUserProfile('${activity.target_id}', '${escapeHtml(targetName)}')">
-                <div class="activity-avatar follow" onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeHtml(actorName)}')">${actorSymbol}</div>
+            <div class="activity-item ${highlight}" onclick="openUserProfile('${activity.target_id}', '${escapeJsString(targetName)}')">
+                <div class="activity-avatar follow" onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeJsString(actorName)}')">${actorSymbol}</div>
                 <div class="activity-content">
                     <div class="activity-text">
-                        <strong onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeHtml(actorName)}')">${escapeHtml(actorName)}</strong> 
+                        <strong onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeJsString(actorName)}')">${escapeHtml(actorName)}</strong> 
                         ${t('activity_followed')} 
-                        <strong onclick="event.stopPropagation(); openUserProfile('${activity.target_id}', '${escapeHtml(targetName)}')">${escapeHtml(targetName)}</strong>
+                        <strong onclick="event.stopPropagation(); openUserProfile('${activity.target_id}', '${escapeJsString(targetName)}')">${escapeHtml(targetName)}</strong>
                     </div>
                     <div class="activity-time">${timeAgo}</div>
                 </div>
@@ -615,10 +616,10 @@ function renderActivityItem(activity, userMap, extraitMap, authorMap) {
         
         return `
             <div class="activity-item" onclick="viewExtraitById('${activity.extrait_id}')">
-                <div class="activity-avatar share" onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeHtml(actorName)}')">${actorSymbol}</div>
+                <div class="activity-avatar share" onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeJsString(actorName)}')">${actorSymbol}</div>
                 <div class="activity-content">
                     <div class="activity-text">
-                        <strong onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeHtml(actorName)}')">${escapeHtml(actorName)}</strong> 
+                        <strong onclick="event.stopPropagation(); openUserProfile('${activity.user_id}', '${escapeJsString(actorName)}')">${escapeHtml(actorName)}</strong> 
                         ${t('activity_shared_extract')} <strong>${escapeHtml(sourceAuthor)}</strong>
                     </div>
                     <div class="activity-snippet">"${escapeHtml(snippet)}${snippet.length >= 80 ? '...' : ''}"</div>
@@ -1222,7 +1223,7 @@ async function loadProfileExtraits(userId) {
                 const commentsCount = typeof getRealCommentsCount === 'function' && getRealCommentsCount(e.id) !== null 
                     ? getRealCommentsCount(e.id) : (e.comments_count || 0);
                 // Échapper pour les attributs HTML (pas onclick)
-                const safeUsername = (username || '').replace(/'/g, "\\'");
+                const safeUsername = escapeJsString(username || '');
 
                 // Troncature du texte à 300 caractères
                 const PREVIEW_LENGTH = 300;
@@ -1382,7 +1383,7 @@ async function loadProfileLikes(userId) {
                 const collInfo = typeof extraitCollectionsCache !== 'undefined' && extraitCollectionsCache.get(e.id);
                 const collCount = collInfo?.count || 0;
                 // Échapper pour les attributs HTML (pas onclick)
-                const safeUsername = (username || '').replace(/'/g, "\\'");
+                const safeUsername = escapeJsString(username || '');
 
                 // Troncature du texte à 300 caractères pour les likes
                 const PREVIEW_LENGTH_LIKES = 300;
@@ -1563,7 +1564,7 @@ async function loadProfileFollowersList(userId) {
                 const profile = profileMap.get(f.follower_id);
                 const name = profile?.username || 'Anonyme';
                 return `
-                    <div class="friend-item" onclick="openUserProfile('${f.follower_id}', '${esc(name)}')">
+                    <div class="friend-item" onclick="openUserProfile('${f.follower_id}', '${escapeJsString(name)}')">
                         <div class="friend-avatar">${getAvatarSymbol(name)}</div>
                         <span>${esc(name)}</span>
                         <span style="margin-left:auto; font-size:0.7rem; color:var(--muted)">depuis ${formatTimeAgo(new Date(f.created_at))}</span>
@@ -1619,7 +1620,7 @@ async function loadProfileFollowingList(userId) {
                 const profile = profileMap.get(f.following_id);
                 const name = profile?.username || 'Anonyme';
                 return `
-                    <div class="friend-item" onclick="openUserProfile('${f.following_id}', '${esc(name)}')">
+                    <div class="friend-item" onclick="openUserProfile('${f.following_id}', '${escapeJsString(name)}')">
                         <div class="friend-avatar">${getAvatarSymbol(name)}</div>
                         <span>${esc(name)}</span>
                         <span style="margin-left:auto; font-size:0.7rem; color:var(--muted)">depuis ${formatTimeAgo(new Date(f.created_at))}</span>

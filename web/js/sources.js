@@ -769,10 +769,9 @@ async function fetchPoetryDB() {
                 // potentiellement CORS
             }
 
-            // 2) fallbacks CORS (services tiers) - utilisés uniquement si le direct échoue.
+            // 2) fallback via notre propre proxy Vercel
             const proxies = [
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`,
-                `https://corsproxy.io/?${encodeURIComponent(rawUrl)}`
+                `/api/proxy?url=${encodeURIComponent(rawUrl)}`
             ];
 
             for (const proxied of proxies) {
@@ -831,16 +830,16 @@ function isLocalEnvironment() {
 }
 
 function archiveProxyUrl(url) {
-    return `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    // Utilise notre propre proxy Vercel (ou archive-proxy dédié en prod)
+    if (!isLocalEnvironment()) {
+        return `/api/archive-proxy?url=${encodeURIComponent(url)}`;
+    }
+    return `/api/proxy?url=${encodeURIComponent(url)}`;
 }
 
 function localArchiveProxyUrl(url) {
-    // En local, pas de proxy serverless - on utilise directement les proxies CORS publics
-    if (isLocalEnvironment()) {
-        return null;
-    }
     try {
-        return `${window.location.origin}/api/archive-proxy?url=${encodeURIComponent(url)}`;
+        return `/api/archive-proxy?url=${encodeURIComponent(url)}`;
     } catch (e) {
         return null;
     }
@@ -1326,44 +1325,33 @@ async function fetchSacredTexts() {
 // 🏛️ GALLICA - Bibliothèque nationale de France (API IIIF/SRU)
 // ═══════════════════════════════════════════════════════════
 
-// Helper pour fetch avec proxy CORS (utilise le proxy Vercel en prod, proxies publics en local)
+// Helper pour fetch avec proxy CORS (utilise nos propres proxies Vercel)
 async function fetchWithCorsProxy(url, timeoutMs = ARCHIVE_TIMEOUT_MS) {
     const isGallica = url.includes('gallica.bnf.fr');
 
-    // En production (Vercel), utiliser notre propre proxy en PRIORITÉ
-    if (!isLocalEnvironment()) {
-        try {
-            const proxyUrl = isGallica
-                ? `/api/gallica-proxy?url=${encodeURIComponent(url)}`
-                : `/api/archive-proxy?url=${encodeURIComponent(url)}`;
-            const res = await fetchWithTimeout(proxyUrl, {}, timeoutMs);
-            if (res.ok) {
-                return res;
-            }
-        } catch (e) {
-            // Fallback silencieux vers proxies publics
-        }
+    // Essayer le proxy spécialisé d'abord (Gallica / Archive)
+    const specializedProxy = isGallica
+        ? `/api/gallica-proxy?url=${encodeURIComponent(url)}`
+        : `/api/archive-proxy?url=${encodeURIComponent(url)}`;
+
+    try {
+        const res = await fetchWithTimeout(specializedProxy, {}, timeoutMs);
+        if (res.ok) return res;
+    } catch (e) {
+        // Fallback vers proxy générique
     }
-    
-    // Essayer les proxies CORS publics (local ou fallback en prod)
-    const proxies = [
-        (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-        (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`
-    ];
-    
-    for (let i = 0; i < proxies.length; i++) {
-        const proxyFn = proxies[i];
-        try {
-            const proxiedUrl = proxyFn(url);
-            const res = await fetchWithTimeout(proxiedUrl, {}, timeoutMs);
-            if (res.ok) {
-                return res;
-            }
-        } catch (e) {
-            // Continue au prochain proxy
-        }
+
+    // Fallback : proxy générique
+    try {
+        const res = await fetchWithTimeout(
+            `/api/proxy?url=${encodeURIComponent(url)}`, {}, timeoutMs
+        );
+        if (res.ok) return res;
+    } catch (e) {
+        // échec
     }
-    console.warn('CORS proxies failed for:', url.substring(0, 80));
+
+    console.warn('All proxies failed for:', url.substring(0, 80));
     return null;
 }
 
@@ -2031,7 +2019,7 @@ function renderEnrichedBranches() {
         html += `<div class="branch-group">
             <div class="branch-group-title">${groupName}</div>
             <div class="branch-items">
-                ${items.map(item => `<div class="cat-pill" onclick="exploreCategory('${item.replace(/'/g, "\\'")}', true)">${item}</div>`).join('')}
+                ${items.map(item => `<div class="cat-pill" onclick="exploreCategory('${escapeJsString(item)}', true)">${escapeHtml(item)}</div>`).join('')}
             </div>
         </div>`;
     }
@@ -2138,7 +2126,7 @@ function renderBreadcrumbs() {
         const name = cat.split(':')[1] || cat;
         const isLast = idx === currentCategoryPath.length - 1;
         return `
-            <span class="cat-crumb ${isLast ? 'active' : ''}" onclick="exploreCategory('${cat.replace(/'/g, "\\'")}', true)">${name}</span>
+            <span class="cat-crumb ${isLast ? 'active' : ''}" onclick="exploreCategory('${escapeJsString(cat)}', true)">${name}</span>
             ${!isLast ? '<span class="cat-sep">></span>' : ''}
         `;
     }).join('');
@@ -2165,7 +2153,7 @@ function renderSubcategories(subcats, pageCount = 0) {
     html += `<div style="font-size:0.75rem; color:var(--muted); margin-bottom:0.3rem;">↳ ${subcats.length} sous-catégorie${subcats.length > 1 ? 's' : ''} :</div>`;
     html += subcats.map(c => {
         const name = (c.title.split(':')[1] || c.title).replace(/_/g, ' ');
-        return `<div class="cat-pill" onclick="exploreCategory('${c.title.replace(/'/g, "\\'")}', true)">${name}</div>`;
+        return `<div class="cat-pill" onclick="exploreCategory('${escapeJsString(c.title)}', true)">${name}</div>`;
     }).join('');
     
     container.innerHTML = html;

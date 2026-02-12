@@ -1069,7 +1069,7 @@ function renderAuthorBars() {
 function renderGenreChart() {
     const container = document.getElementById('genreChart');
     container.innerHTML = Object.entries(state.genreStats).map(([genre, count]) => `
-        <div class="genre-pill" onclick="exploreCategory('${genre}')" title="${t('tooltip_explore_tree')} ${genre}">
+        <div class="genre-pill" onclick="exploreCategory('${escapeJsString(genre)}')" title="${escapeAttr(t('tooltip_explore_tree') + ' ' + genre)}">
             <span class="genre-dot" style="background: ${GENRE_COLORS[genre] || '#6e6e73'}"></span>
             ${genre} <strong>${count}</strong>
         </div>
@@ -1492,7 +1492,7 @@ function createCardElement(result, origTitle, wikisource = getCurrentWikisource(
     
     const keywords = extractKeywords(text, title, author, tag, result.categories || []);
     const keywordsHtml = keywords.map(kw => 
-        `<span class="keyword-tag" onclick="exploreKeyword('${kw}')" title="${t('tooltip_explore')} #${kw}">${kw}</span>`
+        `<span class="keyword-tag" onclick="exploreKeyword('${escapeAttr(kw)}')" title="${escapeAttr(t('tooltip_explore'))} #${escapeAttr(kw)}">${esc(kw)}</span>`
     ).join('');
     
     const card = document.createElement('div');
@@ -1837,7 +1837,7 @@ function renderCard(result, origTitle, wikisource = getCurrentWikisource(), allo
     // Générer les mots-clés pour ce texte
     const keywords = extractKeywords(text, title, author, tag, result.categories || []);
     const keywordsHtml = keywords.map(kw => 
-        `<span class="keyword-tag" onclick="exploreKeyword('${kw}')" title="${t('tooltip_explore')} #${kw}">${kw}</span>`
+        `<span class="keyword-tag" onclick="exploreKeyword('${escapeAttr(kw)}')" title="${escapeAttr(t('tooltip_explore'))} #${escapeAttr(kw)}">${esc(kw)}</span>`
     ).join('');
     
     const card = document.createElement('div');
@@ -2553,7 +2553,7 @@ function updateConnections() {
         const isDiscovered = state.discoveredConnections.has(author);
         const sourceList = sources.slice(0, 2).join(', ');
         return `
-            <div class="connection-item" onclick="exploreAuthor('${author.replace(/'/g, "\\'")}')">
+            <div class="connection-item" onclick="exploreAuthor('${escapeJsString(author)}')">
                 <div class="connection-node ${isDiscovered ? 'discovered' : ''}">
                     <span class="connection-dot"></span>
                     <span>${author}</span>
@@ -2566,7 +2566,7 @@ function updateConnections() {
     // Afficher la bannière de recommandation
     recoBanner.style.display = 'block';
     recoAuthors.innerHTML = connected.slice(0, 4).map(([author]) => `
-        <span class="reco-author" onclick="exploreAuthor('${author.replace(/'/g, "\\'")}')">${author}</span>
+        <span class="reco-author" onclick="exploreAuthor('${escapeJsString(author)}')">${escapeHtml(author)}</span>
     `).join('');
 }
 
@@ -2603,8 +2603,8 @@ function showRelatedAuthors(cardId) {
             <div class="related-title">🕸️ Auteurs proches de ${author.split(' ').pop()}</div>
             <div class="related-list">
                 ${allRelated.map(a => `
-                    <button class="related-btn" onclick="exploreAuthor('${a.replace(/'/g, "\\'")}')">
-                        ${a.split(' ').pop()}
+                    <button class="related-btn" onclick="exploreAuthor('${escapeJsString(a)}')">
+                        ${escapeHtml(a.split(' ').pop())}
                     </button>
                 `).join('')}
             </div>

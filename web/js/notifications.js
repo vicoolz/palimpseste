@@ -241,7 +241,7 @@ async function loadNotifications(containerId = 'notifList') {
             }
             
             return `
-                <div class="notif-item ${isUnread ? 'unread' : ''}" onclick="handleNotifClick('${notif.id}', '${notif.type}', '${notif.extrait_id || ''}', '${notif.from_user_id}', '${escapeHtml(fromName)}')">
+                <div class="notif-item ${isUnread ? 'unread' : ''}" onclick="handleNotifClick('${notif.id}', '${notif.type}', '${notif.extrait_id || ''}', '${notif.from_user_id}', '${escapeJsString(fromName)}')">
                     <div class="notif-avatar">${avatarSymbol}</div>
                     <div class="notif-content">
                         <div class="notif-text">${text}</div>

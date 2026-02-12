@@ -213,10 +213,10 @@ function renderCommentItem(comment, profileMap, reactionsByComment, myReactionBy
     
     return `
         <div class="comment-item" data-id="${comment.id}" data-extrait-id="${extraitId}">
-            <div class="comment-avatar" onclick="openUserProfile('${comment.user_id}', '${escapeHtml(username)}')" style="cursor:pointer">${avatarSymbol}</div>
+            <div class="comment-avatar" onclick="openUserProfile('${comment.user_id}', '${escapeJsString(username)}')" style="cursor:pointer">${avatarSymbol}</div>
             <div class="comment-content">
                 <div class="comment-header">
-                    <span class="comment-username" onclick="openUserProfile('${comment.user_id}', '${escapeHtml(username)}')">${escapeHtml(username)}</span>
+                    <span class="comment-username" onclick="openUserProfile('${comment.user_id}', '${escapeJsString(username)}')">${escapeHtml(username)}</span>
                     <span class="comment-time">${timeAgo}${editedLabel}</span>
                     <div class="comment-actions-inline">
                         <button class="comment-actions-toggle" title="${t('tooltip_actions')}" onclick="toggleCommentActions('${comment.id}')">⋯</button>

@@ -126,6 +126,31 @@ function escapeAttr(text) {
 }
 
 /**
+ * Échappe une chaîne pour utilisation dans un string JS à l'intérieur d'un attribut HTML onclick/onX.
+ * Le navigateur HTML-décode d'abord l'attribut, puis exécute le JS.
+ * On doit donc : 1) échapper pour JS (\' \\ \n), 2) puis échapper pour HTML (&amp; &lt; etc.)
+ * Usage : onclick="maFonction('${escapeJsString(variable)}')"
+ * @param {string} text - Texte brut
+ * @returns {string} Texte sûr pour interpolation dans onclick="fn('...')"
+ */
+function escapeJsString(text) {
+    if (!text) return '';
+    // 1) Échapper pour JS (backslash, quotes, newlines)
+    const jsEscaped = String(text)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/`/g, '\\`');
+    // 2) Échapper pour HTML (le contexte attribut)
+    return jsEscaped
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+/**
  * Échappe les caractères spéciaux pour utilisation dans une regex
  * @param {string} string - Chaîne à échapper
  * @returns {string} Chaîne échappée
@@ -374,6 +399,7 @@ window.formatReadingTime = formatReadingTime;
 window.formatWordsCount = formatWordsCount;
 window.escapeHtml = escapeHtml;
 window.escapeAttr = escapeAttr;
+window.escapeJsString = escapeJsString;
 window.escapeRegex = escapeRegex;
 window.getStorageData = getStorageData;
 window.setStorageData = setStorageData;

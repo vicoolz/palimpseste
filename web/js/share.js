@@ -276,8 +276,8 @@ async function showSharers(extraitId) {
 
         return `
             <div class="liker-item">
-                <div class="liker-avatar" onclick="openUserProfile('${share.user_id}', '${escapeHtml(username)}'); closeSharersModal();">${avatarSymbol}</div>
-                <div class="liker-info" onclick="openUserProfile('${share.user_id}', '${escapeHtml(username)}'); closeSharersModal();">
+                <div class="liker-avatar" onclick="openUserProfile('${share.user_id}', '${escapeJsString(username)}'); closeSharersModal();">${avatarSymbol}</div>
+                <div class="liker-info" onclick="openUserProfile('${share.user_id}', '${escapeJsString(username)}'); closeSharersModal();">
                     <div class="liker-name">${escapeHtml(username)}</div>
                     <div class="liker-time">${timeAgo}</div>
                 </div>

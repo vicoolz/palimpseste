@@ -634,8 +634,8 @@ function renderSearchResults(tab) {
                     if (isMe) {
                         return `
                             <div class="discover-card">
-                                <div class="discover-avatar" onclick="openUserProfile('${u.id}', '${u.username}')">${getAvatarSymbol(u.username || '?')}</div>
-                                <div class="discover-info" onclick="openUserProfile('${u.id}', '${u.username}')">
+                                <div class="discover-avatar" onclick="openUserProfile('${u.id}', '${escapeJsString(u.username)}')">${getAvatarSymbol(u.username || '?')}</div>
+                                <div class="discover-info" onclick="openUserProfile('${u.id}', '${escapeJsString(u.username)}')">
                                     <div class="discover-name">${escapeHtml(u.username || 'Anonyme')}</div>
                                     <div class="discover-stats">${u.extraitCount} ${u.extraitCount > 1 ? t('extract_count_plural') : t('extract_count')}</div>
                                 </div>
@@ -683,7 +683,7 @@ function renderSearchResults(tab) {
             if (kind === 'users') {
                 const avatar = getAvatarSymbol(r.username || '?');
                 const username = r.username || 'Anonyme';
-                const safeUsername = String(username).replace(/'/g, "\\'");
+                const safeUsername = escapeJsString(username);
                 const count = r.extraitCount || 0;
                 return `
                     <div class="search-result-card" onclick="openUserProfile('${r.id}', '${safeUsername}')">
