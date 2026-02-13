@@ -702,21 +702,21 @@ async function postToMastodon(instance, accessToken, statusText, lang) {
 // ─── Hashtags par langue ───
 
 const HASHTAGS = {
-    fr: '#palimpseste #littérature',
-    en: '#palimpseste #literature',
-    de: '#palimpseste #literatur',
-    it: '#palimpseste #letteratura',
-    es: '#palimpseste #literatura',
-    pt: '#palimpseste #literatura',
-    ru: '#palimpseste #литература',
-    zh: '#palimpseste #文学',
-    ja: '#palimpseste #文学',
-    ar: '#palimpseste #أدب',
-    el: '#palimpseste #λογοτεχνία',
-    la: '#palimpseste #literature',
-    he: '#palimpseste #ספרות',
-    sa: '#palimpseste #साहित्य',
-    yi: '#palimpseste #ליטעראטור',
+    fr: '#littérature #livres #citation #wikisource #BooksOfMastodon',
+    en: '#literature #books #quote #wikisource #BooksOfMastodon',
+    de: '#literatur #bücher #zitat #wikisource #BooksOfMastodon',
+    it: '#letteratura #libri #citazione #wikisource #BooksOfMastodon',
+    es: '#literatura #libros #cita #wikisource #BooksOfMastodon',
+    pt: '#literatura #livros #citação #wikisource #BooksOfMastodon',
+    ru: '#литература #книги #цитата #wikisource #BooksOfMastodon',
+    zh: '#文学 #书籍 #引用 #wikisource #BooksOfMastodon',
+    ja: '#文学 #本 #引用 #wikisource #BooksOfMastodon',
+    ar: '#أدب #كتب #اقتباس #wikisource #BooksOfMastodon',
+    el: '#λογοτεχνία #βιβλία #wikisource #BooksOfMastodon',
+    la: '#literature #classics #latin #wikisource #BooksOfMastodon',
+    he: '#ספרות #ספרים #wikisource #BooksOfMastodon',
+    sa: '#साहित्य #संस्कृत #wikisource #BooksOfMastodon',
+    yi: '#ליטעראטור #ביכער #wikisource #BooksOfMastodon',
 };
 
 // ─── Format Post ───

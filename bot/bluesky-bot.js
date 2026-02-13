@@ -779,21 +779,21 @@ async function postToBluesky(session, text, lang) {
 // ─── Hashtags par langue ───
 
 const HASHTAGS = {
-    fr: '#palimpseste #littérature',
-    en: '#palimpseste #literature',
-    de: '#palimpseste #literatur',
-    it: '#palimpseste #letteratura',
-    es: '#palimpseste #literatura',
-    pt: '#palimpseste #literatura',
-    ru: '#palimpseste #литература',
-    zh: '#palimpseste #文学',
-    ja: '#palimpseste #文学',
-    ar: '#palimpseste #أدب',
-    el: '#palimpseste #λογοτεχνία',
-    la: '#palimpseste #literature',
-    he: '#palimpseste #ספרות',
-    sa: '#palimpseste #साहित्य',
-    yi: '#palimpseste #ליטעראטור',
+    fr: '#littérature #livres #citation #wikisource',
+    en: '#literature #books #quote #wikisource',
+    de: '#literatur #bücher #zitat #wikisource',
+    it: '#letteratura #libri #citazione #wikisource',
+    es: '#literatura #libros #cita #wikisource',
+    pt: '#literatura #livros #citação #wikisource',
+    ru: '#литература #книги #цитата #wikisource',
+    zh: '#文学 #书籍 #引用 #wikisource',
+    ja: '#文学 #本 #引用 #wikisource',
+    ar: '#أدب #كتب #اقتباس #wikisource',
+    el: '#λογοτεχνία #βιβλία #wikisource',
+    la: '#literature #classics #latin #wikisource',
+    he: '#ספרות #ספרים #wikisource',
+    sa: '#साहित्य #संस्कृत #wikisource',
+    yi: '#ליטעראטור #ביכער #wikisource',
 };
 
 // ─── Format Post ───
