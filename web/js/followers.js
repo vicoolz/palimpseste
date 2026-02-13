@@ -998,6 +998,8 @@ async function openProfileCollection(collectionId) {
         return;
     }
 
+    const isOwnProfile = currentUser && currentProfileUserId === currentUser.id;
+
     container.innerHTML = '<div class="profile-empty"><div class="spinner"></div></div>';
 
     let items = [];
@@ -1065,29 +1067,35 @@ async function openProfileCollection(collectionId) {
                         const itemId = item.id;
                         const extraitId = item.extraits?.id || null;
                         const previewText = preview ? preview.substring(0, 300) : '';
-                        const hasMore = preview && preview.length > 300;
-                        const isLiked = extraitId && typeof isExtraitLiked === 'function' ? isExtraitLiked(extraitId) : false;
-                        const likeCount = extraitId && typeof getLikeCount === 'function' ? getLikeCount(extraitId) : 0;
+                        const previewTruncated = preview && preview.length > 300;
                         const safeUrl = url ? encodeURIComponent(url) : '';
                         const safeTitle = title ? encodeURIComponent(title) : '';
                         const safeAuthor = author ? encodeURIComponent(author) : '';
+                        const hasRemoteSource = !!(url && url.trim() !== '');
+                        const normPreview = typeof normalizeCollectionText === 'function' ? normalizeCollectionText(previewText) : previewText;
+                        const normFull = typeof normalizeCollectionText === 'function' ? normalizeCollectionText(fullText || '') : (fullText || '');
+                        const hasFullMore = normFull.length > normPreview.length + 20;
+                        const shouldShowExpand = previewTruncated || hasFullMore || hasRemoteSource;
+                        const isLiked = extraitId && typeof isExtraitLiked === 'function' ? isExtraitLiked(extraitId) : false;
+                        const likeCount = extraitId && typeof getLikeCount === 'function' ? getLikeCount(extraitId) : 0;
 
                         return `
-                            <div class="collection-item-card" id="coll-item-${itemId}"
-                                 data-url="${safeUrl}" data-title="${safeTitle}" data-author="${safeAuthor}">
-                                <div class="collection-item-content">
+                            <div class="collection-item-card" id="coll-item-${itemId}" data-expanded="false"
+                                 data-preview-truncated="${previewTruncated ? 'true' : 'false'}" data-can-expand="${shouldShowExpand ? 'true' : 'false'}" data-url="${safeUrl}" data-title="${safeTitle}" data-author="${safeAuthor}">
+                                <div class="collection-item-content" onclick="typeof toggleCollectionItemText === 'function' && toggleCollectionItemText('${itemId}', this, event)">
                                     <div class="collection-item-header">
                                         <div class="collection-item-title">${escapeHtml(title || 'Sans titre')}</div>
                                         <div class="collection-item-author">${escapeHtml(author || 'Auteur inconnu')}</div>
                                     </div>
                                     <div class="collection-item-text-container">
-                                        <div class="collection-item-preview" id="preview-${itemId}">${escapeHtml(previewText)}${hasMore ? '...' : ''}</div>
+                                        <div class="collection-item-preview" id="preview-${itemId}">${escapeHtml(previewText)}${previewTruncated ? '...' : ''}</div>
                                         <div class="collection-item-full" id="full-${itemId}"></div>
                                     </div>
+                                    <button class="collection-item-expand${shouldShowExpand ? '' : ' is-hidden'}" id="expand-btn-${itemId}" type="button" aria-expanded="false" aria-label="${t('show_full_text_aria') || 'Voir le texte complet'}" onmousedown="event.preventDefault()" onclick="event.preventDefault(); event.stopPropagation(); typeof toggleCollectionItemText === 'function' && toggleCollectionItemText('${itemId}', this, event)"><span class="expand-icon">▾</span></button>
                                     ${item.note ? `<div class="collection-item-note"><span class="note-icon">¶</span> ${escapeHtml(item.note)}</div>` : ''}
                                 </div>
                                 ${extraitId ? `
-                                    <div class="extrait-actions" onclick="event.stopPropagation()">
+                                    <div class="extrait-actions" onclick="event.stopPropagation()" data-extrait-id="${extraitId}">
                                         <button class="extrait-action like-btn ${isLiked ? 'liked' : ''}" id="likeBtn-${extraitId}" onclick="event.stopPropagation(); toggleLikeExtrait('${extraitId}')" data-extrait-id="${extraitId}">
                                             <span class="like-icon">${isLiked ? '♥' : '♡'}</span>
                                             <span class="like-count ${likeCount === 0 ? 'is-zero' : ''}" id="likeCount-${extraitId}" onclick="event.stopPropagation(); showLikers('${extraitId}')">${likeCount}</span>
@@ -1110,7 +1118,8 @@ async function openProfileCollection(collectionId) {
                                         <span class="icon">↻</span>
                                         <span class="label">${t('full_text')}</span>
                                     </button>` : ''}
-                                    ${url ? `<button class="item-action" onclick="window.open(decodeURIComponent('${safeUrl}'), '_blank')" title="${t('open_source')}">🔗</button>` : ''}
+                                    ${url ? `<button class="item-action action-open" onclick="window.open(decodeURIComponent('${safeUrl}'), '_blank')" title="${t('open_source')}">🔗</button>` : ''}
+                                    ${isOwnProfile ? `<button class="item-action action-delete" onclick="removeFromCollectionProfile('${collectionId}', '${item.id}')" title="${t('remove') || 'Retirer'}">×</button>` : ''}
                                 </div>
                             </div>
                         `;
@@ -1130,6 +1139,24 @@ async function openProfileCollection(collectionId) {
         if (typeof loadExtraitShareInfoBatch === 'function') {
             loadExtraitShareInfoBatch(extraitIdsInCollection);
         }
+    }
+}
+
+/**
+ * Retirer un item d'une collection depuis la vue profil
+ */
+async function removeFromCollectionProfile(collectionId, itemId) {
+    if (typeof removeFromCollection === 'function') {
+        const success = await removeFromCollection(collectionId, itemId);
+        if (success) {
+            // Mettre à jour le compteur dans le cache profil
+            const cached = profileCollectionsCache.get(collectionId);
+            if (cached && cached.items_count > 0) {
+                cached.items_count--;
+            }
+        }
+    } else {
+        toast('Erreur: module collections non disponible');
     }
 }
 
@@ -1662,3 +1689,4 @@ function closeUserProfile() {
 // Exposer les fonctions de toggle au window
 window.toggleProfileExtraitText = toggleProfileExtraitText;
 window.toggleProfileLikeText = toggleProfileLikeText;
+window.removeFromCollectionProfile = removeFromCollectionProfile;

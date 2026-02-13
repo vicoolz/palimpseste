@@ -991,8 +991,44 @@ async function toggleItemInCollection(collectionId) {
     const isInCollection = btn?.classList.contains('in-collection');
     
     if (isInCollection) {
-        // TODO: Retirer de la collection (nécessite l'ID de l'item)
-        toast(t('to_remove_open_collection'));
+        // Trouver l'ID de l'item dans collection_items pour pouvoir le supprimer
+        try {
+            let query = supabaseClient
+                .from('collection_items')
+                .select('id')
+                .eq('collection_id', collectionId)
+                .eq('user_id', currentUser.id);
+
+            if (pendingCollectionItem.extrait_id) {
+                query = query.eq('extrait_id', pendingCollectionItem.extrait_id);
+            } else if (pendingCollectionItem.source_like_id) {
+                query = query.eq('source_like_id', pendingCollectionItem.source_like_id);
+            } else if (pendingCollectionItem.url || pendingCollectionItem.source_url) {
+                query = query.eq('local_url', pendingCollectionItem.url || pendingCollectionItem.source_url);
+            }
+
+            const { data, error } = await query.maybeSingle();
+            if (error) throw error;
+
+            if (data) {
+                const success = await removeFromCollection(collectionId, data.id, true);
+                if (success && btn) {
+                    btn.classList.remove('in-collection');
+                    btn.querySelector('.collection-picker-check').textContent = '+';
+                    // Mettre à jour le compteur
+                    const countEl = btn.querySelector('.collection-picker-count');
+                    if (countEl) {
+                        const currentCount = parseInt(countEl.textContent) || 0;
+                        const newCount = Math.max(0, currentCount - 1);
+                        const textLabel = newCount > 1 ? t('texts_count_plural') : t('texts_count');
+                        countEl.textContent = `${newCount} ${textLabel}`;
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Erreur retrait depuis picker:', err);
+            toast(t('error_removing') || 'Erreur lors du retrait');
+        }
     } else {
         const success = await addToCollection(collectionId, pendingCollectionItem);
         if (success && btn) {
