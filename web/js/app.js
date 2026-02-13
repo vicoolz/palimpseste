@@ -3301,20 +3301,20 @@ async function shareCardLink(cardIdOrEl) {
     // Extrait court (150 chars max) pour l'aperçu dans le texte de partage
     const snippet = text.replace(/\s+/g, ' ').trim().substring(0, 150);
 
-    // Construire l'URL de partage avec l'ID de l'extrait
-    // Utilise des query params (pas de hash) pour survivre au partage
-    // via WhatsApp, Messenger, SMS etc. qui suppriment souvent le fragment #
+    // Construire l'URL de partage courte et propre
+    // Utilise /s/<base62> pour les extraits avec ID (URLs courtes, survivent au partage)
     let shareUrl;
     if (extraitId) {
-        shareUrl = `${window.location.origin}${window.location.pathname}?eid=${encodeURIComponent(extraitId)}`;
+        shareUrl = (typeof buildShareUrl === 'function') 
+            ? buildShareUrl(extraitId)
+            : `${window.location.origin}/s/${encodeURIComponent(extraitId)}`;
     } else {
-        // Fallback si pas d'ID : utiliser des query params (pas de hash)
-        // Les apps de messagerie (WhatsApp, Messenger, SMS) suppriment le fragment #
+        // Fallback si pas d'ID : query params (texte + auteur)
         const params = new URLSearchParams();
         params.set('t', snippet);
         params.set('a', author);
         if (title) params.set('s', title);
-        shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+        shareUrl = `${window.location.origin}/?${params.toString()}`;
     }
 
     // Web Share API (mobile) ou copie dans le presse-papier (desktop)
