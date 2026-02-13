@@ -163,6 +163,32 @@
     <url><loc>https://palimpseste.vercel.app/author/rumi</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
     <url><loc>https://palimpseste.vercel.app/author/omar-khayyam</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
 
+    <!-- ═══ Landing pages FR (mots-clés) ═══ -->
+    <url><loc>https://palimpseste.vercel.app/lire/lire-wikisource</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+    <url><loc>https://palimpseste.vercel.app/lire/alternative-gutenberg</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+    <url><loc>https://palimpseste.vercel.app/lire/poesie-classique-en-ligne</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+    <url><loc>https://palimpseste.vercel.app/lire/litterature-gratuite</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+    <url><loc>https://palimpseste.vercel.app/lire/lire-gallica</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+    <url><loc>https://palimpseste.vercel.app/lire/textes-domaine-public</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+
+    <!-- ═══ Landing pages EN ═══ -->
+    <url><loc>https://palimpseste.vercel.app/read/read-classic-literature-online</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+    <url><loc>https://palimpseste.vercel.app/read/wikisource-reader</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+    <url><loc>https://palimpseste.vercel.app/read/free-poetry-online</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+
+    <!-- ═══ Landing pages ES ═══ -->
+    <url><loc>https://palimpseste.vercel.app/leer/leer-literatura-clasica-gratis</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+    <url><loc>https://palimpseste.vercel.app/leer/poesia-clasica-online</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+
+    <!-- ═══ Landing pages DE ═══ -->
+    <url><loc>https://palimpseste.vercel.app/lesen/klassische-literatur-online-lesen</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+
+    <!-- ═══ Landing pages IT ═══ -->
+    <url><loc>https://palimpseste.vercel.app/leggere/letteratura-classica-online</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+
+    <!-- ═══ Landing pages PT ═══ -->
+    <url><loc>https://palimpseste.vercel.app/ler/literatura-classica-online</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+
     <!-- Embed -->
     <url>
         <loc>https://palimpseste.vercel.app/web/embed.html</loc>
