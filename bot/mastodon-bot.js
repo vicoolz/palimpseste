@@ -706,10 +706,10 @@ async function postToMastodon(instance, accessToken, statusText, lang) {
 const HASHTAGS = {
     fr: '#litterature #livres #citation #wikisource #BooksOfMastodon',
     en: '#literature #books #quote #wikisource #BooksOfMastodon',
-    de: '#literatur #bücher #zitat #wikisource #BooksOfMastodon',
+    de: '#literatur #bucher #zitat #wikisource #BooksOfMastodon',
     it: '#letteratura #libri #citazione #wikisource #BooksOfMastodon',
     es: '#literatura #libros #cita #wikisource #BooksOfMastodon',
-    pt: '#literatura #livros #citação #wikisource #BooksOfMastodon',
+    pt: '#literatura #livros #citacao #wikisource #BooksOfMastodon',
     ru: '#литература #книги #цитата #wikisource #BooksOfMastodon',
     zh: '#文学 #书籍 #引用 #wikisource #BooksOfMastodon',
     ja: '#文学 #本 #引用 #wikisource #BooksOfMastodon',
