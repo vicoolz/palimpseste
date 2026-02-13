@@ -781,7 +781,7 @@ async function postToBluesky(session, text, lang) {
 // ─── Hashtags par langue ───
 
 const HASHTAGS = {
-    fr: '#littérature #livres #citation #wikisource',
+    fr: '#litterature #livres #citation #wikisource',
     en: '#literature #books #quote #wikisource',
     de: '#literatur #bücher #zitat #wikisource',
     it: '#letteratura #libri #citazione #wikisource',

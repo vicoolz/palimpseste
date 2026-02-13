@@ -704,7 +704,7 @@ async function postToMastodon(instance, accessToken, statusText, lang) {
 // ─── Hashtags par langue ───
 
 const HASHTAGS = {
-    fr: '#littérature #livres #citation #wikisource #BooksOfMastodon',
+    fr: '#litterature #livres #citation #wikisource #BooksOfMastodon',
     en: '#literature #books #quote #wikisource #BooksOfMastodon',
     de: '#literatur #bücher #zitat #wikisource #BooksOfMastodon',
     it: '#letteratura #libri #citazione #wikisource #BooksOfMastodon',
