@@ -358,7 +358,7 @@ const translations = {
         'tag_speech': 'discours',
         
         // Boutons suivre
-        'followed': '✓ Suivi',
+        'followed': 'Suivi',
         'follow_short': '+ Suivre',
         
         // Langues (pour le sélecteur)
@@ -800,7 +800,7 @@ const translations = {
         'tag_speech': 'speech',
         
         // Follow buttons
-        'followed': '✓ Following',
+        'followed': 'Following',
         'follow_short': '+ Follow',
         
         // Langues (pour le sélecteur)
@@ -2358,7 +2358,7 @@ const translations = {
         'tag_speech': 'речь',
 
         // Follow buttons
-        'followed': '✓ Подписан(а)',
+        'followed': 'Подписан(а)',
         'follow_short': '+ Подписаться',
 
         // Langues
@@ -2798,7 +2798,7 @@ const translations = {
         'tag_speech': '演讲',
 
         // Follow buttons
-        'followed': '✓ 已关注',
+        'followed': '已关注',
         'follow_short': '+ 关注',
 
         // Langues
@@ -3238,7 +3238,7 @@ const translations = {
         'tag_speech': '演説',
 
         // Follow buttons
-        'followed': '✓ フォロー中',
+        'followed': 'フォロー中',
         'follow_short': '+ フォロー',
 
         // Langues
@@ -3678,7 +3678,7 @@ const translations = {
         'tag_speech': 'خطاب',
 
         // Follow buttons
-        'followed': '✓ متابَع',
+        'followed': 'متابَع',
         'follow_short': '+ متابعة',
 
         // Langues
