@@ -356,6 +356,9 @@ const translations = {
         'tag_letter': 'lettre',
         'tag_memoir': 'mémoires',
         'tag_speech': 'discours',
+        'tag_text': 'texte',
+        'tag_philosophy': 'philosophie',
+        'tag_mystic': 'mystique',
         
         // Boutons suivre
         'followed': 'Suivi',
@@ -798,6 +801,9 @@ const translations = {
         'tag_letter': 'letter',
         'tag_memoir': 'memoirs',
         'tag_speech': 'speech',
+        'tag_text': 'text',
+        'tag_philosophy': 'philosophy',
+        'tag_mystic': 'mystic',
         
         // Follow buttons
         'followed': 'Following',
@@ -2356,6 +2362,9 @@ const translations = {
         'tag_letter': 'письмо',
         'tag_memoir': 'мемуары',
         'tag_speech': 'речь',
+        'tag_text': 'текст',
+        'tag_philosophy': 'философия',
+        'tag_mystic': 'мистика',
 
         // Follow buttons
         'followed': 'Подписан(а)',
@@ -2796,6 +2805,9 @@ const translations = {
         'tag_letter': '书信',
         'tag_memoir': '回忆录',
         'tag_speech': '演讲',
+        'tag_text': '文本',
+        'tag_philosophy': '哲学',
+        'tag_mystic': '神秘主义',
 
         // Follow buttons
         'followed': '已关注',
@@ -3236,6 +3248,9 @@ const translations = {
         'tag_letter': '書簡',
         'tag_memoir': '回想録',
         'tag_speech': '演説',
+        'tag_text': 'テキスト',
+        'tag_philosophy': '哲学',
+        'tag_mystic': '神秘主義',
 
         // Follow buttons
         'followed': 'フォロー中',
@@ -3676,6 +3691,9 @@ const translations = {
         'tag_letter': 'رسالة',
         'tag_memoir': 'مذكرات',
         'tag_speech': 'خطاب',
+        'tag_text': 'نص',
+        'tag_philosophy': 'فلسفة',
+        'tag_mystic': 'تصوف',
 
         // Follow buttons
         'followed': 'متابَع',
@@ -4474,7 +4492,10 @@ function translateTag(tag) {
         'fable': 'tag_fable', 'favola': 'tag_fable',
         'lettre': 'tag_letter', 'letter': 'tag_letter', 'lettera': 'tag_letter',
         'mémoires': 'tag_memoir', 'memoirs': 'tag_memoir', 'memoir': 'tag_memoir',
-        'discours': 'tag_speech', 'speech': 'tag_speech', 'discorso': 'tag_speech'
+        'discours': 'tag_speech', 'speech': 'tag_speech', 'discorso': 'tag_speech',
+        'texte': 'tag_text', 'text': 'tag_text', 'testo': 'tag_text', 'texto': 'tag_text',
+        'philosophie': 'tag_philosophy', 'philosophy': 'tag_philosophy', 'filosofia': 'tag_philosophy',
+        'mystique': 'tag_mystic', 'mystic': 'tag_mystic', 'mistica': 'tag_mystic'
     };
     
     const key = tagKeyMap[tagLower];
