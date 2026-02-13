@@ -455,6 +455,9 @@ async function registerWithEmail() {
             showAuthError('register', errorMsg);
         } else {
             // Succès ! Le profil est créé automatiquement par un trigger Supabase
+            // 📊 Tracking inscription
+            if (typeof trackSignup === 'function') trackSignup('email');
+            
             closeAuthModal();
             if (data.user && !data.user.email_confirmed_at) {
                 toast('Compte créé ! Vérifiez votre email.');
@@ -551,6 +554,8 @@ async function ensureProfileExists() {
                          currentUser.email?.split('@')[0] || 
                          'Utilisateur';
         await createUserProfile(currentUser.id, username);
+        // 📊 Tracking inscription (première connexion = inscription via OAuth)
+        if (typeof trackSignup === 'function') trackSignup('oauth');
     } else if (!profile.username && currentUser.user_metadata?.username) {
         // Profil existe mais sans username, le mettre à jour
         await supabaseClient

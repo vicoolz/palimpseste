@@ -112,6 +112,7 @@
         
         .badge-login { background: #2ecc7133; color: #2ecc71; }
         .badge-logout { background: #e74c3c33; color: #e74c3c; }
+        .badge-signup { background: #1abc9c33; color: #1abc9c; }
         .badge-search { background: #3498db33; color: #3498db; }
         .badge-share { background: #9b59b633; color: #9b59b6; }
         .badge-other { background: #95a5a633; color: #95a5a6; }
@@ -284,6 +285,11 @@
         <div class="stat-card">
             <div class="stat-value" id="sharesToday">-</div>
             <div class="stat-label">Partages aujourd'hui</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="signupsToday">-</div>
+            <div class="stat-label">\uD83C\uDD95 Inscriptions aujourd'hui</div>
+            <div id="signupsWeek" style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;"></div>
         </div>
         <div class="stat-card">
             <div class="stat-value" id="anonSessionsToday">-</div>
@@ -755,6 +761,9 @@
                 document.getElementById('loginsToday').textContent = data.total_logins_today || 0;
                 document.getElementById('searchesToday').textContent = data.total_searches_today || 0;
                 document.getElementById('sharesToday').textContent = data.total_shares_today || 0;
+                document.getElementById('signupsToday').textContent = data.total_signups_today || 0;
+                const signupsWeek = data.total_signups_week || 0;
+                document.getElementById('signupsWeek').textContent = signupsWeek > 0 ? `(${signupsWeek} cette semaine)` : '';
                 
             } catch (e) {
                 console.error('Exception loading stats:', e);
@@ -774,6 +783,8 @@
             document.getElementById('loginsToday').textContent = '-';
             document.getElementById('searchesToday').textContent = '-';
             document.getElementById('sharesToday').textContent = '-';
+            document.getElementById('signupsToday').textContent = '-';
+            document.getElementById('signupsWeek').textContent = '';
         }
         
         async function loadActiveUsers() {
@@ -1024,6 +1035,7 @@
                 // Résumé des activités
                 const activityParts = [];
                 if (stats.events.login) activityParts.push(`<span class="badge badge-login">🔑 ${stats.events.login} login${stats.events.login > 1 ? 's' : ''}</span>`);
+                if (stats.events.signup) activityParts.push(`<span class="badge badge-signup">🆕 ${stats.events.signup} inscription${stats.events.signup > 1 ? 's' : ''}</span>`);
                 if (stats.events.search) activityParts.push(`<span class="badge badge-search">🔍 ${stats.events.search} recherche${stats.events.search > 1 ? 's' : ''}</span>`);
                 if (stats.events.share) activityParts.push(`<span class="badge badge-share">📤 ${stats.events.share} partage${stats.events.share > 1 ? 's' : ''}</span>`);
                 if (stats.events.page_view) activityParts.push(`<span class="badge badge-other">📄 ${stats.events.page_view} pages</span>`);
@@ -1200,6 +1212,7 @@
             switch (eventType) {
                 case 'login': return 'badge-login';
                 case 'logout': return 'badge-logout';
+                case 'signup': return 'badge-signup';
                 case 'search': return 'badge-search';
                 case 'share': return 'badge-share';
                 default: return 'badge-other';

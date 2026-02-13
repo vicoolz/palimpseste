@@ -81,6 +81,10 @@ const Router = (() => {
                 handler(params, query);
                 // Mettre à jour les meta tags dynamiquement
                 updateMetaForRoute(pattern, params);
+                // 📊 Tracking navigation (desktop + mobile)
+                if (typeof trackPageView === 'function') {
+                    trackPageView(pattern, { params: JSON.stringify(params) });
+                }
                 return;
             }
         }
@@ -91,6 +95,10 @@ const Router = (() => {
             currentRoute = { pattern: '/', params: {}, query };
             routes['/'](query);
             updateMetaForRoute('/', {});
+            // 📊 Tracking page d'accueil
+            if (typeof trackPageView === 'function') {
+                trackPageView('home');
+            }
         }
     }
 
