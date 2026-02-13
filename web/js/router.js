@@ -203,9 +203,13 @@ const Router = (() => {
     /**
      * Initialise le router
      */
+    let initialized = false;
     function init() {
-        window.addEventListener('hashchange', resolve);
-        // Résoudre la route initiale
+        if (!initialized) {
+            window.addEventListener('hashchange', resolve);
+            initialized = true;
+        }
+        // Résoudre la route initiale (ou re-résoudre si appelé à nouveau)
         resolve();
     }
 

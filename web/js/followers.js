@@ -691,7 +691,21 @@ function unsubscribeFromActivityFeed() {
  * Voir un extrait par son ID
  */
 async function viewExtraitById(extraitId) {
-    if (!supabaseClient) return;
+    // Attendre que Supabase soit prêt (important pour les liens de partage sur mobile)
+    if (!supabaseClient) {
+        let waited = 0;
+        while (!supabaseClient && waited < 10000) {
+            await new Promise(r => setTimeout(r, 300));
+            waited += 300;
+        }
+        if (!supabaseClient) return;
+    }
+    
+    // Afficher un loader dans le feed social pendant le chargement
+    const container = document.getElementById('socialFeed');
+    if (container) {
+        container.innerHTML = '<div class="feed-loading"><div class="spinner"></div><span>' + (typeof t === 'function' ? t('loading') : 'Chargement...') + '</span></div>';
+    }
     
     const { data: extrait } = await supabaseClient
         .from('extraits')
@@ -707,6 +721,8 @@ async function viewExtraitById(extraitId) {
     if (extrait) {
         socialExtraits = [extrait];
         renderSocialFeed();
+    } else if (container) {
+        container.innerHTML = '<div class="social-empty"><div class="social-empty-icon">🔍</div><div class="social-empty-title">' + (typeof t === 'function' ? t('extrait_not_found') : 'Extrait introuvable') + '</div></div>';
     }
 }
 

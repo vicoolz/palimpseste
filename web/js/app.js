@@ -397,17 +397,25 @@ async function init() {
             if (typeof openSocialFeed === 'function') openSocialFeed();
         });
         Router.on('profile/:id', (params) => {
-            if (typeof openUserProfile === 'function') openUserProfile(params.id);
+            waitForSupabase().then(() => {
+                if (typeof openUserProfile === 'function') openUserProfile(params.id);
+            });
         });
         Router.on('text/:id', (params) => {
-            // Ouvrir l'overlay social d'abord (comme la recherche), puis charger l'extrait
-            if (typeof openSocialFeed === 'function') openSocialFeed();
-            if (typeof viewExtraitById === 'function') {
-                setTimeout(() => viewExtraitById(params.id), 300);
-            }
+            // Ouvrir l'overlay SANS charger le feed complet (évite la race condition)
+            const overlay = document.getElementById('socialOverlay');
+            if (overlay) overlay.classList.add('open');
+            // Attendre que Supabase soit prêt puis afficher l'extrait
+            waitForSupabase().then(() => {
+                if (typeof viewExtraitById === 'function') {
+                    viewExtraitById(params.id);
+                }
+            });
         });
         Router.on('collection/:id', (params) => {
-            if (typeof openCollectionById === 'function') openCollectionById(params.id);
+            waitForSupabase().then(() => {
+                if (typeof openCollectionById === 'function') openCollectionById(params.id);
+            });
         });
         Router.on('explore/:keyword', (params) => {
             if (typeof exploreKeyword === 'function') exploreKeyword(decodeURIComponent(params.keyword));
@@ -425,6 +433,24 @@ async function init() {
             // Afficher un aperçu de texte partagé via lien
             showSharedPreview(query);
         });
+
+        // Helper: attend que supabaseClient soit initialisé
+        function waitForSupabase(timeout) {
+            timeout = timeout || 10000;
+            return new Promise(function(resolve) {
+                if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+                    return resolve();
+                }
+                var elapsed = 0;
+                var interval = setInterval(function() {
+                    elapsed += 200;
+                    if ((typeof supabaseClient !== 'undefined' && supabaseClient) || elapsed >= timeout) {
+                        clearInterval(interval);
+                        resolve();
+                    }
+                }, 200);
+            });
+        }
         // N'initialiser le router qu'après le chargement initial (avoid premature navigation)
         window._routerReady = true;
     }
@@ -480,12 +506,26 @@ async function init() {
     if (typeof Router !== 'undefined' && window._routerReady) {
         Router.init();
     }
+
+    // 🔗 Si on est arrivé via un lien de partage, re-résoudre la route
+    // (au cas où Router.init() a été appelé avant que Supabase soit prêt)
+    var currentHash = window.location.hash;
+    if (currentHash && (currentHash.indexOf('#/text/') === 0 || currentHash.indexOf('#text/') === 0 || currentHash.indexOf('#/preview') === 0)) {
+        // Forcer la re-résolution de la route après un court délai
+        setTimeout(function() {
+            if (typeof Router !== 'undefined') Router.init();
+        }, 500);
+    }
     
     // ⚡ Précharger immédiatement du contenu vers le HAUT (comme pour le bas)
     // Cela permet à l'utilisateur de scroller vers le haut dès l'ouverture
-    setTimeout(() => {
-        loadNewTextsOnTop();
-    }, 100);
+    // Ne pas le faire si on affiche un preview partagé (sinon ça écrase le contenu)
+    var currentHashCheck = window.location.hash;
+    if (!currentHashCheck || currentHashCheck.indexOf('#/preview') !== 0) {
+        setTimeout(() => {
+            loadNewTextsOnTop();
+        }, 100);
+    }
     
     // Mise à jour périodique du fun stat
     var _funStatInterval = setInterval(updateFunStat, 15000);
@@ -1361,6 +1401,8 @@ function getContextualLoadingMessage() {
 
 async function loadMore() {
     if (state.loading) return;
+    // Ne pas charger plus de cartes si on affiche un aperçu partagé
+    if (window.location.hash && window.location.hash.indexOf('#/preview') === 0) return;
     state.loading = true;
     setMainLoadingMessage(getContextualLoadingMessage());
     document.getElementById('loading').style.display = 'block';
