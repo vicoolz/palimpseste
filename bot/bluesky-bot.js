@@ -13,18 +13,48 @@
 
 const https = require('https');
 
-// ─── Wikisource Config ───
+// ─── Wikisource Config (identique à l'app sources.js) ───
 
 const WIKISOURCES = [
-    { lang: 'fr', url: 'https://fr.wikisource.org', terms: ['Poésie', 'Roman', 'Conte', 'Théâtre', 'Philosophie', 'Lettres', 'Fable'] },
-    { lang: 'en', url: 'https://en.wikisource.org', terms: ['Poetry', 'Novel', 'Tale', 'Play', 'Philosophy'] },
-    { lang: 'de', url: 'https://de.wikisource.org', terms: ['Gedicht', 'Roman', 'Märchen', 'Theater'] },
-    { lang: 'it', url: 'https://it.wikisource.org', terms: ['Poesia', 'Romanzo', 'Favola', 'Teatro'] },
-    { lang: 'es', url: 'https://es.wikisource.org', terms: ['Poesía', 'Novela', 'Cuento', 'Teatro'] },
-    { lang: 'la', url: 'https://la.wikisource.org', terms: ['carmen', 'ode', 'epistula', 'fabula'] },
+    // Langues modernes
+    { lang: 'fr', url: 'https://fr.wikisource.org' },
+    { lang: 'en', url: 'https://en.wikisource.org' },
+    { lang: 'de', url: 'https://de.wikisource.org' },
+    { lang: 'it', url: 'https://it.wikisource.org' },
+    { lang: 'es', url: 'https://es.wikisource.org' },
+    { lang: 'pt', url: 'https://pt.wikisource.org' },
+    { lang: 'ru', url: 'https://ru.wikisource.org' },
+    { lang: 'zh', url: 'https://zh.wikisource.org' },
+    { lang: 'ja', url: 'https://ja.wikisource.org' },
+    { lang: 'ar', url: 'https://ar.wikisource.org' },
+    { lang: 'el', url: 'https://el.wikisource.org' },
+    // Langues anciennes
+    { lang: 'la', url: 'https://la.wikisource.org' },
+    { lang: 'he', url: 'https://he.wikisource.org' },
+    { lang: 'sa', url: 'https://sa.wikisource.org' },
+    { lang: 'yi', url: 'https://yi.wikisource.org' },
 ];
 
-const LANG_WEIGHTS = { fr: 5, en: 2, de: 1, it: 1, es: 1, la: 1 };
+// Mots-clés de recherche par langue (identique à l'app)
+const SEARCH_TERMS = {
+    fr: ['Poésie', 'Roman', 'Conte', 'Théâtre', 'Philosophie', 'Lettres', 'Histoire'],
+    en: ['Poetry', 'Novel', 'Tale', 'Play', 'Philosophy', 'Letters', 'History'],
+    de: ['Gedicht', 'Roman', 'Märchen', 'Theater', 'Philosophie'],
+    it: ['Poesia', 'Romanzo', 'Favola', 'Teatro'],
+    es: ['Poesía', 'Novela', 'Cuento', 'Teatro'],
+    pt: ['Poesia', 'Romance', 'Conto', 'Teatro'],
+    ru: ['поэзия', 'роман', 'сказка', 'театр', 'философия'],
+    zh: ['詩', '小說', '戲劇', '哲學'],
+    ja: ['詩', '小説', '戯曲', '物語'],
+    ar: ['شعر', 'رواية', 'قصة', 'مسرح'],
+    el: ['ποίηση', 'μυθιστόρημα', 'θέατρο', 'φιλοσοφία'],
+    la: ['carmen', 'ode', 'epistula', 'liber', 'fabula', 'poema', 'oratio'],
+    he: ['שיר', 'תהלים', 'משל', 'ספר', 'דבר'],
+    sa: ['गीता', 'श्लोक', 'सूक्त', 'कथा', 'स्तोत्र'],
+    yi: [],
+};
+
+const LANG_WEIGHTS = { fr: 5, en: 3, de: 1, it: 1, es: 1, pt: 1, ru: 1, zh: 1, ja: 1, ar: 1, el: 1, la: 1, he: 1, sa: 1, yi: 1 };
 
 // ─── HTTP Helpers ───
 
@@ -263,9 +293,11 @@ function pickWeightedLang(forceLang) {
 }
 
 async function searchWikisource(ws) {
-    const term = ws.terms[Math.floor(Math.random() * ws.terms.length)];
+    const terms = SEARCH_TERMS[ws.lang] || SEARCH_TERMS['fr'];
+    if (terms.length === 0) return getRandomPages(ws); // fallback si pas de termes
+    const term = terms[Math.floor(Math.random() * terms.length)];
     const offset = Math.floor(Math.random() * 50);
-    const url = `${ws.url}/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(term)}&srlimit=10&sroffset=${offset}&srnamespace=0&format=json&origin=*`;
+    const url = `${ws.url}/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(term)}&srlimit=20&sroffset=${offset}&srnamespace=0&format=json&origin=*`;
     const data = await httpGet(url);
     return data?.query?.search || [];
 }
@@ -276,8 +308,9 @@ async function getRandomPages(ws) {
     return data?.query?.random || [];
 }
 
+// Parse avec catégories (comme l'app: prop=text|displaytitle|categories|links)
 async function parsePage(ws, title) {
-    const url = `${ws.url}/w/api.php?action=parse&page=${encodeURIComponent(title)}&prop=text|displaytitle|links&format=json&origin=*&redirects=true`;
+    const url = `${ws.url}/w/api.php?action=parse&page=${encodeURIComponent(title)}&prop=text|displaytitle|categories|links&pllimit=500&format=json&origin=*&redirects=true`;
     const data = await httpGet(url);
     return data?.parse || null;
 }
@@ -349,15 +382,31 @@ function extractText(html) {
 function detectAuthor(parsed) {
     if (!parsed) return null;
 
-    // 1. Liens "Auteur:XXX" / "Author:XXX" / "Autor:XXX" / "Autore:XXX"
+    // 1. Liens "Auteur:XXX" / "Author:XXX" / "Autor:XXX" / "Autore:XXX" / "作者:XXX"
+    //    (identique à l'app sources.js)
     const links = parsed.links || [];
+    const authorPrefixes = ['Auteur:', 'Author:', 'Autor:', 'Autore:', '作者:'];
     for (const link of links) {
-        const t = link['*'] || '';
-        const match = t.match(/^(?:Auteur|Author|Autor|Autore):(.+)/);
-        if (match) return match[1].replace(/_/g, ' ').trim();
+        const linkTitle = link['*'] || '';
+        for (const prefix of authorPrefixes) {
+            if (linkTitle.startsWith(prefix)) {
+                const authorName = linkTitle.replace(prefix, '').replace(/_/g, ' ').trim();
+                if (authorName.length > 2 && authorName.length < 50) return authorName;
+            }
+        }
     }
 
-    // 2. Classes CSS d'auteur dans le HTML brut
+    // 2. Chercher dans les catégories (comme l'app: "Textes de XXX", "Works by XXX"…)
+    const categories = parsed.categories || [];
+    for (const cat of categories) {
+        const catName = cat['*'] || '';
+        const authorMatch = catName.match(/(?:Textes|Poèmes|Œuvres|Works|Texts|Poems|Werke|Opere|Obras)\s+(?:de|by|von|di)\s+(.+)/i);
+        if (authorMatch && authorMatch[1].length > 2 && authorMatch[1].length < 50) {
+            return authorMatch[1].trim();
+        }
+    }
+
+    // 3. Classes CSS d'auteur dans le HTML brut
     const html = parsed.text?.['*'] || '';
     const classMatch = html.match(/<[^>]*class="[^"]*(?:ws-author|author|auteur|auteur-oeuvre)[^"]*"[^>]*>([^<]+)/i);
     if (classMatch) {
@@ -365,22 +414,40 @@ function detectAuthor(parsed) {
         if (authorText.length > 2 && authorText.length < 50) return authorText;
     }
 
-    // 3. Liens href contenant "Auteur:" dans le HTML brut
+    // 4. Liens href contenant "Auteur:" dans le HTML brut
     const hrefMatch = html.match(/href="[^"]*(?:Auteur|Author|Autor|Autore):([^"&?#]+)"/i);
     if (hrefMatch) {
         return decodeURIComponent(hrefMatch[1]).replace(/_/g, ' ').trim();
     }
 
-    // 4. Pattern "par XXX" ou "de XXX" dans le texte initial
+    // 5. Pattern "par XXX" ou "de XXX" / "by XXX" dans le texte initial
     const rawText = html.replace(/<[^>]+>/g, ' ').substring(0, 500);
     const parMatch = rawText.match(/(?:^|\n)\s*(?:par|de|by)\s+([A-ZÀ-Ü][a-zà-ü]+(?:\s+(?:de\s+)?[A-ZÀ-Ü][a-zà-ü\-]+){0,3})\s*(?:\n|$)/m);
     if (parMatch && parMatch[1].length > 3 && parMatch[1].length < 40) {
         return parMatch[1].trim();
     }
 
-    // 5. Titre de la page (souvent "Œuvre/Auteur")
+    // 6. Titre : format "Œuvre (Auteur)" (comme l'app)
     const title = parsed.displaytitle || parsed.title || '';
     const cleanTitle = title.replace(/<[^>]+>/g, '');
+    const parenthMatch = cleanTitle.match(/\(([^)]+)\)$/);
+    if (parenthMatch) {
+        const potentialAuthor = parenthMatch[1].trim();
+        if (/^[A-ZÀ-Ü][a-zà-ü]+(\s+[A-ZÀ-Ü][a-zà-ü]+)*$/.test(potentialAuthor)) {
+            return potentialAuthor;
+        }
+    }
+
+    // 7. Titre : format "Auteur - Œuvre" ou "Œuvre - Auteur" (comme l'app)
+    const dashMatch = cleanTitle.match(/^([^—–\-]+)[—–\-](.+)$/);
+    if (dashMatch) {
+        const part1 = dashMatch[1].trim();
+        const part2 = dashMatch[2].trim();
+        if (/^[A-ZÀ-Ü][a-zà-ü]+(\s+[A-ZÀ-Ü][a-zà-ü]+)*$/.test(part1)) return part1;
+        if (/^[A-ZÀ-Ü][a-zà-ü]+(\s+[A-ZÀ-Ü][a-zà-ü]+)*$/.test(part2)) return part2;
+    }
+
+    // 8. Titre : format "Œuvre/Auteur" (slash)
     const slashParts = cleanTitle.split('/');
     if (slashParts.length >= 2) return slashParts[0].trim();
 
@@ -416,42 +483,74 @@ function isGoodTitle(title) {
     return true;
 }
 
-// ── Analyse qualité ──
+// ── Analyse qualité (identique à l'app analyzeContentQuality) ──
 function isContentGoodQuality(text, parsed) {
-    if (!text || text.length < 100) return false;
-    if (text.length < 200) return false;
+    if (!text || text.length < 200) return { isGood: false, reason: 'too_short' };
+    if (text.length > 80000) return { isGood: false, reason: 'too_long' };
 
     const html = parsed?.text?.['*'] || '';
     if (html.includes('redirectMsg') || html.includes('propose plusieurs éditions') ||
-        html.includes('Cette page répertorie')) return false;
+        html.includes('Cette page répertorie')) return { isGood: false, reason: 'index' };
 
     const links = parsed?.links || [];
     const linkCharsEstimate = links.length * 30;
-    if (text.length > 0 && linkCharsEstimate / text.length > 0.25) return false;
+    if (text.length > 0 && linkCharsEstimate / text.length > 0.25) return { isGood: false, reason: 'link_density' };
 
     const lines = text.split('\n').filter(l => l.trim().length > 0);
-    if (lines.length < 2) return false;
+    if (lines.length < 2) return { isGood: false, reason: 'too_short' };
     const avgLineLength = text.length / lines.length;
 
     if (avgLineLength < 60) {
         const withPunct = lines.filter(l => /[.!?…:;]$/.test(l.trim())).length;
         const punctRatio = withPunct / lines.length;
-        if (punctRatio < 0.3) return false;
+        if (punctRatio < 0.3) return { isGood: false, reason: 'listy' };
     }
 
+    // Mots black-listés dans le titre
+    const title = (parsed.displaytitle || parsed.title || '').toLowerCase();
+    const badWords = ['sommaire', 'contents', 'inhalt', 'table', 'index', 'chapitres', 'chapters'];
+    if (badWords.some(w => title.includes(w))) return { isGood: false, reason: 'title_blacklist' };
+
     // Détecter le vieux français / texte médiéval illisible
-    // Marqueurs: "fant", "comande", "ert", "chevalchier", "oiël", "mult"
     const archaicMarkers = /\b(chevalch|comande|ne·l|oiël|mult\b|\bert\b|\bfant\b|\bço\b|\bki\b|destr|guerpir|chalcier|seignurs|vassal[sz]|\bcuntre\b|\bpuis\b que|\bnuls\b hom)/i;
     const sample = text.substring(0, 500);
     const archaicHits = (sample.match(archaicMarkers) || []).length;
-    // Si le texte a des marqueurs archaïques dans les 500 premiers caractères
     if (archaicHits > 0) {
-        // Vérifier plus en profondeur: compter les mots archaïques
         const deepMarkers = sample.match(/\b(ert|fant|mult|comand[ea]|chevalch|oiël|guerpir|\bço\b|\bki\b|seignurs)\b/gi);
-        if (deepMarkers && deepMarkers.length >= 2) return false;
+        if (deepMarkers && deepMarkers.length >= 2) return { isGood: false, reason: 'archaic' };
     }
 
-    return true;
+    return { isGood: true };
+}
+
+// ── Détection d'index / sommaire et extraction de sous-lien (comme l'app) ──
+function detectIndexAndSubLink(parsed) {
+    const html = parsed?.text?.['*'] || '';
+    
+    // Détecter redirect ou page d'éditions multiples
+    const isRedirect = html.includes('redirectMsg');
+    const hasEditions = html.includes('propose plusieurs éditions') ||
+                        html.includes('Cette page répertorie');
+    const isIndex = isRedirect || hasEditions;
+    
+    let subLink = null;
+    if (isIndex) {
+        // Chercher un sous-lien utile (page de contenu réel)
+        const linkRegex = /href="\/wiki\/([^"]+)"/g;
+        let match;
+        while ((match = linkRegex.exec(html)) !== null) {
+            const name = decodeURIComponent(match[1]);
+            if (name.includes(':') || name.includes('Auteur') || name.includes('Discussion')) continue;
+            if (name.includes('/') && !name.endsWith('/')) {
+                if (!name.includes('Préface') && !name.includes('Notice') &&
+                    !name.includes('Table') && !name.includes('Index')) {
+                    subLink = name;
+                    break;
+                }
+            }
+        }
+    }
+    return { isIndex, subLink };
 }
 
 function extractBestQuote(text) {
@@ -508,6 +607,87 @@ function extractBestQuote(text) {
     return null;
 }
 
+/**
+ * Tente de récupérer un texte depuis une page Wikisource (avec récursion dans les sous-pages).
+ * Logique identique à l'app fetchText() : récursion 4 niveaux, suivi sommaire, link graph.
+ */
+async function fetchTextFromPage(ws, title, depth = 0) {
+    if (depth > 4) return null;
+    if (!isGoodTitle(title)) return null;
+
+    console.log(`${'    '.repeat(depth + 1)}Parsing: ${title} (depth ${depth})`);
+    const parsed = await parsePage(ws, title);
+    if (!parsed?.text?.['*']) return null;
+
+    const html = parsed.text['*'];
+    const links = parsed.links || [];
+
+    // ═══ ANALYSE DU GRAPHE DES LIENS (comme l'app) ═══
+    // Compter les liens vers des sous-pages (même préfixe + "/")
+    const basePage = title.split('/')[0];
+    const subPageLinks = links.filter(l => {
+        const t = l['*'] || '';
+        return t.startsWith(basePage + '/') && l.ns === 0;
+    });
+
+    // Si la page a beaucoup de liens vers ses sous-pages, c'est un sommaire
+    if (subPageLinks.length >= 5) {
+        const randomSub = subPageLinks[Math.floor(Math.random() * subPageLinks.length)];
+        console.log(`${'    '.repeat(depth + 1)}↳ Sommaire détecté (${subPageLinks.length} sous-pages), suit: ${randomSub['*']}`);
+        return await fetchTextFromPage(ws, randomSub['*'], depth + 1);
+    }
+
+    // Détecter page d'index classique (redirections, éditions multiples)
+    const { isIndex, subLink } = detectIndexAndSubLink(parsed);
+    if (isIndex && subLink) {
+        console.log(`${'    '.repeat(depth + 1)}↳ Index détecté, suit: ${subLink}`);
+        return await fetchTextFromPage(ws, subLink, depth + 1);
+    }
+
+    const text = extractText(html);
+    if (text.length < 100) return null;
+
+    // ═══ ANALYSE STATISTIQUE DE QUALITÉ (comme l'app) ═══
+    const quality = isContentGoodQuality(text, parsed);
+    if (!quality.isGood) {
+        // Si c'est rejeté parce que c'est un sommaire/liste, on essaie de trouver un lien pertinent
+        if (quality.reason === 'link_density' || quality.reason === 'listy') {
+            const contentLinks = links.filter(l => l.ns === 0 && !(l['*'] || '').includes(':'));
+            if (contentLinks.length > 0) {
+                const randomLink = contentLinks[Math.floor(Math.random() * contentLinks.length)];
+                console.log(`${'    '.repeat(depth + 1)}↳ Contenu ${quality.reason}, suit lien: ${randomLink['*']}`);
+                return await fetchTextFromPage(ws, randomLink['*'], depth + 1);
+            }
+        }
+        return null;
+    }
+
+    const quote = extractBestQuote(text);
+    if (!quote) return null;
+
+    const author = detectAuthor(parsed);
+    const cleanTitle = (parsed.displaytitle || title).replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').trim();
+
+    if (!author) {
+        console.log(`${'    '.repeat(depth + 1)}✗ No author found for: ${cleanTitle}`);
+        return null;
+    }
+
+    if (!isQuotePostWorthy(quote, author)) {
+        console.log(`${'    '.repeat(depth + 1)}✗ Post not worthy: "${quote.substring(0, 50)}…" by ${author}`);
+        return null;
+    }
+
+    console.log(`${'    '.repeat(depth + 1)}✓ Found: "${quote.substring(0, 60)}…" by ${author}`);
+    return {
+        text: quote,
+        author,
+        title: cleanTitle,
+        lang: ws.lang,
+        source: `${ws.url}/wiki/${encodeURIComponent(title)}`
+    };
+}
+
 async function fetchQuoteFromWikisource(maxRetries = 8, forceLang = null) {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
@@ -523,45 +703,8 @@ async function fetchQuoteFromWikisource(maxRetries = 8, forceLang = null) {
             const shuffled = pages.sort(() => Math.random() - 0.5);
 
             for (const page of shuffled) {
-                const title = page.title;
-                if (!isGoodTitle(title)) continue;
-
-                console.log(`    Parsing: ${title}`);
-                const parsed = await parsePage(ws, title);
-                if (!parsed?.text?.['*']) continue;
-
-                const text = extractText(parsed.text['*']);
-                if (text.length < 100) continue;
-
-                if (!isContentGoodQuality(text, parsed)) continue;
-
-                const quote = extractBestQuote(text);
-                if (!quote) continue;
-
-                const author = detectAuthor(parsed);
-                const cleanTitle = (parsed.displaytitle || title).replace(/<[^>]+>/g, '');
-
-                // Ne pas poster sans auteur identifié (sinon on affiche le titre comme auteur)
-                if (!author) {
-                    console.log(`    ✗ No author found for: ${cleanTitle}`);
-                    continue;
-                }
-
-                // Vérification qualité universelle (copyright, encyclopédie, page de titre…)
-                if (!isQuotePostWorthy(quote, author)) {
-                    console.log(`    ✗ Post not worthy: "${quote.substring(0, 50)}…" by ${author}`);
-                    continue;
-                }
-
-                console.log(`    ✓ Found: "${quote.substring(0, 60)}…" by ${author}`);
-
-                return {
-                    text: quote,
-                    author: author,
-                    title: cleanTitle,
-                    lang: ws.lang,
-                    source: `${ws.url}/wiki/${encodeURIComponent(title)}`
-                };
+                const result = await fetchTextFromPage(ws, page.title, 0);
+                if (result) return result;
             }
         } catch (err) {
             console.log(`    ✗ Error: ${err.message}`);
@@ -641,7 +784,16 @@ const HASHTAGS = {
     de: '#literatur #poesie #palimpseste',
     it: '#letteratura #poesia #palimpseste',
     es: '#literatura #poesía #palimpseste',
+    pt: '#literatura #poesia #palimpseste',
+    ru: '#литература #поэзия #palimpseste',
+    zh: '#文学 #诗歌 #palimpseste',
+    ja: '#文学 #詩 #palimpseste',
+    ar: '#أدب #شعر #palimpseste',
+    el: '#λογοτεχνία #ποίηση #palimpseste',
     la: '#literature #poetry #palimpseste',
+    he: '#ספרות #שירה #palimpseste',
+    sa: '#साहित्य #काव्य #palimpseste',
+    yi: '#ליטעראטור #פּאָעזיע #palimpseste',
 };
 
 // ─── Format Post ───
