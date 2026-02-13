@@ -85,13 +85,14 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 async function fetchTrendingQuote(forceLang) {
     try {
         // Query Supabase REST API for top-liked extracts
+        // Note: is_silent can be NULL (most rows), so we use or filter
         const query = new URLSearchParams({
             select: 'id,texte,source_title,source_author,source_url,likes_count',
             order: 'likes_count.desc,created_at.desc',
             limit: '30',
-            'is_silent': 'eq.false',
-            'source_author': 'neq.',       // must have an author
-            'texte': 'neq.',               // must have text
+            'or': '(is_silent.is.null,is_silent.eq.false)',
+            'source_author': 'not.is.null',
+            'texte': 'not.is.null',
         });
 
         const url = `${SUPABASE_URL}/rest/v1/extraits?${query.toString()}`;
@@ -124,10 +125,11 @@ async function fetchTrendingQuote(forceLang) {
 
         console.log(`   Found ${data.length} trending extraits in Supabase`);
 
-        // Filter: need texte >= 30 chars, real author, not just whitespace
+        // Filter: need texte >= 30 chars, real author, not junk content
         const valid = data.filter(e =>
             e.texte && e.texte.trim().length >= 30 &&
-            e.source_author && e.source_author.trim().length > 1
+            e.source_author && e.source_author.trim().length > 1 &&
+            isQuotePostWorthy(e.texte, e.source_author)
         );
 
         if (valid.length === 0) {
@@ -191,6 +193,58 @@ async function fetchTrendingQuote(forceLang) {
         console.log(`   ⚠️ Supabase trending fetch failed: ${err.message}`);
         return null;
     }
+}
+
+// ─── Universal Post Quality Gate ───
+
+/**
+ * Vérifie qu'un texte + auteur sont dignes d'être postés.
+ * Appliqué à TOUTES les sources (trending ET Wikisource).
+ */
+function isQuotePostWorthy(text, author) {
+    if (!text || !author) return false;
+    const t = text.trim();
+    const a = author.trim().toLowerCase();
+
+    // ── Rejeter les notices légales / copyright ──
+    if (/public domain|domaine public|united states|federal government|17\s*U\.?S\.?C/i.test(t)) return false;
+    if (/copyright|©|all rights reserved|creative commons|free documentation license/i.test(t)) return false;
+    if (/this work is (in the |)public domain/i.test(t)) return false;
+
+    // ── Rejeter les encyclopédies / dictionnaires ──
+    if (/encyclop[aæ]edia|encyclopédie|dictionnaire|dictionary|wörterbuch/i.test(a)) return false;
+    if (/^\d{4}\s/i.test(a)) return false; // "1911 Encyclopædia…"
+    if (/wikisource|wikipedia|wiki/i.test(a)) return false;
+
+    // ── Rejeter les pages de titre / frontispices (texte très majoritairement en MAJUSCULES) ──
+    const upper = (t.match(/[A-ZÀ-Ü]/g) || []).length;
+    const lower = (t.match(/[a-zà-ü]/g) || []).length;
+    if (upper + lower > 20 && upper / (upper + lower) > 0.55) return false;
+
+    // ── Rejeter le texte avec trop de mots TOUT EN MAJUSCULES ──
+    const words = t.split(/\s+/);
+    const capsWords = words.filter(w => w.length > 2 && w === w.toUpperCase() && /[A-ZÀ-Ü]/.test(w));
+    if (words.length > 5 && capsWords.length / words.length > 0.3) return false;
+
+    // ── Rejeter le texte qui ressemble à des métadonnées éditeur ──
+    if (/\b(libraire|imprimeur|éditeur|typograph|imprimerie|chez\s[A-Z])\b/i.test(t) &&
+        /\bPARIS\b|\bLONDON\b|\bLYON\b|\bBRUXELLES\b/.test(t)) return false;
+
+    // ── Rejeter les textes trop courts pour un post intéressant ──
+    if (t.length < 40) return false;
+
+    // ── Rejeter les problèmes d'encodage (caractères de remplacement) ──
+    if (/\uFFFD|ï¿½|Ã©|Ã¨|Ã |â€™|â€œ/.test(t)) return false;
+
+    // ── Rejeter les listes / index (trop de retours à la ligne relatifs au texte) ──
+    const lines = t.split('\n').filter(l => l.trim().length > 0);
+    if (lines.length > 3 && t.length / lines.length < 30) return false;
+
+    // ── Rejeter les textes qui commencent par des formules de catalogue ──
+    if (/^(AUGMENT[ÉE]|NOUVELLE [ÉE]DITION|PREMI[ÈE]RE PARTIE|TOME [IVXLCDM]+|VOL\.?\s)/i.test(t.trim())) return false;
+    if (/^(FABLES|TABLE DES|SOMMAIRE|CONTENTS|PRÉFACE|PREFACE|INTRODUCTION)\b/i.test(t.trim())) return false;
+
+    return true;
 }
 
 // ─── Wikisource Fetching ───
@@ -490,6 +544,12 @@ async function fetchQuoteFromWikisource(maxRetries = 8, forceLang = null) {
                 // Ne pas poster sans auteur identifié (sinon on affiche le titre comme auteur)
                 if (!author) {
                     console.log(`    ✗ No author found for: ${cleanTitle}`);
+                    continue;
+                }
+
+                // Vérification qualité universelle (copyright, encyclopédie, page de titre…)
+                if (!isQuotePostWorthy(quote, author)) {
+                    console.log(`    ✗ Post not worthy: "${quote.substring(0, 50)}…" by ${author}`);
                     continue;
                 }
 
