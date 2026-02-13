@@ -1,8 +1,10 @@
 /**
  * Bot Bluesky — Palimpseste
  * 
- * Poste automatiquement des extraits littéraires récupérés en live depuis Wikisource.
- * Exécuté via GitHub Actions (2x/jour).
+ * Poste automatiquement des extraits littéraires.
+ * Source primaire : tendances Supabase (extraits curés par les utilisateurs).
+ * Fallback : récupération live depuis Wikisource.
+ * Exécuté via GitHub Actions (1x/heure, FR + EN).
  * 
  * Nécessite les variables d'environnement :
  *   BLUESKY_IDENTIFIER  (ex: palimpseste.bsky.social)
@@ -69,6 +71,126 @@ function httpPost(hostname, path, body, headers = {}) {
         req.write(jsonBody);
         req.end();
     });
+}
+
+// ─── Supabase Trending Config ───
+
+const SUPABASE_URL = 'https://cqoepdrqifilqxnvflyy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxb2VwZHJxaWZpbHF4bnZmbHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkxNzQxMTksImV4cCI6MjA4NDc1MDExOX0.e7dJmzUEgzDIix12ca38HvBmF7Cgp_fTZPT6gZ6Xy5s';
+
+/**
+ * Fetch trending extraits from Supabase (the app's user-curated content).
+ * Returns a quote object { text, author, source, lang } or null.
+ */
+async function fetchTrendingQuote(forceLang) {
+    try {
+        // Query Supabase REST API for top-liked extracts
+        const query = new URLSearchParams({
+            select: 'id,texte,source_title,source_author,source_url,likes_count',
+            order: 'likes_count.desc,created_at.desc',
+            limit: '30',
+            'is_silent': 'eq.false',
+            'source_author': 'neq.',       // must have an author
+            'texte': 'neq.',               // must have text
+        });
+
+        const url = `${SUPABASE_URL}/rest/v1/extraits?${query.toString()}`;
+
+        const data = await new Promise((resolve, reject) => {
+            https.get(url, {
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'Accept': 'application/json',
+                    'User-Agent': 'PalimpsestBot/1.0',
+                }
+            }, (res) => {
+                let body = '';
+                res.on('data', chunk => body += chunk);
+                res.on('end', () => {
+                    try {
+                        const parsed = JSON.parse(body);
+                        if (res.statusCode >= 200 && res.statusCode < 300) resolve(parsed);
+                        else reject(new Error(`Supabase ${res.statusCode}: ${body}`));
+                    } catch (e) { reject(new Error(`Supabase JSON parse: ${e.message}`)); }
+                });
+            }).on('error', reject);
+        });
+
+        if (!Array.isArray(data) || data.length === 0) {
+            console.log('   No trending extraits found in Supabase');
+            return null;
+        }
+
+        console.log(`   Found ${data.length} trending extraits in Supabase`);
+
+        // Filter: need texte >= 30 chars, real author, not just whitespace
+        const valid = data.filter(e =>
+            e.texte && e.texte.trim().length >= 30 &&
+            e.source_author && e.source_author.trim().length > 1
+        );
+
+        if (valid.length === 0) {
+            console.log('   No valid extraits after filtering');
+            return null;
+        }
+
+        // Pick a random one from top results (weighted toward top)
+        // Top 5 get 3x weight, next 10 get 2x, rest get 1x
+        const pool = [];
+        valid.forEach((e, i) => {
+            const weight = i < 5 ? 3 : i < 15 ? 2 : 1;
+            for (let w = 0; w < weight; w++) pool.push(e);
+        });
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+
+        // Detect language from source_url or default based on forceLang
+        let lang = forceLang || 'fr';
+        if (pick.source_url) {
+            if (pick.source_url.includes('fr.wikisource') || pick.source_url.includes('/fr/')) lang = 'fr';
+            else if (pick.source_url.includes('en.wikisource') || pick.source_url.includes('/en/')) lang = 'en';
+            else if (pick.source_url.includes('de.wikisource')) lang = 'de';
+            else if (pick.source_url.includes('it.wikisource')) lang = 'it';
+            else if (pick.source_url.includes('es.wikisource')) lang = 'es';
+            else if (pick.source_url.includes('la.wikisource')) lang = 'la';
+        }
+
+        // If forceLang is specified and doesn't match, skip (we'll fall back to Wikisource)
+        if (forceLang && lang !== forceLang) {
+            console.log(`   Picked extrait is ${lang} but need ${forceLang}, trying another…`);
+            // Try to find one that matches forceLang
+            const langMatches = valid.filter(e => {
+                if (!e.source_url) return forceLang === 'fr'; // default assume French
+                if (e.source_url.includes(`${forceLang}.wikisource`)) return true;
+                if (e.source_url.includes(`/${forceLang}/`)) return true;
+                return false;
+            });
+            if (langMatches.length === 0) {
+                console.log(`   No trending extraits for lang=${forceLang}`);
+                return null;
+            }
+            const langPick = langMatches[Math.floor(Math.random() * langMatches.length)];
+            return {
+                text: langPick.texte.trim(),
+                author: langPick.source_author.trim(),
+                source: langPick.source_url || `${langPick.source_title}`,
+                lang: forceLang,
+                fromTrending: true,
+            };
+        }
+
+        return {
+            text: pick.texte.trim(),
+            author: pick.source_author.trim(),
+            source: pick.source_url || `${pick.source_title}`,
+            lang,
+            fromTrending: true,
+        };
+
+    } catch (err) {
+        console.log(`   ⚠️ Supabase trending fetch failed: ${err.message}`);
+        return null;
+    }
 }
 
 // ─── Wikisource Fetching ───
@@ -509,18 +631,29 @@ async function main() {
         process.exit(1);
     }
 
-    console.log(`🔍 Fetching quote from Wikisource${forceLang ? ` (lang: ${forceLang})` : ''}…\n`);
-    const quote = await fetchQuoteFromWikisource(8, forceLang);
+    let quote = null;
+
+    // 1) Essayer d'abord les tendances Supabase (contenu curé par les utilisateurs)
+    console.log(`🔥 Fetching trending quote from Supabase${forceLang ? ` (lang: ${forceLang})` : ''}…`);
+    quote = await fetchTrendingQuote(forceLang);
+
+    if (quote) {
+        console.log(`   ✅ Got trending quote by ${quote.author} (${quote.lang})`);
+    } else {
+        // 2) Fallback: Wikisource live
+        console.log(`\n🔍 Fallback: fetching from Wikisource${forceLang ? ` (lang: ${forceLang})` : ''}…\n`);
+        quote = await fetchQuoteFromWikisource(8, forceLang);
+    }
 
     if (!quote) {
-        console.error('❌ Could not find a suitable quote after multiple attempts');
+        console.error('❌ Could not find a suitable quote from trending or Wikisource');
         process.exit(1);
     }
 
     const post = formatPost(quote);
     const encoder = new TextEncoder();
 
-    console.log(`\n📝 Posting to Bluesky (${encoder.encode(post).length} bytes, lang: ${quote.lang}):\n${post}\n`);
+    console.log(`\n📝 Posting to Bluesky (${encoder.encode(post).length} bytes, lang: ${quote.lang}, source: ${quote.fromTrending ? 'TRENDING' : 'WIKISOURCE'}):\n${post}\n`);
     console.log(`📖 Source: ${quote.source}\n`);
 
     try {
