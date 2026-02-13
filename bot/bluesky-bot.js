@@ -138,6 +138,13 @@ function extractText(html) {
         .replace(/modifier le wikicode/gi, '')
         .replace(/mw-page-title[^\s]*/gi, '')
         .replace(/Poésies \([^)]+\)/g, '')
+        // Nettoyer numéros de vers/lignes (ex: "5555«Quant..." ou "1234 Le roi")
+        .replace(/^\d{2,5}\s*/gm, '')
+        // Nettoyer numéros de chapitre romains seuls sur une ligne
+        .replace(/^\s*[IVXLCDM]{1,10}\s*$/gm, '')
+        // Nettoyer marqueurs de chapitre en début de paragraphe ("XVIII ", "CHAPTER XII")
+        .replace(/^(?:CHAPTER|CHAPITRE|CANTO|LIVRE|BOOK)\s+[IVXLCDM\d]+\s*/gim, '')
+        .replace(/^[IVXLCDM]{2,10}\s+/gm, '')
         .replace(/\n{3,}/g, '\n\n')
         .trim();
 
@@ -256,13 +263,35 @@ function isContentGoodQuality(text, parsed) {
         if (punctRatio < 0.3) return false;
     }
 
+    // Détecter le vieux français / texte médiéval illisible
+    // Marqueurs: "fant", "comande", "ert", "chevalchier", "oiël", "mult"
+    const archaicMarkers = /\b(chevalch|comande|ne·l|oiël|mult\b|\bert\b|\bfant\b|\bço\b|\bki\b|destr|guerpir|chalcier|seignurs|vassal[sz]|\bcuntre\b|\bpuis\b que|\bnuls\b hom)/i;
+    const sample = text.substring(0, 500);
+    const archaicHits = (sample.match(archaicMarkers) || []).length;
+    // Si le texte a des marqueurs archaïques dans les 500 premiers caractères
+    if (archaicHits > 0) {
+        // Vérifier plus en profondeur: compter les mots archaïques
+        const deepMarkers = sample.match(/\b(ert|fant|mult|comand[ea]|chevalch|oiël|guerpir|\bço\b|\bki\b|seignurs)\b/gi);
+        if (deepMarkers && deepMarkers.length >= 2) return false;
+    }
+
     return true;
 }
 
 function extractBestQuote(text) {
     if (!text || text.length < 80) return null;
 
-    const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 20);
+    const paragraphs = text.split(/\n\n+/)
+        .map(p => p.trim())
+        .filter(p => p.length > 20)
+        // Nettoyer : retirer les paragraphes qui commencent par un numéro de chapitre
+        .filter(p => !/^\s*[IVXLCDM]{2,10}\b/.test(p))
+        .filter(p => !/^\s*(CHAPTER|CHAPITRE|CANTO|LIVRE|BOOK)\s/i.test(p))
+        // Retirer les paragraphes qui sont juste un titre/heading
+        .filter(p => !(p.length < 60 && /^[A-ZÀ-Ü\s\-']+$/.test(p)))
+        // Retirer les paragraphes avec trop de numéros (tables, index)
+        .filter(p => (p.match(/\d+/g) || []).length < p.split(' ').length * 0.3);
+
     if (paragraphs.length === 0) return null;
 
     // Priorité 1 : taille idéale (100-450 chars)
@@ -336,11 +365,17 @@ async function fetchQuoteFromWikisource(maxRetries = 8, forceLang = null) {
                 const author = detectAuthor(parsed);
                 const cleanTitle = (parsed.displaytitle || title).replace(/<[^>]+>/g, '');
 
-                console.log(`    ✓ Found: "${quote.substring(0, 60)}…" by ${author || 'Unknown'}`);
+                // Ne pas poster sans auteur identifié (sinon on affiche le titre comme auteur)
+                if (!author) {
+                    console.log(`    ✗ No author found for: ${cleanTitle}`);
+                    continue;
+                }
+
+                console.log(`    ✓ Found: "${quote.substring(0, 60)}…" by ${author}`);
 
                 return {
                     text: quote,
-                    author: author || cleanTitle,
+                    author: author,
                     title: cleanTitle,
                     lang: ws.lang,
                     source: `${ws.url}/wiki/${encodeURIComponent(title)}`
