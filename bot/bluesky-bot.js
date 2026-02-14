@@ -113,7 +113,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
  * Fetch trending extraits from Supabase (the app's user-curated content).
  * Returns a quote object { text, author, source, lang } or null.
  */
-async function fetchTrendingQuote(forceLang) {
+async function fetchTrendingQuote(forceLang, excludeUrls = new Set()) {
     try {
         // Query Supabase REST API for top-liked extracts
         // Note: is_silent can be NULL (most rows), so we use or filter
@@ -156,11 +156,12 @@ async function fetchTrendingQuote(forceLang) {
 
         console.log(`   Found ${data.length} trending extraits in Supabase`);
 
-        // Filter: need texte >= 30 chars, real author, not junk content
+        // Filter: need texte >= 30 chars, real author, not junk content, not already posted
         const valid = data.filter(e =>
             e.texte && e.texte.trim().length >= 30 &&
             e.source_author && e.source_author.trim().length > 1 &&
-            isQuotePostWorthy(e.texte, e.source_author)
+            isQuotePostWorthy(e.texte, e.source_author) &&
+            !excludeUrls.has(e.source_url)
         );
 
         if (valid.length === 0) {
@@ -351,6 +352,54 @@ async function saveExtraitToSupabase(quote) {
     } catch (err) {
         console.log(`   ⚠️ Supabase save failed: ${err.message}`);
         return null;
+    }
+}
+
+// ─── Déduplication : historique des posts du bot ───
+
+/**
+ * Récupère les source_url des extraits déjà postés par le bot.
+ * Utilisé pour éviter de reposter le même contenu.
+ * Retourne un Set de source_url.
+ */
+async function fetchRecentBotPosts() {
+    try {
+        const query = new URLSearchParams({
+            select: 'source_url',
+            user_id: `eq.${BOT_USER_ID}`,
+            'source_url': 'not.is.null',
+            order: 'created_at.desc',
+            limit: '1000',
+        });
+        const url = `${SUPABASE_URL}/rest/v1/extraits?${query.toString()}`;
+
+        const data = await new Promise((resolve, reject) => {
+            https.get(url, {
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'Accept': 'application/json',
+                    'User-Agent': 'PalimpsestBot/1.0',
+                }
+            }, (res) => {
+                let body = '';
+                res.on('data', chunk => body += chunk);
+                res.on('end', () => {
+                    try {
+                        const parsed = JSON.parse(body);
+                        if (res.statusCode >= 200 && res.statusCode < 300) resolve(parsed);
+                        else resolve([]);
+                    } catch (e) { resolve([]); }
+                });
+            }).on('error', () => resolve([]));
+        });
+
+        const urls = new Set(data.filter(e => e.source_url).map(e => e.source_url));
+        console.log(`   📋 Bot history: ${urls.size} previously posted URLs`);
+        return urls;
+    } catch (err) {
+        console.log(`   ⚠️ Could not fetch bot history: ${err.message}`);
+        return new Set();
     }
 }
 
@@ -817,7 +866,7 @@ async function fetchTextFromPage(ws, title, depth = 0) {
     };
 }
 
-async function fetchQuoteFromWikisource(maxRetries = 8, forceLang = null) {
+async function fetchQuoteFromWikisource(maxRetries = 8, forceLang = null, excludeUrls = new Set()) {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
             const ws = pickWeightedLang(forceLang);
@@ -833,6 +882,10 @@ async function fetchQuoteFromWikisource(maxRetries = 8, forceLang = null) {
 
             for (const page of shuffled) {
                 const result = await fetchTextFromPage(ws, page.title, 0);
+                if (result && excludeUrls.has(result.source)) {
+                    console.log(`    ⚠️ Already posted: ${result.source}, skipping`);
+                    continue;
+                }
                 if (result) return result;
             }
         } catch (err) {
@@ -1075,16 +1128,20 @@ async function main() {
 
     let quote = null;
 
+    // 0) Charger l'historique des posts du bot pour éviter les doublons
+    console.log('📋 Loading bot post history…');
+    const excludeUrls = await fetchRecentBotPosts();
+
     // 1) Essayer d'abord les tendances Supabase (contenu curé par les utilisateurs)
     console.log(`🔥 Fetching trending quote from Supabase${forceLang ? ` (lang: ${forceLang})` : ''}…`);
-    quote = await fetchTrendingQuote(forceLang);
+    quote = await fetchTrendingQuote(forceLang, excludeUrls);
 
     if (quote) {
         console.log(`   ✅ Got trending quote by ${quote.author} (${quote.lang})`);
     } else {
         // 2) Fallback: Wikisource live
         console.log(`\n🔍 Fallback: fetching from Wikisource${forceLang ? ` (lang: ${forceLang})` : ''}…\n`);
-        quote = await fetchQuoteFromWikisource(8, forceLang);
+        quote = await fetchQuoteFromWikisource(8, forceLang, excludeUrls);
     }
 
     if (!quote) {
@@ -1092,8 +1149,7 @@ async function main() {
         process.exit(1);
     }
 
-    // 3) Si l'extrait vient de Wikisource (pas en base), le sauvegarder dans Supabase
-    //    pour que le lien pointe vers #text/{id} au lieu de #preview
+    // 3) Sauvegarder dans Supabase (pour le lien ET pour le tracking anti-doublon)
     if (!quote.extraitId) {
         console.log('\n💾 Saving Wikisource extract to Supabase…');
         const savedId = await saveExtraitToSupabase(quote);
@@ -1103,6 +1159,10 @@ async function main() {
         } else {
             console.log('   ⚠️ Could not save, link will use #preview fallback');
         }
+    } else {
+        // Trending quote : sauvegarder aussi pour le tracking (éviter repost)
+        console.log('\n💾 Saving trending extract reference for dedup tracking…');
+        await saveExtraitToSupabase(quote);
     }
 
     const { text: post, embedUri } = formatPost(quote);
