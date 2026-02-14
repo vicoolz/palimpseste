@@ -102,7 +102,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
  * Fetch trending extraits from Supabase (the app's user-curated content).
  * Returns a quote object { text, author, source, lang } or null.
  */
-async function fetchTrendingQuote(forceLang) {
+async function fetchTrendingQuote(forceLang, excludeUrls = new Set()) {
     try {
         const query = new URLSearchParams({
             select: 'id,texte,source_title,source_author,source_url,likes_count',
