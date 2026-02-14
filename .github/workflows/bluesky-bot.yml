@@ -2,8 +2,8 @@ name: Bluesky Bot — Post Literary Quotes
 
 on:
   schedule:
-    # Toutes les heures de 7h à 22h UTC (8h-23h FR hiver, 9h-00h FR été)
-    - cron: '0 7-22 * * *'
+    # Toutes les heures, 24h/24 (audience internationale)
+    - cron: '0 * * * *'
   workflow_dispatch:
     inputs:
       lang:
@@ -27,6 +27,7 @@ jobs:
         env:
           BLUESKY_IDENTIFIER: ${{ secrets.BLUESKY_IDENTIFIER }}
           BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node bot/bluesky-bot.js --lang=fr
 
   post-english:
@@ -48,4 +49,5 @@ jobs:
         env:
           BLUESKY_IDENTIFIER: ${{ secrets.BLUESKY_IDENTIFIER }}
           BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node bot/bluesky-bot.js --lang=en

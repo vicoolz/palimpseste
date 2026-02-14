@@ -869,6 +869,53 @@ CREATE INDEX IF NOT EXISTS idx_extraits_user_created ON extraits(user_id, create
 CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, created_at DESC) WHERE read_at IS NULL;
 
 -- ═══════════════════════════════════════════════════════════════════════════
+-- 🤖 Bot : nettoyage TTL des extraits silencieux
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Les bots créent des extraits is_silent=true pour chaque post Wikisource.
+-- On supprime ceux de +4 mois qui n'ont AUCUNE interaction :
+-- ni likes, ni comments, ni ajout en collection.
+
+CREATE OR REPLACE FUNCTION cleanup_silent_extraits()
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    deleted_count INTEGER;
+BEGIN
+    DELETE FROM extraits
+    WHERE id IN (
+        SELECT e.id
+        FROM extraits e
+        WHERE e.is_silent = true
+          AND e.created_at < NOW() - INTERVAL '4 months'
+          AND e.likes_count = 0
+          AND e.comments_count = 0
+          AND NOT EXISTS (SELECT 1 FROM likes l WHERE l.extrait_id = e.id)
+          AND NOT EXISTS (SELECT 1 FROM comments c WHERE c.extrait_id = e.id)
+          AND NOT EXISTS (SELECT 1 FROM collection_items ci WHERE ci.extrait_id = e.id)
+    );
+    GET DIAGNOSTICS deleted_count = ROW_COUNT;
+    RAISE NOTICE 'Cleaned up % silent extraits with zero interactions', deleted_count;
+    RETURN deleted_count;
+END;
+$$;
+
+-- Restreindre l'accès : seul service_role peut appeler le cleanup (pas anon/authenticated)
+REVOKE ALL ON FUNCTION cleanup_silent_extraits() FROM PUBLIC;
+REVOKE ALL ON FUNCTION cleanup_silent_extraits() FROM anon, authenticated;
+
+-- Pour activer le nettoyage automatique avec pg_cron (si l'extension est activée) :
+-- SELECT cron.schedule('cleanup-silent-extraits', '0 4 * * *', 'SELECT cleanup_silent_extraits()');
+-- Cela lancera le nettoyage tous les jours à 4h du matin.
+--
+-- Si pg_cron n'est pas disponible, le nettoyage peut être déclenché via
+-- un appel RPC Supabase depuis un cron GitHub Actions :
+--   POST /rest/v1/rpc/cleanup_silent_extraits
+--   avec la clé service_role
+
+-- ═══════════════════════════════════════════════════════════════════════════
 -- Termine !
 -- ═══════════════════════════════════════════════════════════════════════════
 --

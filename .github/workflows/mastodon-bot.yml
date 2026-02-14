@@ -2,8 +2,8 @@ name: Mastodon Bot — Post Literary Quotes
 
 on:
   schedule:
-    # Toutes les heures de 7h à 22h UTC (8h-23h FR hiver, 9h-00h FR été)
-    - cron: '15 7-22 * * *'
+    # Toutes les heures, 24h/24 (audience internationale)
+    - cron: '15 * * * *'
   workflow_dispatch:
     inputs:
       lang:
@@ -27,6 +27,7 @@ jobs:
         env:
           MASTODON_INSTANCE: ${{ secrets.MASTODON_INSTANCE }}
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node bot/mastodon-bot.js --lang=fr
 
   post-english:
@@ -48,4 +49,5 @@ jobs:
         env:
           MASTODON_INSTANCE: ${{ secrets.MASTODON_INSTANCE }}
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node bot/mastodon-bot.js --lang=en

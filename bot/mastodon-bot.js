@@ -4,11 +4,12 @@
  * Poste automatiquement des extraits littéraires.
  * Source primaire : tendances Supabase (extraits curés par les utilisateurs).
  * Fallback : récupération live depuis Wikisource.
- * Exécuté via GitHub Actions (1x/heure, FR + EN).
+ * Exécuté via GitHub Actions (1x/heure, 24h/24, audience internationale).
  * 
  * Nécessite les variables d'environnement :
- *   MASTODON_INSTANCE     (ex: mastodon.social, piaille.fr)
- *   MASTODON_ACCESS_TOKEN (token d'accès généré dans Préférences > Développement)
+ *   MASTODON_INSTANCE        (ex: mastodon.social, piaille.fr)
+ *   MASTODON_ACCESS_TOKEN    (token d'accès généré dans Préférences > Développement)
+ *   SUPABASE_SERVICE_ROLE_KEY (clé service_role pour écrire dans la base, bypass RLS)
  */
 
 const https = require('https');
@@ -204,6 +205,132 @@ async function fetchTrendingQuote(forceLang) {
 
     } catch (err) {
         console.log(`   ⚠️ Supabase trending fetch failed: ${err.message}`);
+        return null;
+    }
+}
+
+// ─── Supabase Insert (sauvegarde des extraits Wikisource) ───
+
+// UUID fixe pour le compte bot (créé automatiquement dans auth.users)
+const BOT_USER_ID = '00000000-0000-4000-a000-b07b07b07b07';
+const BOT_EMAIL = 'bot@palimpseste.app';
+
+/**
+ * Crée le compte bot dans auth.users s'il n'existe pas encore.
+ * Utilise l'API Admin Auth de Supabase (service_role key).
+ * Idempotent : si le user existe déjà (422), on ignore l'erreur.
+ */
+async function ensureBotUserExists(serviceRoleKey) {
+    try {
+        const body = JSON.stringify({
+            id: BOT_USER_ID,
+            email: BOT_EMAIL,
+            password: `bot-${Date.now()}-notrealpassword`,
+            email_confirm: true,
+        });
+        const url = new URL(`${SUPABASE_URL}/auth/v1/admin/users`);
+        await new Promise((resolve, reject) => {
+            const options = {
+                hostname: url.hostname,
+                path: url.pathname,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(body),
+                    'apikey': serviceRoleKey,
+                    'Authorization': `Bearer ${serviceRoleKey}`,
+                }
+            };
+            const req = https.request(options, (res) => {
+                let responseBody = '';
+                res.on('data', chunk => responseBody += chunk);
+                res.on('end', () => {
+                    // 200/201 = created, 422 = already exists — both OK
+                    if (res.statusCode < 500) resolve();
+                    else reject(new Error(`Auth Admin ${res.statusCode}: ${responseBody}`));
+                });
+            });
+            req.on('error', reject);
+            req.write(body);
+            req.end();
+        });
+    } catch (err) {
+        console.log(`   ⚠️ Bot user check failed: ${err.message} (non-fatal)`);
+    }
+}
+
+/**
+ * Sauvegarde un extrait Wikisource dans Supabase avant de le poster.
+ * Utilise la clé service_role pour bypasser RLS (pas d'auth.uid()).
+ * L'extrait est marqué is_silent=true pour le nettoyage TTL.
+ * Retourne l'UUID de l'extrait créé, ou null en cas d'erreur.
+ */
+async function saveExtraitToSupabase(quote) {
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRoleKey) {
+        console.log('   ⚠️ SUPABASE_SERVICE_ROLE_KEY not set, skipping save');
+        return null;
+    }
+
+    try {
+        // S'assurer que le compte bot existe dans auth.users (FK constraint)
+        await ensureBotUserExists(serviceRoleKey);
+
+        const texte = (quote.text || '').substring(0, 150).trim();
+        const body = JSON.stringify({
+            user_id: BOT_USER_ID,
+            texte,
+            source_title: quote.title || quote.author || 'Wikisource',
+            source_author: quote.author || 'Anonyme',
+            source_url: quote.source || null,
+            is_silent: true,
+            likes_count: 0,
+            comments_count: 0,
+        });
+
+        const url = new URL(`${SUPABASE_URL}/rest/v1/extraits`);
+
+        const data = await new Promise((resolve, reject) => {
+            const options = {
+                hostname: url.hostname,
+                path: url.pathname,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(body),
+                    'apikey': serviceRoleKey,
+                    'Authorization': `Bearer ${serviceRoleKey}`,
+                    'Prefer': 'return=representation',
+                    'Accept': 'application/json',
+                }
+            };
+            const req = https.request(options, (res) => {
+                let responseBody = '';
+                res.on('data', chunk => responseBody += chunk);
+                res.on('end', () => {
+                    try {
+                        const parsed = JSON.parse(responseBody);
+                        if (res.statusCode >= 200 && res.statusCode < 300) resolve(parsed);
+                        else reject(new Error(`Supabase INSERT ${res.statusCode}: ${responseBody}`));
+                    } catch (e) { reject(new Error(`Supabase INSERT parse: ${e.message}`)); }
+                });
+            });
+            req.on('error', reject);
+            req.write(body);
+            req.end();
+        });
+
+        // Supabase REST retourne un tableau avec l'objet inséré
+        const inserted = Array.isArray(data) ? data[0] : data;
+        if (inserted?.id) {
+            console.log(`   💾 Saved to Supabase: ${inserted.id} (is_silent=true)`);
+            return inserted.id;
+        }
+        console.log('   ⚠️ Supabase INSERT returned no id');
+        return null;
+
+    } catch (err) {
+        console.log(`   ⚠️ Supabase save failed: ${err.message}`);
         return null;
     }
 }
@@ -701,42 +828,105 @@ async function postToMastodon(instance, accessToken, statusText, lang) {
     }, body);
 }
 
-// ─── Hashtags par langue ───
+// ─── Hashtags dynamiques basés sur le contenu ───
 
-const HASHTAGS = {
-    fr: '#litterature #livres #citation #wikisource #BooksOfMastodon',
-    en: '#literature #books #quote #wikisource #BooksOfMastodon',
-    de: '#literatur #bucher #zitat #wikisource #BooksOfMastodon',
-    it: '#letteratura #libri #citazione #wikisource #BooksOfMastodon',
-    es: '#literatura #libros #cita #wikisource #BooksOfMastodon',
-    pt: '#literatura #livros #citacao #wikisource #BooksOfMastodon',
-    ru: '#литература #книги #цитата #wikisource #BooksOfMastodon',
-    zh: '#文学 #书籍 #引用 #wikisource #BooksOfMastodon',
-    ja: '#文学 #本 #引用 #wikisource #BooksOfMastodon',
-    ar: '#أدب #كتب #اقتباس #wikisource #BooksOfMastodon',
-    el: '#λογοτεχνία #βιβλία #wikisource #BooksOfMastodon',
-    la: '#literature #classics #latin #wikisource #BooksOfMastodon',
-    he: '#ספרות #ספרים #wikisource #BooksOfMastodon',
-    sa: '#साहित्य #संस्कृत #wikisource #BooksOfMastodon',
-    yi: '#ליטעראטור #ביכער #wikisource #BooksOfMastodon',
+/**
+ * Catégories de mots-clés pour détecter le thème du texte.
+ * Inspiré du Kaléidoscope de l'app (exploration.js).
+ */
+const CONTENT_TAGS = {
+    // Formes littéraires
+    poetry:    { hashtag: 'poetry',    keywords: ['poésie', 'poème', 'vers', 'rime', 'strophe', 'sonnet', 'ode', 'élégie', 'ballade', 'hymne', 'poem', 'verse', 'rhyme', 'lyric'] },
+    novel:     { hashtag: 'novel',     keywords: ['roman', 'chapitre', 'novel', 'chapter', 'fiction', 'récit', 'histoire', 'narration'] },
+    theatre:   { hashtag: 'theatre',   keywords: ['théâtre', 'scène', 'acte', 'tragédie', 'comédie', 'drame', 'theater', 'play', 'scene', 'act', 'tragedy', 'comedy'] },
+    philosophy:{ hashtag: 'philosophy',keywords: ['philosophie', 'pensée', 'réflexion', 'sagesse', 'raison', 'vérité', 'philosophy', 'wisdom', 'truth', 'reason'] },
+    fable:     { hashtag: 'fable',     keywords: ['fable', 'conte', 'morale', 'il était une fois', 'tale', 'once upon', 'fairy'] },
+    essay:     { hashtag: 'essay',     keywords: ['essai', 'méditation', 'discours', 'essay', 'discourse', 'speech'] },
+    // Tonalités / Ambiances
+    love:      { hashtag: 'love',      keywords: ['amour', 'cœur', 'âme', 'passion', 'désir', 'baiser', 'love', 'heart', 'soul', 'desire', 'kiss', 'beloved'] },
+    melancholy:{ hashtag: 'melancholy',keywords: ['spleen', 'mélancolie', 'tristesse', 'solitude', 'nostalgie', 'regret', 'melancholy', 'sorrow', 'loneliness'] },
+    nature:    { hashtag: 'nature',    keywords: ['nature', 'fleur', 'arbre', 'mer', 'ciel', 'soleil', 'lune', 'étoile', 'flower', 'tree', 'sea', 'sky', 'sun', 'moon', 'star', 'forest', 'river'] },
+    gothic:    { hashtag: 'gothic',    keywords: ['fantôme', 'spectre', 'ténèbres', 'terreur', 'nuit', 'mort', 'ombre', 'ghost', 'shadow', 'darkness', 'terror', 'death'] },
+    epic:      { hashtag: 'epic',      keywords: ['héros', 'bataille', 'gloire', 'honneur', 'guerre', 'conquête', 'hero', 'battle', 'glory', 'honor', 'war', 'sword'] },
+    mystic:    { hashtag: 'mystic',    keywords: ['divin', 'extase', 'sacré', 'éternel', 'lumière', 'prière', 'divine', 'sacred', 'eternal', 'prayer', 'spirit'] },
+    dream:     { hashtag: 'dream',     keywords: ['rêve', 'songe', 'vision', 'sommeil', 'chimère', 'illusion', 'dream', 'vision', 'sleep', 'reverie'] },
+    humor:     { hashtag: 'humor',     keywords: ['rire', 'comique', 'ironie', 'satire', 'moquerie', 'ridicule', 'laugh', 'irony', 'satire', 'wit', 'comedy'] },
+    // Époques / Courants
+    romanticism:{ hashtag: 'romanticism', keywords: ['romantisme', 'romantique', 'sublime', 'romantic', 'sublime'] },
+    classics:  { hashtag: 'classics',  keywords: ['antique', 'olympe', 'mythologie', 'latin', 'grec', 'classic', 'ancient', 'mythology', 'greek', 'roman'] },
 };
+
+/**
+ * Hashtags communautaires Mastodon (fixes, toujours inclus).
+ * #BooksOfMastodon et #LiteratureFedi sont les plus actifs sur le Fediverse.
+ */
+const PLATFORM_TAGS = ['#BooksOfMastodon', '#LitFedi'];
+
+/**
+ * Analyse le texte et retourne les meilleurs hashtags dynamiques.
+ * @param {string} text - Le texte de l'extrait
+ * @param {string} lang - La langue de l'extrait
+ * @param {number} max - Nombre max de hashtags de contenu (défaut: 3)
+ * @returns {string} Hashtags formatés
+ */
+function buildDynamicHashtags(text, lang, max = 3) {
+    const lower = (text || '').toLowerCase();
+    const scores = {};
+
+    for (const [cat, { keywords }] of Object.entries(CONTENT_TAGS)) {
+        let score = 0;
+        for (const kw of keywords) {
+            if (lower.includes(kw.toLowerCase())) score++;
+        }
+        if (score > 0) scores[cat] = score;
+    }
+
+    const top = Object.entries(scores)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, max)
+        .map(([cat]) => `#${CONTENT_TAGS[cat].hashtag}`);
+
+    if (top.length === 0) {
+        const fallback = { fr: '#litterature', en: '#literature', de: '#literatur', it: '#letteratura', es: '#literatura', pt: '#literatura' };
+        top.push(fallback[lang] || '#literature');
+    }
+
+    return [...top, ...PLATFORM_TAGS].join(' ');
+}
 
 // ─── Format Post ───
 
 /**
  * Mastodon a une limite de 500 caractères par défaut (varie selon l'instance).
  * On utilise 500 comme standard.
+ * 
+ * Lien intelligent :
+ *   - Si extraitId → lien direct #text/{id}
+ *   - Sinon → lien #preview?t=snippet&a=auteur&s=source
+ *     (l'app affiche une carte de prévisualisation avec le texte)
  */
 function formatPost(quote) {
     const maxChars = 500;
 
     const lang = quote.lang || 'fr';
-    // Lien direct vers l'extrait si disponible (trending), sinon lien général
-    const appLink = quote.extraitId 
-        ? `\nhttps://palimpseste.vercel.app/#text/${quote.extraitId}`
-        : `\nhttps://palimpseste.vercel.app`;
-    const hashtag = `\n${HASHTAGS[lang] || HASHTAGS['en']}`;
-    const suffix = `\n\n— ${quote.author}${appLink}${hashtag}`;
+
+    // Construire le lien intelligent
+    let appLink;
+    if (quote.extraitId) {
+        appLink = `\nhttps://palimpseste.vercel.app/#text/${quote.extraitId}`;
+    } else {
+        const snippet = (quote.text || '').substring(0, 80).trim();
+        const params = new URLSearchParams({
+            t: snippet,
+            a: quote.author || 'Anonyme',
+        });
+        if (quote.source) params.set('s', quote.source);
+        appLink = `\nhttps://palimpseste.vercel.app/#preview?${params.toString()}`;
+    }
+
+    const hashtags = buildDynamicHashtags(quote.text, lang, 3);
+    const hashtagLine = `\n${hashtags}`;
+    const suffix = `\n\n— ${quote.author}${appLink}${hashtagLine}`;
 
     let text = quote.text;
     const available = maxChars - suffix.length - 1;
@@ -750,7 +940,7 @@ function formatPost(quote) {
         text += '…';
     }
 
-    return `${text}\n\n— ${quote.author}${appLink}${hashtag}`;
+    return `${text}\n\n— ${quote.author}${appLink}${hashtagLine}`;
 }
 
 // ─── Main ───
@@ -786,6 +976,19 @@ async function main() {
     if (!quote) {
         console.error('❌ Could not find a suitable quote from trending or Wikisource');
         process.exit(1);
+    }
+
+    // 3) Si l'extrait vient de Wikisource (pas en base), le sauvegarder dans Supabase
+    //    pour que le lien pointe vers #text/{id} au lieu de #preview
+    if (!quote.extraitId) {
+        console.log('\n💾 Saving Wikisource extract to Supabase…');
+        const savedId = await saveExtraitToSupabase(quote);
+        if (savedId) {
+            quote.extraitId = savedId;
+            console.log(`   ✅ Extract saved, link will use #text/${savedId}`);
+        } else {
+            console.log('   ⚠️ Could not save, link will use #preview fallback');
+        }
     }
 
     const post = formatPost(quote);

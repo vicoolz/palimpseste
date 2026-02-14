@@ -128,15 +128,6 @@ FROM analytics_events
 GROUP BY DATE(created_at)
 ORDER BY date DESC;
 
--- ═══════════════════════════════════════════════════════════════════════════
--- 🔒 SET SECURITY INVOKER ON VIEWS (Fix for Supabase linter warnings)
--- Ensures RLS policies of the querying user are respected, not the view creator
--- ═══════════════════════════════════════════════════════════════════════════
-ALTER VIEW analytics_daily_logins SET (security_invoker = on);
-ALTER VIEW analytics_events_summary SET (security_invoker = on);
-ALTER VIEW analytics_top_users SET (security_invoker = on);
-ALTER VIEW analytics_active_sessions SET (security_invoker = on);
-
 -- Vue : Visiteurs anonymes les plus actifs (par visitor_id)
 CREATE OR REPLACE VIEW analytics_anonymous_visitors AS
 SELECT 
@@ -156,7 +147,18 @@ ORDER BY event_count DESC
 LIMIT 100;
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- 📊 FONCTIONS UTILES
+-- � SET SECURITY INVOKER ON ALL VIEWS (Fix for Supabase linter warnings)
+-- Ensures RLS policies of the querying user are respected, not the view creator
+-- ═══════════════════════════════════════════════════════════════════════════
+ALTER VIEW analytics_daily_logins SET (security_invoker = on);
+ALTER VIEW analytics_events_summary SET (security_invoker = on);
+ALTER VIEW analytics_top_users SET (security_invoker = on);
+ALTER VIEW analytics_active_sessions SET (security_invoker = on);
+ALTER VIEW analytics_daily_visitors SET (security_invoker = on);
+ALTER VIEW analytics_anonymous_visitors SET (security_invoker = on);
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- �📊 FONCTIONS UTILES
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- Fonction : Statistiques globales

@@ -4,11 +4,12 @@
  * Poste automatiquement des extraits littéraires.
  * Source primaire : tendances Supabase (extraits curés par les utilisateurs).
  * Fallback : récupération live depuis Wikisource.
- * Exécuté via GitHub Actions (1x/heure, FR + EN).
+ * Exécuté via GitHub Actions (1x/heure, 24h/24, audience internationale).
  * 
  * Nécessite les variables d'environnement :
- *   BLUESKY_IDENTIFIER  (ex: palimpseste.bsky.social)
- *   BLUESKY_APP_PASSWORD (mot de passe d'app généré dans Settings)
+ *   BLUESKY_IDENTIFIER       (ex: palimpseste.bsky.social)
+ *   BLUESKY_APP_PASSWORD      (mot de passe d'app généré dans Settings)
+ *   SUPABASE_SERVICE_ROLE_KEY (clé service_role pour écrire dans la base, bypass RLS)
  */
 
 const https = require('https');
@@ -223,6 +224,132 @@ async function fetchTrendingQuote(forceLang) {
 
     } catch (err) {
         console.log(`   ⚠️ Supabase trending fetch failed: ${err.message}`);
+        return null;
+    }
+}
+
+// ─── Supabase Insert (sauvegarde des extraits Wikisource) ───
+
+// UUID fixe pour le compte bot (créé automatiquement dans auth.users)
+const BOT_USER_ID = '00000000-0000-4000-a000-b07b07b07b07';
+const BOT_EMAIL = 'bot@palimpseste.app';
+
+/**
+ * Crée le compte bot dans auth.users s'il n'existe pas encore.
+ * Utilise l'API Admin Auth de Supabase (service_role key).
+ * Idempotent : si le user existe déjà (422), on ignore l'erreur.
+ */
+async function ensureBotUserExists(serviceRoleKey) {
+    try {
+        const body = JSON.stringify({
+            id: BOT_USER_ID,
+            email: BOT_EMAIL,
+            password: `bot-${Date.now()}-notrealpassword`,
+            email_confirm: true,
+        });
+        const url = new URL(`${SUPABASE_URL}/auth/v1/admin/users`);
+        await new Promise((resolve, reject) => {
+            const options = {
+                hostname: url.hostname,
+                path: url.pathname,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(body),
+                    'apikey': serviceRoleKey,
+                    'Authorization': `Bearer ${serviceRoleKey}`,
+                }
+            };
+            const req = https.request(options, (res) => {
+                let responseBody = '';
+                res.on('data', chunk => responseBody += chunk);
+                res.on('end', () => {
+                    // 200/201 = created, 422 = already exists — both OK
+                    if (res.statusCode < 500) resolve();
+                    else reject(new Error(`Auth Admin ${res.statusCode}: ${responseBody}`));
+                });
+            });
+            req.on('error', reject);
+            req.write(body);
+            req.end();
+        });
+    } catch (err) {
+        console.log(`   ⚠️ Bot user check failed: ${err.message} (non-fatal)`);
+    }
+}
+
+/**
+ * Sauvegarde un extrait Wikisource dans Supabase avant de le poster.
+ * Utilise la clé service_role pour bypasser RLS (pas d'auth.uid()).
+ * L'extrait est marqué is_silent=true pour le nettoyage TTL.
+ * Retourne l'UUID de l'extrait créé, ou null en cas d'erreur.
+ */
+async function saveExtraitToSupabase(quote) {
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRoleKey) {
+        console.log('   ⚠️ SUPABASE_SERVICE_ROLE_KEY not set, skipping save');
+        return null;
+    }
+
+    try {
+        // S'assurer que le compte bot existe dans auth.users (FK constraint)
+        await ensureBotUserExists(serviceRoleKey);
+
+        const texte = (quote.text || '').substring(0, 150).trim();
+        const body = JSON.stringify({
+            user_id: BOT_USER_ID,
+            texte,
+            source_title: quote.title || quote.author || 'Wikisource',
+            source_author: quote.author || 'Anonyme',
+            source_url: quote.source || null,
+            is_silent: true,
+            likes_count: 0,
+            comments_count: 0,
+        });
+
+        const url = new URL(`${SUPABASE_URL}/rest/v1/extraits`);
+
+        const data = await new Promise((resolve, reject) => {
+            const options = {
+                hostname: url.hostname,
+                path: url.pathname,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(body),
+                    'apikey': serviceRoleKey,
+                    'Authorization': `Bearer ${serviceRoleKey}`,
+                    'Prefer': 'return=representation',
+                    'Accept': 'application/json',
+                }
+            };
+            const req = https.request(options, (res) => {
+                let responseBody = '';
+                res.on('data', chunk => responseBody += chunk);
+                res.on('end', () => {
+                    try {
+                        const parsed = JSON.parse(responseBody);
+                        if (res.statusCode >= 200 && res.statusCode < 300) resolve(parsed);
+                        else reject(new Error(`Supabase INSERT ${res.statusCode}: ${responseBody}`));
+                    } catch (e) { reject(new Error(`Supabase INSERT parse: ${e.message}`)); }
+                });
+            });
+            req.on('error', reject);
+            req.write(body);
+            req.end();
+        });
+
+        // Supabase REST retourne un tableau avec l'objet inséré
+        const inserted = Array.isArray(data) ? data[0] : data;
+        if (inserted?.id) {
+            console.log(`   💾 Saved to Supabase: ${inserted.id} (is_silent=true)`);
+            return inserted.id;
+        }
+        console.log('   ⚠️ Supabase INSERT returned no id');
+        return null;
+
+    } catch (err) {
+        console.log(`   ⚠️ Supabase save failed: ${err.message}`);
         return null;
     }
 }
@@ -758,7 +885,7 @@ function buildFacets(text) {
     return facets;
 }
 
-async function postToBluesky(session, text, lang) {
+async function postToBluesky(session, text, lang, embedUri) {
     const facets = buildFacets(text);
 
     const record = {
@@ -769,6 +896,19 @@ async function postToBluesky(session, text, lang) {
         langs: [lang || 'fr']
     };
 
+    // Embed externe : le lien apparaît comme une carte cliquable sous le post
+    // au lieu d'occuper ~45 caractères dans le texte
+    if (embedUri) {
+        record.embed = {
+            $type: 'app.bsky.embed.external',
+            external: {
+                uri: embedUri,
+                title: 'Palimpseste',
+                description: 'Explorez la littérature mondiale — textes libres de droit depuis Wikisource',
+            }
+        };
+    }
+
     return httpPost('bsky.social', '/xrpc/com.atproto.repo.createRecord', {
         repo: session.did,
         collection: 'app.bsky.feed.post',
@@ -778,25 +918,73 @@ async function postToBluesky(session, text, lang) {
     });
 }
 
-// ─── Hashtags par langue ───
+// ─── Hashtags dynamiques basés sur le contenu ───
 
-const HASHTAGS = {
-    fr: '#litterature #livres #citation #wikisource',
-    en: '#literature #books #quote #wikisource',
-    de: '#literatur #bucher #zitat #wikisource',
-    it: '#letteratura #libri #citazione #wikisource',
-    es: '#literatura #libros #cita #wikisource',
-    pt: '#literatura #livros #citacao #wikisource',
-    ru: '#литература #книги #цитата #wikisource',
-    zh: '#文学 #书籍 #引用 #wikisource',
-    ja: '#文学 #本 #引用 #wikisource',
-    ar: '#أدب #كتب #اقتباس #wikisource',
-    el: '#λογοτεχνία #βιβλία #wikisource',
-    la: '#literature #classics #latin #wikisource',
-    he: '#ספרות #ספרים #wikisource',
-    sa: '#साहित्य #संस्कृत #wikisource',
-    yi: '#ליטעראטור #ביכער #wikisource',
+/**
+ * Catégories de mots-clés pour détecter le thème du texte.
+ * Inspiré du Kaléidoscope de l'app (exploration.js).
+ * Hashtags courts optimisés pour Bluesky (limite 300 graphèmes).
+ * 
+ * Hashtags pertinents sur Bluesky littéraire :
+ *   #BookSky — communauté livres Bluesky (le plus actif)
+ *   #poetry #love #nature — universels, très suivis
+ *   #gothic #epic #dream — niches actives
+ */
+const CONTENT_TAGS = {
+    // Formes (hashtags courts)
+    poetry:  { tag: 'poetry',  keywords: ['poésie', 'poème', 'vers', 'rime', 'strophe', 'sonnet', 'ode', 'élégie', 'ballade', 'hymne', 'poem', 'verse', 'rhyme', 'lyric'] },
+    novel:   { tag: 'novel',   keywords: ['roman', 'chapitre', 'novel', 'chapter', 'fiction', 'récit', 'histoire', 'narration'] },
+    theatre: { tag: 'theatre', keywords: ['théâtre', 'scène', 'acte', 'tragédie', 'comédie', 'drame', 'theater', 'play', 'scene', 'act', 'tragedy', 'comedy'] },
+    philo:   { tag: 'philo',   keywords: ['philosophie', 'pensée', 'réflexion', 'sagesse', 'raison', 'vérité', 'philosophy', 'wisdom', 'truth', 'reason'] },
+    fable:   { tag: 'fable',   keywords: ['fable', 'conte', 'morale', 'il était une fois', 'tale', 'once upon', 'fairy'] },
+    // Tons (hashtags courts)
+    love:    { tag: 'love',    keywords: ['amour', 'cœur', 'âme', 'passion', 'désir', 'baiser', 'love', 'heart', 'soul', 'desire', 'kiss', 'beloved'] },
+    spleen:  { tag: 'spleen',  keywords: ['spleen', 'mélancolie', 'tristesse', 'solitude', 'nostalgie', 'regret', 'melancholy', 'sorrow', 'loneliness'] },
+    nature:  { tag: 'nature',  keywords: ['nature', 'fleur', 'arbre', 'mer', 'ciel', 'soleil', 'lune', 'étoile', 'flower', 'tree', 'sea', 'sky', 'sun', 'moon', 'star', 'forest', 'river'] },
+    gothic:  { tag: 'gothic',  keywords: ['fantôme', 'spectre', 'ténèbres', 'terreur', 'nuit', 'mort', 'ombre', 'ghost', 'shadow', 'darkness', 'terror', 'death'] },
+    epic:    { tag: 'epic',    keywords: ['héros', 'bataille', 'gloire', 'honneur', 'guerre', 'conquête', 'hero', 'battle', 'glory', 'honor', 'war', 'sword'] },
+    mystic:  { tag: 'mystic',  keywords: ['divin', 'extase', 'sacré', 'éternel', 'lumière', 'prière', 'divine', 'sacred', 'eternal', 'prayer', 'spirit'] },
+    dream:   { tag: 'dream',   keywords: ['rêve', 'songe', 'vision', 'sommeil', 'chimère', 'illusion', 'dream', 'vision', 'sleep', 'reverie'] },
+    humor:   { tag: 'humor',   keywords: ['rire', 'comique', 'ironie', 'satire', 'moquerie', 'ridicule', 'laugh', 'irony', 'satire', 'wit', 'comedy'] },
 };
+
+/**
+ * Hashtag communautaire Bluesky (fixe, toujours inclus).
+ * #BookSky est la communauté littéraire la plus active sur Bluesky.
+ */
+const PLATFORM_TAG = '#BookSky';
+
+/**
+ * Analyse le texte et retourne les hashtags dynamiques courts.
+ * @param {string} text - Le texte de l'extrait
+ * @param {string} lang - La langue
+ * @param {number} max - Nombre max de hashtags de contenu (défaut: 2)
+ * @returns {string} Ex: "#poetry #love #BookSky"
+ */
+function buildDynamicHashtags(text, lang, max = 2) {
+    const lower = (text || '').toLowerCase();
+    const scores = {};
+
+    for (const [cat, { keywords }] of Object.entries(CONTENT_TAGS)) {
+        let score = 0;
+        for (const kw of keywords) {
+            if (lower.includes(kw.toLowerCase())) score++;
+        }
+        if (score > 0) scores[cat] = score;
+    }
+
+    const top = Object.entries(scores)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, max)
+        .map(([cat]) => `#${CONTENT_TAGS[cat].tag}`);
+
+    if (top.length === 0) {
+        top.push('#lit');
+    }
+
+    top.push(PLATFORM_TAG);
+    return top.join(' ');
+}
 
 // ─── Format Post ───
 
@@ -805,7 +993,6 @@ const HASHTAGS = {
  * Bluesky compte en graphemes, pas en bytes UTF-8.
  */
 function countGraphemes(str) {
-    // Segmenter si disponible (Node 16+), sinon fallback Array.from
     if (typeof Intl !== 'undefined' && Intl.Segmenter) {
         const segmenter = new Intl.Segmenter('fr', { granularity: 'grapheme' });
         return [...segmenter.segment(str)].length;
@@ -813,25 +1000,50 @@ function countGraphemes(str) {
     return [...str].length;
 }
 
+/**
+ * Formate le post Bluesky.
+ * Le lien Palimpseste n'est PAS dans le texte : il est envoyé comme embed card
+ * (carte cliquable sous le post), ce qui économise ~45 caractères.
+ * 
+ * Lien intelligent :
+ *   - Si extraitId → lien direct #text/{id}
+ *   - Sinon → lien #preview?t=snippet&a=auteur&s=source
+ *     (l'app affiche une carte de prévisualisation avec le texte)
+ * 
+ * Retourne { text, embedUri } pour le postage.
+ */
 function formatPost(quote) {
     const maxGraphemes = 300;
 
     const lang = quote.lang || 'fr';
-    // Lien direct vers l'extrait si disponible (trending), sinon lien général
-    const appLink = quote.extraitId 
-        ? `\nhttps://palimpseste.vercel.app/#text/${quote.extraitId}`
-        : `\nhttps://palimpseste.vercel.app`;
-    const hashtag = `\n${HASHTAGS[lang] || HASHTAGS['en']}`;
-    const suffix = `\n\n— ${quote.author}${appLink}${hashtag}`;
+
+    // Construire le lien embed intelligent
+    let embedUri;
+    if (quote.extraitId) {
+        // Lien direct vers l'extrait en base
+        embedUri = `https://palimpseste.vercel.app/#text/${quote.extraitId}`;
+    } else {
+        // Pas en base → lien preview avec un snippet du texte + auteur + source
+        // L'app affichera une belle carte de prévisualisation
+        const snippet = (quote.text || '').substring(0, 80).trim();
+        const params = new URLSearchParams({
+            t: snippet,
+            a: quote.author || 'Anonyme',
+        });
+        if (quote.source) params.set('s', quote.source);
+        embedUri = `https://palimpseste.vercel.app/#preview?${params.toString()}`;
+    }
+
+    const hashtags = buildDynamicHashtags(quote.text, lang, 2);
+    const hashtagLine = `\n${hashtags}`;
+    const suffix = `\n\n— ${quote.author}${hashtagLine}`;
     const suffixGraphemes = countGraphemes(suffix);
 
     let text = quote.text;
     const available = maxGraphemes - suffixGraphemes - 1;
 
-    // Tronquer si besoin (sur les graphemes, pas les bytes)
     let chars = [...text];
     if (chars.length > available) {
-        // Reconstruire et couper au dernier espace
         text = chars.slice(0, available).join('');
         const lastSpace = text.lastIndexOf(' ');
         if (lastSpace > text.length * 0.6) {
@@ -840,7 +1052,10 @@ function formatPost(quote) {
         text += '…';
     }
 
-    return `${text}\n\n— ${quote.author}${appLink}${hashtag}`;
+    return {
+        text: `${text}\n\n— ${quote.author}${hashtagLine}`,
+        embedUri,
+    };
 }
 
 // ─── Main ───
@@ -877,10 +1092,24 @@ async function main() {
         process.exit(1);
     }
 
-    const post = formatPost(quote);
+    // 3) Si l'extrait vient de Wikisource (pas en base), le sauvegarder dans Supabase
+    //    pour que le lien pointe vers #text/{id} au lieu de #preview
+    if (!quote.extraitId) {
+        console.log('\n💾 Saving Wikisource extract to Supabase…');
+        const savedId = await saveExtraitToSupabase(quote);
+        if (savedId) {
+            quote.extraitId = savedId;
+            console.log(`   ✅ Extract saved, link will use #text/${savedId}`);
+        } else {
+            console.log('   ⚠️ Could not save, link will use #preview fallback');
+        }
+    }
+
+    const { text: post, embedUri } = formatPost(quote);
     const encoder = new TextEncoder();
 
     console.log(`\n📝 Posting to Bluesky (${encoder.encode(post).length} bytes, lang: ${quote.lang}, source: ${quote.fromTrending ? 'TRENDING' : 'WIKISOURCE'}):\n${post}\n`);
+    console.log(`🔗 Embed card: ${embedUri}`);
     console.log(`📖 Source: ${quote.source}\n`);
 
     try {
@@ -888,7 +1117,7 @@ async function main() {
         const session = await blueskyLogin(identifier, appPassword);
         console.log(`   Logged in as ${session.handle}`);
 
-        const result = await postToBluesky(session, post, quote.lang);
+        const result = await postToBluesky(session, post, quote.lang, embedUri);
         console.log(`✅ Posted to Bluesky!`);
         console.log(`   https://bsky.app/profile/${session.handle}/post/${result.uri.split('/').pop()}`);
     } catch (err) {
