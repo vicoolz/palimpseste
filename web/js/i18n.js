@@ -289,7 +289,6 @@ const translations = {
         'wikisource_desc': 'Bibliothèque libre participative. Meilleure qualité et formatage.',
         'archive_desc': 'Scanner de livres anciens. Textes bruts (OCR parfois imparfait).',
         'gutenberg_desc': 'Classiques du domaine public.',
-        'gallica_desc': 'Bibliothèque nationale de France. Textes français numérisés.',
         'perseus_desc': 'Textes classiques grecs et latins (traductions anglaises).',
         'sacredtexts_desc': 'Textes religieux et mystiques en anglais (traductions de sanskrit, hébreu, grec ancien, etc.).',
         'poetrydb_desc': 'Base de données dédiée à la poésie anglophone.',
@@ -737,7 +736,6 @@ const translations = {
         'wikisource_desc': 'Free collaborative library. Best quality and formatting.',
         'archive_desc': 'Old book scanner. Raw texts (sometimes imperfect OCR).',
         'gutenberg_desc': 'Public domain classics.',
-        'gallica_desc': 'National Library of France. Digitized French texts.',
         'perseus_desc': 'Classical Greek and Latin texts (English translations).',
         'sacredtexts_desc': 'Religious and mystical texts in English (translations from Sanskrit, Hebrew, Ancient Greek, etc.).',
         'poetrydb_desc': 'Database dedicated to English-language poetry.',
@@ -2301,7 +2299,6 @@ const translations = {
         'wikisource_desc': 'Свободная библиотека. Лучшее качество и форматирование.',
         'archive_desc': 'Сканер старых книг. Сырые тексты (иногда несовершенный OCR).',
         'gutenberg_desc': 'Классика общественного достояния.',
-        'gallica_desc': 'Национальная библиотека Франции. Оцифрованные французские тексты.',
         'perseus_desc': 'Классические греческие и латинские тексты (переводы на английский).',
         'sacredtexts_desc': 'Религиозные и мистические тексты на английском.',
         'poetrydb_desc': 'База данных англоязычной поэзии.',
@@ -2747,7 +2744,6 @@ const translations = {
         'wikisource_desc': '自由协作图书馆。最佳质量和排版。',
         'archive_desc': '旧书扫描仪。原始文本（OCR可能不完美）。',
         'gutenberg_desc': '公共领域经典作品。',
-        'gallica_desc': '法国国家图书馆。数字化法语文本。',
         'perseus_desc': '古典希腊和拉丁文本（英文翻译）。',
         'sacredtexts_desc': '英文宗教和神秘文本。',
         'poetrydb_desc': '英语诗歌数据库。',
@@ -3193,7 +3189,6 @@ const translations = {
         'wikisource_desc': '自由な共同図書館。最高品質。',
         'archive_desc': '古書スキャナー。生テキスト（OCR精度に差あり）。',
         'gutenberg_desc': 'パブリックドメインの古典。',
-        'gallica_desc': 'フランス国立図書館。デジタル化されたフランス語テキスト。',
         'perseus_desc': '古典ギリシャ語・ラテン語テキスト（英訳）。',
         'sacredtexts_desc': '英語の宗教・神秘テキスト。',
         'poetrydb_desc': '英語詩のデータベース。',
@@ -3639,7 +3634,6 @@ const translations = {
         'wikisource_desc': 'مكتبة تعاونية حرة. أفضل جودة وتنسيق.',
         'archive_desc': 'ماسح كتب قديمة. نصوص خام (OCR قد يكون ناقصًا).',
         'gutenberg_desc': 'كلاسيكيات الملك العام.',
-        'gallica_desc': 'المكتبة الوطنية الفرنسية. نصوص فرنسية رقمية.',
         'perseus_desc': 'نصوص يونانية ولاتينية كلاسيكية (ترجمات إنجليزية).',
         'sacredtexts_desc': 'نصوص دينية وروحانية بالإنجليزية.',
         'poetrydb_desc': 'قاعدة بيانات الشعر الإنجليزي.',
@@ -4424,9 +4418,6 @@ function updateSourcesModalTranslations() {
     
     const gutenbergDesc = document.getElementById('gutenbergDesc');
     if (gutenbergDesc) gutenbergDesc.textContent = t('gutenberg_desc');
-    
-    const gallicaDesc = document.getElementById('gallicaDesc');
-    if (gallicaDesc) gallicaDesc.textContent = t('gallica_desc');
     
     const perseusDesc = document.getElementById('perseusDesc');
     if (perseusDesc) perseusDesc.textContent = t('perseus_desc');

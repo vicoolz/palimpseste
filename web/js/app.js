@@ -3126,7 +3126,7 @@ function toggleSourceSetting(source) {
 }
 
 function updateSourceSettingsUI() {
-    ['wikisource', 'archive', 'gutenberg', 'poetrydb', 'sacredtexts', 'gallica', 'perseus'].forEach(s => {
+    ['wikisource', 'archive', 'gutenberg', 'poetrydb', 'sacredtexts', 'perseus'].forEach(s => {
         const check = document.getElementById(`check-${s}`);
         if (check) {
             const isActive = !state.activeSourceFilter || state.activeSourceFilter.includes(s) || state.activeSourceFilter.includes('all');

@@ -10,7 +10,6 @@ const ALLOWED_DOMAINS = [
     // Sources littéraires
     'archive.org',
     'openlibrary.org',
-    'gallica.bnf.fr',
     'sacred-texts.com',
     'www.sacred-texts.com',
     'perseus.tufts.edu',

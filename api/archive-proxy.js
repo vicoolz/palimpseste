@@ -33,7 +33,6 @@ export default async function handler(req, res) {
         const allowedDomains = [
             'archive.org',
             'openlibrary.org',
-            'gallica.bnf.fr',
             'sacred-texts.com',
             'www.sacred-texts.com',
             'perseus.tufts.edu',

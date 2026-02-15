@@ -88,13 +88,13 @@ const LANDING_FR = {
     'lire-wikisource': {
         title: 'Lire Wikisource autrement — Palimpseste',
         h1: 'Wikisource en mode flux',
-        desc: 'Palimpseste agrège Wikisource, Gutenberg, Gallica et 4 autres sources en un flux infini de littérature. Découvrez la poésie, le théâtre et les romans du domaine public dans une expérience de lecture immersive.',
+        desc: 'Palimpseste agrège Wikisource, Gutenberg et 4 autres sources en un flux infini de littérature. Découvrez la poésie, le théâtre et les romans du domaine public dans une expérience de lecture immersive.',
         keywords: 'wikisource, lire wikisource, wikisource français, textes libres, domaine public'
     },
     'alternative-gutenberg': {
         title: 'Alternative à Project Gutenberg — Palimpseste',
         h1: 'Project Gutenberg, Wikisource et plus encore',
-        desc: 'Palimpseste combine Project Gutenberg, Wikisource, Gallica (BnF), PoetryDB, Internet Archive et d\'autres sources en un flux littéraire infini. Lisez 7 sources en 12 langues.',
+        desc: 'Palimpseste combine Project Gutenberg, Wikisource, PoetryDB, Internet Archive et d\'autres sources en un flux littéraire infini. Lisez 6 sources en 12 langues.',
         keywords: 'project gutenberg, gutenberg alternative, ebook gratuit, livre domaine public'
     },
     'poesie-classique-en-ligne': {
@@ -109,12 +109,6 @@ const LANDING_FR = {
         desc: 'Accédez gratuitement à des milliers d\'œuvres littéraires du domaine public. Romans, poésie, théâtre, philosophie. De l\'Antiquité au XXe siècle, 12 langues.',
         keywords: 'littérature gratuite, livre gratuit en ligne, ebook gratuit, lire gratuitement'
     },
-    'lire-gallica': {
-        title: 'Lire Gallica (BnF) en flux — Palimpseste',
-        h1: 'Gallica en flux littéraire',
-        desc: 'Palimpseste intègre les textes de Gallica (Bibliothèque nationale de France) dans un flux de lecture infini. Découvrez les trésors de la BnF aux côtés de Wikisource et Gutenberg.',
-        keywords: 'gallica, gallica bnf, bibliothèque nationale, lire gallica'
-    },
     'textes-domaine-public': {
         title: 'Textes du domaine public — Lire en ligne',
         h1: 'Le domaine public littéraire',
@@ -128,13 +122,13 @@ const LANDING_EN = {
     'read-classic-literature-online': {
         title: 'Read Classic Literature Online Free — Palimpseste',
         h1: 'Read Classic Literature Online',
-        desc: 'Palimpseste is a free, infinite scroll of classic literature from 7 digital libraries including Wikisource, Project Gutenberg, Gallica, and more. Poetry, novels, philosophy in 12 languages.',
+        desc: 'Palimpseste is a free, infinite scroll of classic literature from 6 digital libraries including Wikisource, Project Gutenberg, and more. Poetry, novels, philosophy in 12 languages.',
         keywords: 'read classic literature online, free classic books, public domain literature, wikisource reader'
     },
     'wikisource-reader': {
         title: 'Wikisource Reader — Infinite Literary Feed',
         h1: 'A Better Way to Read Wikisource',
-        desc: 'Palimpseste combines Wikisource, Project Gutenberg, Gallica, PoetryDB, Internet Archive and more into one infinite literary feed. Discover poetry, theatre, novels from antiquity to the 20th century.',
+        desc: 'Palimpseste combines Wikisource, Project Gutenberg, PoetryDB, Internet Archive and more into one infinite literary feed. Discover poetry, theatre, novels from antiquity to the 20th century.',
         keywords: 'wikisource reader, wikisource app, read wikisource, public domain reader'
     },
     'free-poetry-online': {
@@ -149,7 +143,7 @@ const LANDING_ES = {
     'leer-literatura-clasica-gratis': {
         title: 'Leer literatura clásica gratis — Palimpseste',
         h1: 'Literatura clásica gratis',
-        desc: 'Palimpseste es un flujo infinito de literatura clásica de 7 bibliotecas digitales: Wikisource, Gutenberg, Gallica y más. Poesía, novela, filosofía en 12 idiomas. Gratuito y de código abierto.',
+        desc: 'Palimpseste es un flujo infinito de literatura clásica de 6 bibliotecas digitales: Wikisource, Gutenberg y más. Poesía, novela, filosofía en 12 idiomas. Gratuito y de código abierto.',
         keywords: 'literatura clásica gratis, leer libros gratis, dominio público, wikisource español'
     },
     'poesia-clasica-online': {
@@ -164,7 +158,7 @@ const LANDING_DE = {
     'klassische-literatur-online-lesen': {
         title: 'Klassische Literatur online lesen — Palimpseste',
         h1: 'Klassische Literatur online',
-        desc: 'Palimpseste ist ein endloser Strom klassischer Literatur aus 7 digitalen Bibliotheken: Wikisource, Gutenberg, Gallica und mehr. Poesie, Romane, Philosophie in 12 Sprachen. Kostenlos und Open Source.',
+        desc: 'Palimpseste ist ein endloser Strom klassischer Literatur aus 6 digitalen Bibliotheken: Wikisource, Gutenberg und mehr. Poesie, Romane, Philosophie in 12 Sprachen. Kostenlos und Open Source.',
         keywords: 'klassische Literatur online, kostenlose Bücher, Gutenberg lesen, Wikisource deutsch'
     }
 };
@@ -173,7 +167,7 @@ const LANDING_IT = {
     'letteratura-classica-online': {
         title: 'Letteratura classica online gratis — Palimpseste',
         h1: 'Letteratura classica online',
-        desc: 'Palimpseste è un flusso infinito di letteratura classica da 7 biblioteche digitali: Wikisource, Gutenberg, Gallica e altro. Poesia, romanzi, filosofia in 12 lingue. Gratuito e open source.',
+        desc: 'Palimpseste è un flusso infinito di letteratura classica da 6 biblioteche digitali: Wikisource, Gutenberg e altro. Poesia, romanzi, filosofia in 12 lingue. Gratuito e open source.',
         keywords: 'letteratura classica online, leggere libri gratis, dominio pubblico, wikisource italiano'
     }
 };
@@ -182,7 +176,7 @@ const LANDING_PT = {
     'literatura-classica-online': {
         title: 'Literatura clássica online grátis — Palimpseste',
         h1: 'Literatura clássica online',
-        desc: 'Palimpseste é um fluxo infinito de literatura clássica de 7 bibliotecas digitais: Wikisource, Gutenberg, Gallica e mais. Poesia, romances, filosofia em 12 idiomas. Gratuito e open source.',
+        desc: 'Palimpseste é um fluxo infinito de literatura clássica de 6 bibliotecas digitais: Wikisource, Gutenberg e mais. Poesia, romances, filosofia em 12 idiomas. Gratuito e open source.',
         keywords: 'literatura clássica online, ler livros grátis, domínio público, wikisource português'
     }
 };
@@ -411,7 +405,7 @@ module.exports = async (req, res) => {
                 bodyContent: `
                     <h1>${page.h1}</h1>
                     <p>${page.desc}</p>
-                    <p><strong>Sources :</strong> Wikisource, Project Gutenberg, Gallica (BnF), PoetryDB, Internet Archive, Perseus, Sacred Texts.</p>
+                    <p><strong>Sources :</strong> Wikisource, Project Gutenberg, PoetryDB, Internet Archive, Perseus, Sacred Texts.</p>
                     <a class="cta" href="${BASE_URL}">Commencer à lire →</a>
                 `
             }));
@@ -446,7 +440,7 @@ module.exports = async (req, res) => {
                     bodyContent: `
                         <h1>${page.h1}</h1>
                         <p>${page.desc}</p>
-                        <p><strong>Sources:</strong> Wikisource, Project Gutenberg, Gallica (BnF), PoetryDB, Internet Archive, Perseus, Sacred Texts.</p>
+                        <p><strong>Sources:</strong> Wikisource, Project Gutenberg, PoetryDB, Internet Archive, Perseus, Sacred Texts.</p>
                         <a class="cta" href="${BASE_URL}">${langConf.cta}</a>
                     `
                 }));

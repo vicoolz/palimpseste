@@ -87,7 +87,6 @@ function isExternalAPI(url) {
            url.hostname.includes('gutendex.com') ||
            url.hostname.includes('poetrydb.org') ||
            url.hostname.includes('archive.org') ||
-           url.hostname.includes('gallica.bnf.fr') ||
            url.hostname.includes('perseus.tufts.edu') ||
            url.hostname.includes('sacred-texts.com');
 }

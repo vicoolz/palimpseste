@@ -30,7 +30,7 @@ This is an experiment in making great literature as accessible and engaging as a
 
 Open source is not just a technical choice. It's essential to this project's identity.
 
-**Open texts:** Palimpseste's philosophy is to curate and share quality literature free from copyright restrictions. All content comes from public domain sources (Wikisource, Project Gutenberg, Gallica, Archive.org, Perseus...). 
+**Open texts:** Palimpseste's philosophy is to curate and share quality literature free from copyright restrictions. All content comes from public domain sources (Wikisource, Project Gutenberg, Archive.org, Perseus...). 
 
 **Open code:** The platform itself is fully open source. In an era where social networks are opaque systems designed to extract value from users, transparency matters. Anyone can inspect how Palimpseste works, suggest improvements, or fork it to build something new. The community owns this project as much as its creator.
 
@@ -81,7 +81,6 @@ palimpseste/
 | **Project Gutenberg** | EN (primarily) | 70,000+ public domain ebooks |
 | **PoetryDB** | EN | Poetry database |
 | **Archive.org** | Multiple | Millions of scanned books |
-| **Gallica** | FR | French National Library |
 | **Perseus** | Greek, Latin | Classical antiquity |
 | **Sacred Texts** | Multiple | Religious & mystical texts |
 

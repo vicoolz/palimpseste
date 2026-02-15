@@ -9,7 +9,6 @@
  * - PoetryDB
  * - Archive.org + Open Library
  * - Sacred Texts Archive (textes religieux/mystiques)
- * - Gallica (BnF)
  * - Perseus Digital Library (classiques grecs/latins)
  * - Navigation par catégories
  * 
@@ -67,14 +66,6 @@ const ALT_SOURCES = {
         name: 'Sacred Texts Archive',
         url: 'https://sacred-texts.com',
         lang: 'en'
-    },
-    // ═══════════════════════════════════════════════════════════
-    //  GALLICA - Bibliothèque nationale de France
-    // ═══════════════════════════════════════════════════════════
-    gallica: {
-        name: 'Gallica (BnF)',
-        url: 'https://gallica.bnf.fr',
-        lang: 'fr'
     },
     // ═══════════════════════════════════════════════════════════
     //  PERSEUS DIGITAL LIBRARY - Textes classiques grecs/latins
@@ -1319,20 +1310,10 @@ async function fetchSacredTexts() {
         console.error('Sacred Texts error:', e);
         return [];
     }
-}
-
-// ═══════════════════════════════════════════════════════════
-// 🏛️ GALLICA - Bibliothèque nationale de France (API IIIF/SRU)
-// ═══════════════════════════════════════════════════════════
-
-// Helper pour fetch avec proxy CORS (utilise nos propres proxies Vercel)
+}\n\n// Helper pour fetch avec proxy CORS (utilise nos propres proxies Vercel)
 async function fetchWithCorsProxy(url, timeoutMs = ARCHIVE_TIMEOUT_MS) {
-    const isGallica = url.includes('gallica.bnf.fr');
-
-    // Essayer le proxy spécialisé d'abord (Gallica / Archive)
-    const specializedProxy = isGallica
-        ? `/api/gallica-proxy?url=${encodeURIComponent(url)}`
-        : `/api/archive-proxy?url=${encodeURIComponent(url)}`;
+    // Essayer le proxy spécialisé d'abord (Archive)
+    const specializedProxy = `/api/archive-proxy?url=${encodeURIComponent(url)}`;
 
     try {
         const res = await fetchWithTimeout(specializedProxy, {}, timeoutMs);
@@ -1353,180 +1334,6 @@ async function fetchWithCorsProxy(url, timeoutMs = ARCHIVE_TIMEOUT_MS) {
 
     console.warn('All proxies failed for:', url.substring(0, 80));
     return null;
-}
-
-// Cache pour éviter les requêtes répétées à Gallica (rate limiting strict)
-const gallicaCache = new Map();
-const GALLICA_CACHE_DURATION = 1000 * 60 * 30; // 30 minutes
-
-// NOTE: Gallica désactivé - l'endpoint /texteBrut retourne du HTML avec JS/UI
-// et très peu de texte littéraire exploitable. L'API SRU fonctionne pour les
-// métadonnées mais le contenu textuel n'est pas accessible proprement.
-const GALLICA_ENABLED = false;
-
-async function fetchGallica() {
-    // Gallica désactivé par configuration
-    if (!GALLICA_ENABLED) {
-        return [];
-    }
-    
-    try {
-        // Termes de recherche pour Gallica - utiliser dc.title ou dc.subject (pas de noms d'auteurs en dur)
-        const searchTerms = [
-            { field: 'dc.title', term: 'fables' },
-            { field: 'dc.title', term: 'poésies' },
-            { field: 'dc.title', term: 'contes' },
-            { field: 'dc.title', term: 'roman' },
-            { field: 'dc.title', term: 'théâtre' },
-            { field: 'dc.title', term: 'lettres' },
-            { field: 'dc.title', term: 'mémoires' },
-            { field: 'dc.title', term: 'nouvelles' },
-            { field: 'dc.title', term: 'essais' },
-            { field: 'dc.title', term: 'tragédie' },
-            { field: 'dc.title', term: 'comédie' },
-            { field: 'dc.subject', term: 'littérature' },
-            { field: 'dc.subject', term: 'poésie française' },
-            { field: 'dc.subject', term: 'romans français' },
-            { field: 'dc.subject', term: 'philosophie' },
-        ];
-        const search = searchTerms[Math.floor(Math.random() * searchTerms.length)];
-        
-        // API SRU de Gallica - UN SEUL document pour éviter le rate limiting
-        const startRecord = Math.floor(Math.random() * 200) + 1;
-        const sruUrl = `https://gallica.bnf.fr/SRU?operation=searchRetrieve&version=1.2&maximumRecords=1&startRecord=${startRecord}&query=${search.field} all "${search.term}"`;
-        
-        // Vérifier le cache
-        const cacheKey = `sru:${search.field}:${search.term}:${startRecord}`;
-        const cached = gallicaCache.get(cacheKey);
-        if (cached && Date.now() - cached.timestamp < GALLICA_CACHE_DURATION) {
-            return cached.results;
-        }
-        
-        const res = await fetchWithCorsProxy(sruUrl);
-        if (!res) {
-            return [];
-        }
-        
-        const xmlText = await res.text();
-        
-        // Parser le XML avec gestion des namespaces SRU
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-        
-        // Vérifier les erreurs de parsing XML
-        const parseError = xmlDoc.querySelector('parsererror');
-        if (parseError) {
-            return [];
-        }
-        
-        // Méthode robuste: extraire les records via regex puis parser individuellement
-        const recordMatches = xmlText.match(/<srw:record>[\s\S]*?<\/srw:record>/gi);
-        if (!recordMatches || recordMatches.length === 0) {
-            return [];
-        }
-        
-        const results = [];
-        
-        // Ne traiter qu'UN SEUL record pour éviter le rate limiting de Gallica
-        const recordXml = recordMatches[0];
-        try {
-            // Extraire les métadonnées via regex (plus fiable que DOM avec namespaces)
-            const titleMatch = recordXml.match(/<dc:title>([^<]+)<\/dc:title>/i);
-            const creatorMatch = recordXml.match(/<dc:creator>([^<]+)<\/dc:creator>/i);
-            const identifierMatch = recordXml.match(/<dc:identifier>([^<]+)<\/dc:identifier>/i);
-            
-            const title = titleMatch ? titleMatch[1].trim() : 'Sans titre';
-            const creator = creatorMatch ? creatorMatch[1].trim() : 'Inconnu';
-            const identifier = identifierMatch ? identifierMatch[1].trim() : null;
-            
-            if (identifier) {
-                // Extraire l'ARK ID depuis l'identifier
-                const arkMatch = identifier.match(/(ark:\/\d+\/\w+)/);
-                if (arkMatch) {
-                    const arkId = arkMatch[1];
-                    
-                    // URL du texte OCR - Gallica expose le texte via /texteBrut
-                    const textUrl = `https://gallica.bnf.fr/${arkId}/texteBrut`;
-                    
-                    // Essayer de récupérer le texte (aussi via proxy CORS)
-                    let text = null;
-                    try {
-                        const textRes = await fetchWithCorsProxy(textUrl, 10000);
-                        if (textRes) {
-                            let html = await textRes.text();
-                            
-                            // Gallica /texteBrut retourne une page HTML - extraire le contenu textuel
-                            const div = document.createElement('div');
-                            div.innerHTML = html;
-                            
-                            // Supprimer les scripts, styles, nav, footer, etc.
-                            div.querySelectorAll('script, style, nav, header, footer, .header, .footer, .navbar, .menu, .navigation, noscript, iframe, form, button, input, select').forEach(el => el.remove());
-                            
-                            // Chercher le contenu textuel principal
-                            let contentEl = div.querySelector('.texteIntegral, .ocr-content, .content, #texte, .texte, article, main, .main');
-                            if (!contentEl) {
-                                contentEl = div.querySelector('body') || div;
-                            }
-                            
-                            text = contentEl.innerText || contentEl.textContent || '';
-                        }
-                    } catch (e) {
-                        // Erreur silencieuse
-                    }
-                    
-                    if (text && text.length > 500) {
-                        // Nettoyer le texte OCR Gallica
-                        text = text
-                            .replace(/\{[^}]+\}/g, '') // Supprimer JSON résiduel
-                            .replace(/"[^"]*":\s*"[^"]*"/g, '') // Supprimer paires JSON
-                            .replace(/https?:\/\/[^\s]+/g, '') // Supprimer URLs
-                            .replace(/\b(display|active|parameters|role|contenu|selected|etat|link|menu|button)\b/gi, '') // Mots-clés UI
-                            .replace(/\n{3,}/g, '\n\n')
-                            .replace(/^\s*\d+\s*$/gm, '') // Numéros de page seuls
-                            .replace(/GALLICA/gi, '')
-                            .replace(/BnF/gi, '')
-                            .replace(/\s{3,}/g, ' ')
-                            .trim();
-                        
-                        // Vérifier que le texte est vraiment du contenu littéraire (pas du JSON/UI)
-                        const jsonScore = (text.match(/[{}[\]":,]/g) || []).length;
-                        const textScore = text.length;
-                        if (jsonScore <= textScore / 20) {
-                            // Prendre un extrait (éviter les premières pages souvent des couvertures)
-                            const start = Math.min(text.length / 4, 2000);
-                            let excerpt = text.substring(start, start + 2500);
-                            const paraStart = excerpt.indexOf('\n\n');
-                            if (paraStart > 0 && paraStart < 200) {
-                                excerpt = excerpt.substring(paraStart).trim();
-                            }
-                            
-                            if (excerpt.length > 300) {
-                                results.push({
-                                    title: title.substring(0, 100),
-                                    text: excerpt + '\n\n[...] (Lire la suite sur Gallica)',
-                                    author: creator,
-                                    source: 'gallica',
-                                    url: `https://gallica.bnf.fr/${arkId}`,
-                                    lang: 'fr',
-                                    isPreloaded: true
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (e) {
-            // Erreur silencieuse
-        }
-        
-        // Mettre en cache les résultats
-        gallicaCache.set(cacheKey, { results, timestamp: Date.now() });
-        
-        return results;
-    } catch (e) {
-        console.error('Gallica error:', e);
-        return [];
-    }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1683,7 +1490,7 @@ async function fillPool() {
 
     // Si l'utilisateur force une source unique "API" (PoetryDB/Gutenberg/Archive/etc.),
     // on ne bloque pas ces sources même si un contexte de recherche/filtres est actif.
-    const altSourceIds = ['poetrydb', 'gutenberg', 'archive', 'sacredtexts', 'gallica', 'perseus'];
+    const altSourceIds = ['poetrydb', 'gutenberg', 'archive', 'sacredtexts', 'perseus'];
     const strictAltSourceMode = Array.isArray(state.activeSourceFilter)
         && state.activeSourceFilter.length === 1
         && altSourceIds.includes(state.activeSourceFilter[0]);
@@ -1758,25 +1565,7 @@ async function fillPool() {
         );
     }
     
-    // === 1.8 GALLICA (BnF) - Bibliothèque nationale de France ===
-    const gallicaLangOk = (selectedLang === 'all' || selectedLang === 'fr') || (strictAltSourceMode && state.activeSourceFilter[0] === 'gallica');
-    const gallicaAllowed = isSourceAllowed('gallica');
-    const gallicaConditionOk = (!hasSearchContext || strictAltSourceMode);
-    if (gallicaConditionOk && gallicaLangOk && gallicaAllowed) {
-        console.log('📚 Gallica - Loading...');
-        sourcePromises.push(
-            fetchGallica().then(gallicaTexts => {
-                console.log('📚 fetchGallica returned:', gallicaTexts.length, 'items');
-                for (const item of gallicaTexts) {
-                    if (!state.shownPages.has('gallica:' + item.title)) {
-                        state.textPool.unshift({ ...item, isPreloaded: true });
-                    }
-                }
-            }).catch(e => console.error('Gallica fillPool error:', e))
-        );
-    }
-    
-    // === 1.9 PERSEUS DIGITAL LIBRARY - Classiques grecs/latins ===
+    // === 1.8 PERSEUS DIGITAL LIBRARY - Classiques grecs/latins ===
     const isPerseusOnlyLang = isPerseusOnlyLanguage();
     const perseusLangOk = isPerseusOnlyLang || (selectedLang === 'all' || ['en', 'la', 'grc', 'el'].includes(selectedLang)) || (strictAltSourceMode && state.activeSourceFilter[0] === 'perseus');
     const perseusAllowed = isPerseusOnlyLang || isSourceAllowed('perseus');
@@ -2292,7 +2081,6 @@ window.fetchPoetryDB = fetchPoetryDB;
 window.fetchArchiveOrg = fetchArchiveOrg;
 window.fetchOpenLibrary = fetchOpenLibrary;
 window.fetchSacredTexts = fetchSacredTexts;
-window.fetchGallica = fetchGallica;
 window.fetchPerseus = fetchPerseus;
 window.fillPool = fillPool;
 window.exploreCategory = exploreCategory;
