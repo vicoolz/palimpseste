@@ -65,7 +65,14 @@ function httpGet(url) {
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => {
-                try { resolve(JSON.parse(data)); }
+                try {
+                    // Handle non-JSON responses (HTML error pages, 404s, etc.)
+                    if (res.statusCode < 200 || res.statusCode >= 300) {
+                        reject(new Error(`HTTP ${res.statusCode} for ${url}`));
+                        return;
+                    }
+                    resolve(JSON.parse(data));
+                }
                 catch (e) { reject(new Error(`JSON parse error for ${url}: ${e.message}`)); }
             });
         }).on('error', reject);
@@ -107,7 +114,7 @@ async function fetchTrendingQuote(forceLang, excludeUrls = new Set()) {
         const query = new URLSearchParams({
             select: 'id,texte,source_title,source_author,source_url,likes_count',
             order: 'likes_count.desc,created_at.desc',
-            limit: '30',
+            limit: '100',
             'or': '(is_silent.is.null,is_silent.eq.false)',
             'source_author': 'not.is.null',
             'texte': 'not.is.null',
@@ -832,6 +839,58 @@ async function fetchQuoteFromWikisource(maxRetries = 15, forceLang = null, exclu
     return null;
 }
 
+// ─── PoetryDB Fallback (always reliable) ───
+
+/**
+ * Fetch a random poem from PoetryDB (English poetry, always works).
+ * This is the same source the app uses and never fails.
+ */
+async function fetchPoetryDBQuote() {
+    try {
+        // Get a random poem from PoetryDB
+        const data = await httpGet('https://poetrydb.org/random/5');
+        if (!Array.isArray(data) || data.length === 0) return null;
+
+        for (const poem of data) {
+            if (!poem.lines || !poem.author || poem.author === 'Unknown') continue;
+            const text = poem.lines.join('\n').trim();
+            if (text.length < 40 || text.length > 2000) continue;
+
+            // Extract a good quote (100-450 chars ideal)
+            let quote = text;
+            if (quote.length > 450) {
+                // Take first stanza or first ~400 chars
+                const stanzaEnd = quote.indexOf('\n\n');
+                if (stanzaEnd > 80 && stanzaEnd < 450) {
+                    quote = quote.substring(0, stanzaEnd);
+                } else {
+                    quote = quote.substring(0, 400);
+                    const lastLine = quote.lastIndexOf('\n');
+                    if (lastLine > 200) quote = quote.substring(0, lastLine);
+                    else quote += '…';
+                }
+            }
+
+            if (quote.length < 40) continue;
+            if (!isQuotePostWorthy(quote, poem.author)) continue;
+
+            console.log(`   ✅ PoetryDB: "${quote.substring(0, 60)}…" by ${poem.author}`);
+            return {
+                text: quote.trim(),
+                author: poem.author,
+                title: poem.title || 'Poetry',
+                lang: 'en',
+                source: `https://poetrydb.org`,
+                fromTrending: false,
+            };
+        }
+        return null;
+    } catch (err) {
+        console.log(`   ⚠️ PoetryDB fallback failed: ${err.message}`);
+        return null;
+    }
+}
+
 // ─── Mastodon API ───
 
 /**
@@ -913,7 +972,7 @@ const CONTENT_TAGS = {
     humor:     { hashtag: 'humor',     keywords: ['rire', 'comique', 'ironie', 'satire', 'moquerie', 'ridicule', 'laugh', 'irony', 'satire', 'wit', 'comedy'] },
     // Époques / Courants
     romanticism:{ hashtag: 'romanticism', keywords: ['romantisme', 'romantique', 'sublime', 'romantic', 'sublime'] },
-    classics:  { hashtag: 'classics',  keywords: ['antique', 'olympe', 'mythologie', 'latin', 'grec', 'classic', 'ancient', 'mythology', 'greek', 'roman'] },
+    classics:  { hashtag: 'classics',     keywords: ['antique', 'olympe', 'mythologie', 'latin', 'grec', 'classic', 'ancient', 'mythology', 'greek', 'roman'] },
 };
 
 /**
@@ -923,14 +982,14 @@ const CONTENT_TAGS = {
  * #books #literature — universels, très suivis
  */
 const PLATFORM_TAGS_BY_LANG = {
-    fr: ['#Bookstodon', '#MastoLivre', '#litterature'],
-    en: ['#Bookstodon', '#books', '#literature'],
-    de: ['#Bookstodon', '#books', '#literatur'],
-    it: ['#Bookstodon', '#books', '#letteratura'],
-    es: ['#Bookstodon', '#books', '#literatura'],
-    pt: ['#Bookstodon', '#books', '#literatura'],
+    fr: ['#bookstodon', '#mastolivre', '#litterature'],
+    en: ['#bookstodon', '#books', '#literature'],
+    de: ['#bookstodon', '#books', '#literatur'],
+    it: ['#bookstodon', '#books', '#letteratura'],
+    es: ['#bookstodon', '#books', '#literatura'],
+    pt: ['#bookstodon', '#books', '#literatura'],
 };
-const PLATFORM_TAGS_DEFAULT = ['#Bookstodon', '#books', '#literature'];
+const PLATFORM_TAGS_DEFAULT = ['#bookstodon', '#books', '#literature'];
 
 /**
  * Analyse le texte et retourne les meilleurs hashtags dynamiques.
@@ -1045,13 +1104,25 @@ async function main() {
     if (quote) {
         console.log(`   ✅ Got trending quote by ${quote.author} (${quote.lang})`);
     } else {
-        // 2) Fallback: Wikisource live
+        // 2) Fallback: Wikisource live (25 retries)
         console.log(`\n🔍 Fallback: fetching from Wikisource${forceLang ? ` (lang: ${forceLang})` : ''}…\n`);
-        quote = await fetchQuoteFromWikisource(8, forceLang, excludeUrls);
+        quote = await fetchQuoteFromWikisource(25, forceLang, excludeUrls);
+    }
+
+    // 3) Ultimate fallback: PoetryDB (en anglais, toujours fiable)
+    if (!quote) {
+        console.log('\n🎭 Ultimate fallback: fetching from PoetryDB…');
+        quote = await fetchPoetryDBQuote();
+    }
+
+    // 4) Relaxed mode: re-allow previously posted if nothing else works
+    if (!quote) {
+        console.log('\n♻️ Relaxed mode: retrying Wikisource without dedup filter…');
+        quote = await fetchQuoteFromWikisource(15, forceLang, new Set());
     }
 
     if (!quote) {
-        console.error('❌ Could not find a suitable quote from trending or Wikisource');
+        console.error('❌ Could not find a suitable quote from any source');
         process.exit(1);
     }
 
