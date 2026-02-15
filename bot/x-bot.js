@@ -127,15 +127,18 @@ async function fetchTrendingQuote(forceLang, excludeUrls = new Set()) {
 
         console.log(`   Found ${data.length} trending extraits in Supabase`);
 
-        const valid = data.filter(e =>
-            e.texte && e.texte.trim().length >= 30 &&
-            e.source_author && e.source_author.trim().length > 1 &&
-            isQuotePostWorthy(e.texte, e.source_author) &&
-            !excludeUrls.has(e.source_url)
-        );
+        // Diagnostic : pourquoi les extraits sont rejetés
+        let rejectedDedup = 0, rejectedQuality = 0, rejectedShort = 0, rejectedNoAuthor = 0;
+        const valid = data.filter(e => {
+            if (!e.texte || e.texte.trim().length < 30) { rejectedShort++; return false; }
+            if (!e.source_author || e.source_author.trim().length <= 1) { rejectedNoAuthor++; return false; }
+            if (!isQuotePostWorthy(e.texte, e.source_author)) { rejectedQuality++; return false; }
+            if (excludeUrls.has(e.source_url)) { rejectedDedup++; return false; }
+            return true;
+        });
 
         if (valid.length === 0) {
-            console.log('   No valid extraits after filtering');
+            console.log(`   No valid extraits after filtering (short:${rejectedShort} noAuthor:${rejectedNoAuthor} quality:${rejectedQuality} dedup:${rejectedDedup})`);
             return null;
         }
 
@@ -542,8 +545,7 @@ function detectAuthor(parsed) {
         if (/^[A-ZÀ-Ü][a-zà-ü]+(\s+[A-ZÀ-Ü][a-zà-ü]+)*$/.test(part2)) return part2;
     }
 
-    const slashParts = cleanTitle.split('/');
-    if (slashParts.length >= 2) return slashParts[0].trim();
+    // NB: ne PAS utiliser slashParts pour deviner l'auteur (retourne souvent un titre de livre)
 
     return null;
 }
@@ -568,6 +570,13 @@ function isGoodTitle(title) {
     if (t.includes('étude biographique') || t.includes('étude sur')) return false;
     if (t.includes('biographical study') || t.includes('biography of')) return false;
     if (/\bbiograph/i.test(t) && !t.includes('/')) return false;
+
+    // Filtrer dictionnaires/encyclopédies/lexiques dès le titre (évite de parser inutilement)
+    if (/\b(dictionnaire|dictionary|wörterbuch|dizionario|diccionario)\b/i.test(t) && !t.includes('/')) return false;
+    if (/\b(encyclop[aæ]edia|encyclopédie|enciclopedia)\b/i.test(t) && !t.includes('/')) return false;
+    if (/\b(lexique|lexicon|glossaire|glossary)\b/i.test(t) && !t.includes('/')) return false;
+    if (/^(grand dictionnaire|petit dictionnaire|nouveau dictionnaire)/i.test(t)) return false;
+    if (/^(revue musicale|revue littéraire|revue des)/i.test(t) && !t.includes('/')) return false;
 
     if ((t.includes('œuvres complètes') || t.includes('complete works') ||
         t.includes('gesammelte werke') || t.includes('opere complete')) && !t.includes('/')) return false;
@@ -719,7 +728,10 @@ async function fetchTextFromPage(ws, title, depth = 0) {
     }
 
     const text = extractText(html);
-    if (text.length < 100) return null;
+    if (text.length < 100) {
+        console.log(`${'    '.repeat(depth + 1)}✗ Text too short (${text.length} chars)`);
+        return null;
+    }
 
     const quality = isContentGoodQuality(text, parsed);
     if (!quality.isGood) {
@@ -731,11 +743,15 @@ async function fetchTextFromPage(ws, title, depth = 0) {
                 return await fetchTextFromPage(ws, randomLink['*'], depth + 1);
             }
         }
+        console.log(`${'    '.repeat(depth + 1)}✗ Quality check failed: ${quality.reason} (${text.length} chars)`);
         return null;
     }
 
     const quote = extractBestQuote(text);
-    if (!quote) return null;
+    if (!quote) {
+        console.log(`${'    '.repeat(depth + 1)}✗ No suitable quote extracted (${text.length} chars, ${text.split(/\n\n+/).length} paragraphs)`);
+        return null;
+    }
 
     const author = detectAuthor(parsed);
     const cleanTitle = (parsed.displaytitle || title).replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').trim();
@@ -760,7 +776,7 @@ async function fetchTextFromPage(ws, title, depth = 0) {
     };
 }
 
-async function fetchQuoteFromWikisource(maxRetries = 8, forceLang = null, excludeUrls = new Set()) {
+async function fetchQuoteFromWikisource(maxRetries = 15, forceLang = null, excludeUrls = new Set()) {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
             const ws = pickWeightedLang(forceLang);
@@ -1130,7 +1146,7 @@ async function main() {
     } else {
         // 2) Fallback: Wikisource live
         console.log(`\n🔍 Fallback: fetching from Wikisource${forceLang ? ` (lang: ${forceLang})` : ''}…\n`);
-        quote = await fetchQuoteFromWikisource(8, forceLang, excludeUrls);
+        quote = await fetchQuoteFromWikisource(15, forceLang, excludeUrls);
     }
 
     if (!quote) {
