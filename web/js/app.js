@@ -1482,7 +1482,8 @@ async function loadMore() {
                 title: item.title,
                 text: item.text,
                 author: item.author,
-                source: item.source
+                source: item.source,
+                url: item.url
             }, item.title, sourceInfo);
             loaded++;
             continue;
@@ -1889,10 +1890,10 @@ function renderCard(result, origTitle, wikisource = getCurrentWikisource(), allo
     // Utiliser l'auteur des métadonnées en priorité
     const author = detectAuthor(title, text, result.author);
     const tag = detectTag(title, text);
-    const url = `${wikisource?.url || 'https://fr.wikisource.org'}/wiki/${encodeURIComponent(origTitle)}`;
+    const url = result.url || `${wikisource?.url || 'https://fr.wikisource.org'}/wiki/${encodeURIComponent(origTitle)}`;
     const safeUrl = (url || '').replace(/'/g, "\\'");
     const cardId = 'card-' + (state.cardIdx++);
-    
+
     // Extraire un titre propre pour l'affichage
     let displayTitle = title.split('/').pop() || title.split('/')[0];
     // Si c'est un titre générique, prendre la première partie
@@ -1901,10 +1902,10 @@ function renderCard(result, origTitle, wikisource = getCurrentWikisource(), allo
     displayTitle = displayTitle.replace(/\s*\([^)]*\)\s*$/, '').trim();
     // Si displayTitle est vide ou trop court après nettoyage, utiliser le titre original
     if (displayTitle.length < 3) displayTitle = title.split('/')[0] || 'Texte sans titre';
-    
+
     // Badge de langue
     const langBadge = lang !== 'fr' ? `<span class="lang-badge">${lang.toUpperCase()}</span>` : '';
-    
+
     // Tracker les stats et construire les connexions
     trackStats(author, tag);
     buildAuthorConnections(author, tag);
