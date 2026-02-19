@@ -1514,6 +1514,7 @@ async function fillPool() {
                             author: poem.author,
                             lang: 'en',
                             source: 'poetrydb',
+                            url: poem.url,
                             isPreloaded: true
                         });
                     }
