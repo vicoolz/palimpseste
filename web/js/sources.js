@@ -798,6 +798,7 @@ async function fetchPoetryDB() {
                     text: Array.isArray(poem.lines) ? poem.lines.join('\n') : poem.lines,
                     author: poem.author,
                     source: 'poetrydb',
+                    url: `https://poetrydb.org/title/${encodeURIComponent(poem.title)}`,
                     lang: 'en'
                 }));
             }
@@ -1513,6 +1514,7 @@ async function fillPool() {
                             author: poem.author,
                             lang: 'en',
                             source: 'poetrydb',
+                            url: poem.url,
                             isPreloaded: true
                         });
                     }
