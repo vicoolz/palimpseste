@@ -269,6 +269,27 @@
     </div>
     
     <div id="errorContainer"></div>
+
+    <!-- Formulaire de connexion (affiché si pas de session) -->
+    <div id="loginForm" style="display:none; max-width:360px; margin: 4rem auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 2rem;">
+        <h2 style="margin-top:0; color:var(--accent);">🔐 Connexion Admin</h2>
+        <div id="loginError" style="display:none; background:#e74c3c22; border:1px solid #e74c3c; color:#e74c3c; padding:0.75rem; border-radius:8px; margin-bottom:1rem; font-size:0.9rem;"></div>
+        <div style="margin-bottom:1rem;">
+            <label style="display:block; margin-bottom:0.4rem; font-size:0.85rem; color:var(--text-muted);">Email</label>
+            <input type="email" id="adminEmail" placeholder="admin@example.com"
+                style="width:100%; padding:0.6rem 0.8rem; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:6px; font-size:1rem; box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:1.5rem;">
+            <label style="display:block; margin-bottom:0.4rem; font-size:0.85rem; color:var(--text-muted);">Mot de passe</label>
+            <input type="password" id="adminPassword" placeholder="•••••••"
+                style="width:100%; padding:0.6rem 0.8rem; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:6px; font-size:1rem; box-sizing:border-box;"
+                onkeydown="if(event.key==='Enter') adminLogin()">
+        </div>
+        <button onclick="adminLogin()" id="loginBtn"
+            style="width:100%; padding:0.75rem; background:var(--accent); color:white; border:none; border-radius:8px; font-size:1rem; cursor:pointer; font-family:inherit;">
+            Se connecter
+        </button>
+    </div>
     
     <div class="stats-grid" id="statsGrid">
         <div class="stat-card">
@@ -411,41 +432,76 @@
             try {
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 
-                // Vérifier l'authentification
-                const { data: { session } } = await supabaseClient.auth.getSession();
+                // Vérifier l'authentification (getSession peut échouer sur mobile avec Tracking Prevention)
+                let session = null;
+                try {
+                    const { data } = await supabaseClient.auth.getSession();
+                    session = data.session;
+                } catch(e) {
+                    console.warn('getSession failed:', e);
+                }
+
                 if (!session) {
-                    showError('Vous devez être connecté pour accéder au dashboard admin.');
+                    // Afficher le formulaire de connexion
+                    document.getElementById('loginForm').style.display = 'block';
                     return;
                 }
                 
-                currentUser = session.user;
-
-                // 🔐 Vérifier que l'utilisateur est bien l'admin
-                if (currentUser.email !== CONFIG.ADMIN_EMAIL) {
-                    document.body.innerHTML = `
-                        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:1rem;font-family:Georgia,serif;">
-                            <div style="font-size:3rem;">🚫</div>
-                            <h2 style="color:#e74c3c;">Accès refusé</h2>
-                            <p style="color:#aaa;">Vous n'êtes pas autorisé à accéder au dashboard admin.</p>
-                            <a href="index.html" style="color:#5a7a8a;">← Retour à Palimpseste</a>
-                        </div>`;
-                    return;
-                }
-
-                adminSessionId = getAdminSessionId();
-                adminVisitorId = getAdminVisitorId();
-                
-                // Afficher l'indicateur de session et visitor_id
-                document.getElementById('mySessionIndicator').innerHTML = 
-                    `🔍 Mon visitor_id: <code style="font-size: 0.7rem;">${adminVisitorId || 'aucun'}</code><br>
-                     🔍 Ma session: <code style="font-size: 0.7rem;">${adminSessionId.substring(0, 8)}...</code>`;
-                
-                await loadDashboard();
+                await proceedWithSession(session);
                 
             } catch (e) {
                 console.error('Init error:', e);
                 showError('Erreur d\'initialisation: ' + e.message);
             }
+        }
+
+        async function adminLogin() {
+            const email = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const btn = document.getElementById('loginBtn');
+            const errDiv = document.getElementById('loginError');
+
+            errDiv.style.display = 'none';
+            btn.disabled = true;
+            btn.textContent = 'Connexion...';
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                document.getElementById('loginForm').style.display = 'none';
+                await proceedWithSession(data.session);
+            } catch(e) {
+                errDiv.textContent = e.message || 'Erreur de connexion';
+                errDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Se connecter';
+            }
+        }
+
+        async function proceedWithSession(session) {
+            currentUser = session.user;
+
+            // 🔐 Vérifier que l'utilisateur est bien l'admin
+            if (currentUser.email !== CONFIG.ADMIN_EMAIL) {
+                document.body.innerHTML = `
+                    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:1rem;font-family:Georgia,serif;">
+                        <div style="font-size:3rem;">🚫</div>
+                        <h2 style="color:#e74c3c;">Accès refusé</h2>
+                        <p style="color:#aaa;">Vous n'êtes pas autorisé à accéder au dashboard admin.</p>
+                        <a href="index.html" style="color:#5a7a8a;">← Retour à Palimpseste</a>
+                    </div>`;
+                return;
+            }
+
+            adminSessionId = getAdminSessionId();
+            adminVisitorId = getAdminVisitorId();
+            
+            // Afficher l'indicateur de session et visitor_id
+            document.getElementById('mySessionIndicator').innerHTML = 
+                `🔍 Mon visitor_id: <code style="font-size: 0.7rem;">${adminVisitorId || 'aucun'}</code><br>
+                 🔍 Ma session: <code style="font-size: 0.7rem;">${adminSessionId.substring(0, 8)}...</code>`;
+            
+            await loadDashboard();
         }
         
         function showError(message) {
