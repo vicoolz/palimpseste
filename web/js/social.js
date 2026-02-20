@@ -864,9 +864,9 @@ async function loadFullTextFromSource(btnOrId, sourceUrlParam, sourceTitleParam)
                 // Supprimer les éléments indésirables
                 tempDiv.querySelectorAll('table, .mw-editsection, script, style, .noprint, .reference, sup.reference, .navigation, .toc').forEach(el => el.remove());
                 
-                // Extraire le texte des paragraphes
+                // Extraire le texte des paragraphes (inclut les formats ProofRead Pages de Wikisource)
                 let text = '';
-                const paragraphs = tempDiv.querySelectorAll('p, .poem, .verse, blockquote, div.text');
+                const paragraphs = tempDiv.querySelectorAll('p, .poem, .verse, blockquote, div.text, .prp-pages-output, section, .mw-parser-output > div');
                 paragraphs.forEach(p => {
                     const t = p.textContent.trim();
                     if (t.length > 20) text += t + '\n\n';
