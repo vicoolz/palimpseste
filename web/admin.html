@@ -427,9 +427,43 @@
             return localStorage.getItem('palimpseste_visitor_id');
         }
         
+        function setDashboardVisible(visible) {
+            const sections = document.querySelectorAll('.stats-grid, .section');
+            sections.forEach(section => {
+                section.style.display = visible ? '' : 'none';
+            });
+            const refreshBtn = document.querySelector('.refresh-btn');
+            if (refreshBtn) {
+                refreshBtn.style.display = visible ? '' : 'none';
+            }
+        }
+
+        function showLoginForm(message) {
+            setDashboardVisible(false);
+            const form = document.getElementById('loginForm');
+            const errDiv = document.getElementById('loginError');
+            if (form) form.style.display = 'block';
+            if (errDiv) {
+                if (message) {
+                    errDiv.textContent = message;
+                    errDiv.style.display = 'block';
+                } else {
+                    errDiv.style.display = 'none';
+                }
+            }
+        }
+
+        function hideLoginForm() {
+            const form = document.getElementById('loginForm');
+            const errDiv = document.getElementById('loginError');
+            if (form) form.style.display = 'none';
+            if (errDiv) errDiv.style.display = 'none';
+        }
+
         // Initialisation
         async function init() {
             try {
+                setDashboardVisible(false);
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 
                 // Vérifier l'authentification (getSession peut échouer sur mobile avec Tracking Prevention)
@@ -442,8 +476,7 @@
                 }
 
                 if (!session) {
-                    // Afficher le formulaire de connexion
-                    document.getElementById('loginForm').style.display = 'block';
+                    showLoginForm();
                     return;
                 }
                 
@@ -452,6 +485,7 @@
             } catch (e) {
                 console.error('Init error:', e);
                 showError('Erreur d\'initialisation: ' + e.message);
+                showLoginForm('Erreur d\'initialisation. Réessayez.');
             }
         }
 
@@ -462,13 +496,18 @@
             const errDiv = document.getElementById('loginError');
 
             errDiv.style.display = 'none';
+            if (!email || !password) {
+                errDiv.textContent = 'Veuillez renseigner email et mot de passe.';
+                errDiv.style.display = 'block';
+                return;
+            }
             btn.disabled = true;
             btn.textContent = 'Connexion...';
 
             try {
                 const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
                 if (error) throw error;
-                document.getElementById('loginForm').style.display = 'none';
+                hideLoginForm();
                 await proceedWithSession(data.session);
             } catch(e) {
                 errDiv.textContent = e.message || 'Erreur de connexion';
@@ -483,13 +522,13 @@
 
             // 🔐 Vérifier que l'utilisateur est bien l'admin
             if (currentUser.email !== CONFIG.ADMIN_EMAIL) {
-                document.body.innerHTML = `
-                    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:1rem;font-family:Georgia,serif;">
-                        <div style="font-size:3rem;">🚫</div>
-                        <h2 style="color:#e74c3c;">Accès refusé</h2>
-                        <p style="color:#aaa;">Vous n'êtes pas autorisé à accéder au dashboard admin.</p>
-                        <a href="index.html" style="color:#5a7a8a;">← Retour à Palimpseste</a>
-                    </div>`;
+                showError('Accès refusé. Connectez-vous avec le compte admin.');
+                try {
+                    await supabaseClient.auth.signOut();
+                } catch (e) {
+                    console.warn('SignOut failed:', e);
+                }
+                showLoginForm('Accès refusé. Veuillez vous reconnecter.');
                 return;
             }
 
@@ -501,6 +540,8 @@
                 `🔍 Mon visitor_id: <code style="font-size: 0.7rem;">${adminVisitorId || 'aucun'}</code><br>
                  🔍 Ma session: <code style="font-size: 0.7rem;">${adminSessionId.substring(0, 8)}...</code>`;
             
+            hideLoginForm();
+            setDashboardVisible(true);
             await loadDashboard();
         }
         
