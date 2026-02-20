@@ -227,3 +227,27 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Donner accès à la fonction aux utilisateurs authentifiés (pour le dashboard admin)
 GRANT EXECUTE ON FUNCTION get_analytics_stats() TO authenticated;
+
+-- Fonction : Liste des utilisateurs (date d'inscription + dernière connexion)
+CREATE OR REPLACE FUNCTION get_admin_users(limit_count INTEGER DEFAULT 20)
+RETURNS TABLE (
+    id UUID,
+    email TEXT,
+    created_at TIMESTAMP WITH TIME ZONE,
+    last_sign_in_at TIMESTAMP WITH TIME ZONE,
+    username TEXT
+) AS $$
+    SELECT
+        u.id,
+        u.email,
+        u.created_at,
+        u.last_sign_in_at,
+        p.username
+    FROM auth.users u
+    LEFT JOIN profiles p ON p.id = u.id
+    WHERE auth.jwt() ->> 'email' = 'VOTRE_EMAIL@example.com'
+    ORDER BY u.created_at DESC
+    LIMIT COALESCE(limit_count, 20);
+$$ LANGUAGE sql SECURITY DEFINER SET search_path = public, auth;
+
+GRANT EXECUTE ON FUNCTION get_admin_users(INTEGER) TO authenticated;

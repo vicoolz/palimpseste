@@ -248,6 +248,15 @@
             border-radius: 8px;
             color: var(--text-muted);
         }
+
+        .mask-indicator {
+            background: rgba(26, 188, 156, 0.12);
+            border-left: 3px solid #1abc9c;
+            padding: 8px 12px;
+            margin-bottom: 1rem;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+        }
     </style>
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -309,7 +318,7 @@
     </div>
     
     <div class="section">
-        <h2>👻 Visiteurs anonymes (dernière heure)</h2>
+        <h2>👻 Visiteurs anonymes (50 dernières activités)</h2>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
             <strong>visitor_id</strong> = même navigateur (persiste)<br>
             <strong>session_id</strong> = même onglet (temporaire)<br>
@@ -338,6 +347,9 @@
         <h2>📜 Événements récents</h2>
         <div id="myActivitySummary" style="background: rgba(243, 156, 18, 0.1); border-left: 3px solid #f39c12; padding: 10px 15px; margin-bottom: 1rem; border-radius: 0 8px 8px 0; display: none;">
             <!-- Résumé de mon activité -->
+        </div>
+        <div id="maskIndicator" class="mask-indicator" style="display: none;">
+            🙈 Vos événements sont masqués. Les autres restent visibles.
         </div>
         <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
             <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
@@ -381,7 +393,8 @@
         
         // Générer/récupérer l'ID de session admin
         function getAdminSessionId() {
-            let sessionId = sessionStorage.getItem('admin_session_id');
+            let sessionId = sessionStorage.getItem('palimpseste_session_id') ||
+                sessionStorage.getItem('admin_session_id');
             if (!sessionId) {
                 sessionId = crypto.randomUUID ? crypto.randomUUID() : 
                     'admin-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
@@ -556,20 +569,17 @@
             const container = document.getElementById('anonymousVisitorsContainer');
             
             try {
-                const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-                
                 const { data: events, error } = await supabaseClient
                     .from('analytics_events')
                     .select('session_id, user_agent, created_at, event_type, event_data')
-                    .gte('created_at', oneHourAgo)
                     .is('user_id', null)
-                    .order('created_at', { ascending: false });
+                    .order('created_at', { ascending: false })
+                    .limit(50);
                 
                 if (error) throw error;
                 
-                // Grouper par session_id ET extraire visitor_id
+                // Grouper par session_id puis agréger par visitor_id
                 const sessionMap = new Map();
-                const visitorToSessions = new Map(); // Pour regrouper les sessions du même visiteur
                 
                 (events || []).forEach(e => {
                     if (!e.session_id) return;
@@ -600,21 +610,51 @@
                     session.events.push({ type: e.event_type, data: e.event_data });
                 });
                 
-                // Compter combien de sessions par visitor_id
+                const visitorMap = new Map();
+                const fallbackSessions = [];
+                
                 sessionMap.forEach(session => {
-                    if (session.visitor_id) {
-                        if (!visitorToSessions.has(session.visitor_id)) {
-                            visitorToSessions.set(session.visitor_id, []);
-                        }
-                        visitorToSessions.get(session.visitor_id).push(session.session_id);
+                    if (!session.visitor_id) {
+                        fallbackSessions.push(session);
+                        return;
+                    }
+                    
+                    if (!visitorMap.has(session.visitor_id)) {
+                        visitorMap.set(session.visitor_id, {
+                            visitor_id: session.visitor_id,
+                            sessions: [],
+                            event_count: 0,
+                            events: [],
+                            first_seen: session.first_seen,
+                            last_seen: session.last_seen,
+                            user_agent: session.user_agent,
+                            is_me: false
+                        });
+                    }
+                    
+                    const visitor = visitorMap.get(session.visitor_id);
+                    visitor.sessions.push(session);
+                    visitor.event_count += session.event_count;
+                    visitor.events = visitor.events.concat(session.events);
+                    if (new Date(session.first_seen) < new Date(visitor.first_seen)) {
+                        visitor.first_seen = session.first_seen;
+                    }
+                    if (new Date(session.last_seen) > new Date(visitor.last_seen)) {
+                        visitor.last_seen = session.last_seen;
+                        visitor.user_agent = session.user_agent;
+                    }
+                    if (session.session_id === adminSessionId) {
+                        visitor.is_me = true;
                     }
                 });
                 
-                const sessions = Array.from(sessionMap.values())
+                const visitors = Array.from(visitorMap.values())
+                    .sort((a, b) => new Date(b.last_seen) - new Date(a.last_seen));
+                const sessions = fallbackSessions
                     .sort((a, b) => new Date(b.last_seen) - new Date(a.last_seen));
                 
-                if (sessions.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-muted)">Aucun visiteur anonyme dans la dernière heure</p>';
+                if (visitors.length === 0 && sessions.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted)">Aucun visiteur anonyme récent</p>';
                     return;
                 }
                 
@@ -627,24 +667,57 @@
                     <th>Activité</th>
                 </tr></thead><tbody>`;
                 
+                visitors.forEach(visitor => {
+                    const lastSeenDate = new Date(visitor.last_seen).toLocaleString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    const deviceInfo = parseUserAgent(visitor.user_agent);
+                    const visitorShort = visitor.visitor_id.substring(0, 10);
+                    const sessionsCount = visitor.sessions.length;
+                    const sessionList = visitor.sessions
+                        .map(s => `<span class="session-fingerprint" title="Session (cet onglet)">${s.session_id.substring(0, 8)}...</span>`)
+                        .join(' ');
+                    
+                    // Résumé des activités (agrégé)
+                    const activitySummary = summarizeActivity(visitor.events);
+                    
+                    html += `<tr class="${visitor.is_me ? 'session-row-me' : ''}">
+                        <td>
+                            <span class="session-fingerprint" title="Visiteur unique (même navigateur)">${visitorShort}...</span>
+                            ${sessionsCount > 1 ? `<small style="color: var(--accent);">(${sessionsCount} sessions)</small>` : ''}
+                        </td>
+                        <td>
+                            <div>${sessionList}</div>
+                            ${visitor.is_me ? '<span class="badge badge-me">👤 MOI</span>' : ''}
+                        </td>
+                        <td class="device-info">${deviceInfo}</td>
+                        <td>${visitor.event_count} events</td>
+                        <td>${lastSeenDate}</td>
+                        <td>${activitySummary}</td>
+                    </tr>`;
+                });
+                
                 sessions.forEach(session => {
                     const isMe = session.session_id === adminSessionId;
-                    const minutesAgo = Math.round((Date.now() - new Date(session.last_seen)) / 60000);
+                    const lastSeenDate = new Date(session.last_seen).toLocaleString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
                     const deviceInfo = parseUserAgent(session.user_agent);
                     const sessionShort = session.session_id.substring(0, 8);
-                    const visitorShort = session.visitor_id ? session.visitor_id.substring(0, 10) : '-';
                     
-                    // Nombre de sessions pour ce visiteur
-                    const sessionsCount = session.visitor_id ? 
-                        visitorToSessions.get(session.visitor_id)?.length || 1 : 1;
-                    
-                    // Résumé des activités
                     const activitySummary = summarizeActivity(session.events);
                     
                     html += `<tr class="${isMe ? 'session-row-me' : ''}">
                         <td>
-                            <span class="session-fingerprint" title="Visiteur unique (même navigateur)">${visitorShort}...</span>
-                            ${sessionsCount > 1 ? `<small style="color: var(--accent);">(${sessionsCount} sessions)</small>` : ''}
+                            <span class="badge badge-anon" style="background: #95a5a633; color: #95a5a6;">Session seule</span>
                         </td>
                         <td>
                             <span class="session-fingerprint" title="Session (cet onglet)">${sessionShort}...</span>
@@ -652,17 +725,17 @@
                         </td>
                         <td class="device-info">${deviceInfo}</td>
                         <td>${session.event_count} events</td>
-                        <td>Il y a ${minutesAgo} min</td>
+                        <td>${lastSeenDate}</td>
                         <td>${activitySummary}</td>
                     </tr>`;
                 });
                 
-                // Compter les visiteurs uniques
-                const uniqueVisitorCount = new Set(sessions.map(s => s.visitor_id || s.session_id)).size;
+                const totalSessions = sessionMap.size;
+                const uniqueVisitorCount = visitors.length + sessions.length;
                 
                 html += '</tbody></table>';
                 html += `<p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text);">
-                    📊 <strong>${sessions.length}</strong> session(s) active(s) • 
+                    📊 <strong>${totalSessions}</strong> session(s) récentes • 
                     👤 <strong>${uniqueVisitorCount}</strong> visiteur(s) unique(s)
                 </p>`;
                 html += `<div class="activity-legend">
@@ -855,24 +928,41 @@
             const container = document.getElementById('newUsersContainer');
             
             try {
-                // Récupérer les profils triés par date de création
-                const { data: profiles, error } = await supabaseClient
-                    .from('profiles')
-                    .select('id, username, created_at')
-                    .order('created_at', { ascending: false })
-                    .limit(20);
-                
-                if (error) throw error;
-                
-                if (!profiles || profiles.length === 0) {
+                let users = null;
+                let useAuth = false;
+
+                // Récupérer les utilisateurs depuis auth.users (RPC admin)
+                try {
+                    const { data: authUsers, error: authError } = await supabaseClient
+                        .rpc('get_admin_users', { limit_count: 20 });
+                    if (!authError && authUsers && authUsers.length > 0) {
+                        users = authUsers;
+                        useAuth = true;
+                    }
+                } catch (rpcError) {
+                    console.warn('RPC get_admin_users indisponible:', rpcError);
+                }
+
+                // Fallback : profils
+                if (!users) {
+                    const { data: profiles, error } = await supabaseClient
+                        .from('profiles')
+                        .select('id, username, created_at')
+                        .order('created_at', { ascending: false })
+                        .limit(20);
+                    if (error) throw error;
+                    users = profiles || [];
+                }
+
+                if (!users || users.length === 0) {
                     container.innerHTML = '<p style="color: var(--text-muted)">Aucun utilisateur inscrit</p>';
                     return;
                 }
-                
-                let html = '<table><thead><tr><th>Utilisateur</th><th>Date d\'inscription</th><th>Ancienneté</th></tr></thead><tbody>';
-                
-                profiles.forEach(profile => {
-                    const createdAt = new Date(profile.created_at);
+
+                let html = '<table><thead><tr><th>Utilisateur</th><th>Date d\'inscription</th><th>Ancienneté</th><th>Dernière connexion</th></tr></thead><tbody>';
+
+                users.forEach(user => {
+                    const createdAt = new Date(user.created_at);
                     const dateStr = createdAt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
                     const daysAgo = Math.floor((Date.now() - createdAt) / (1000 * 60 * 60 * 24));
                     let anciennete = '';
@@ -887,11 +977,17 @@
                     } else {
                         anciennete = `Il y a ${Math.floor(daysAgo / 30)} mois`;
                     }
-                    
+
+                    const username = user.username || (user.email ? user.email.split('@')[0] : 'Utilisateur');
+                    const lastSignIn = useAuth && user.last_sign_in_at
+                        ? new Date(user.last_sign_in_at).toLocaleString('fr-FR')
+                        : (useAuth ? 'Jamais' : '-');
+
                     html += `<tr>
-                        <td><strong>${escapeHtml(profile.username)}</strong></td>
+                        <td><strong>${escapeHtml(username)}</strong></td>
                         <td>${dateStr}</td>
                         <td>${anciennete}</td>
+                        <td>${lastSignIn}</td>
                     </tr>`;
                 });
                 
@@ -912,7 +1008,7 @@
                     .from('analytics_events')
                     .select('*')
                     .order('created_at', { ascending: false })
-                    .limit(100);
+                    .limit(500);
                 
                 if (error) throw error;
                 
@@ -936,9 +1032,17 @@
             if (summaryDiv) {
                 summaryDiv.style.display = hideMyEvents ? 'block' : 'none';
             }
+
+            const maskIndicator = document.getElementById('maskIndicator');
+            if (maskIndicator) {
+                maskIndicator.style.display = hideMyEvents ? 'block' : 'none';
+            }
             
             if (events.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-muted)">Aucun événement (hors les vôtres)</p>';
+                const emptyText = hideMyEvents
+                    ? 'Aucun événement (hors les vôtres)'
+                    : 'Aucun événement';
+                container.innerHTML = `<p style="color: var(--text-muted)">${emptyText}</p>`;
                 return;
             }
             
@@ -953,7 +1057,7 @@
         function renderDetailedEvents(events, container) {
             let html = '<table><thead><tr><th>Date</th><th>Type</th><th>Utilisateur</th><th>Détails</th></tr></thead><tbody>';
             
-            events.slice(0, 50).forEach(event => {
+            events.forEach(event => {
                 const date = new Date(event.created_at).toLocaleString('fr-FR');
                 const badgeClass = getBadgeClass(event.event_type);
                 const details = formatEventData(event.event_data);
@@ -1014,7 +1118,7 @@
             let realVisitorCount = 0;
             let legacySessionCount = 0;
             
-            sorted.forEach(stats => {
+            sorted.slice(0, 50).forEach(stats => {
                 const isMe = stats.user_id === currentUser?.id;
                 let userDisplay = stats.username;
                 
@@ -1070,6 +1174,13 @@
         function applyFilters() {
             filterEvents(currentFilter);
         }
+
+        function isMyEvent(event) {
+            if (currentUser?.id && event.user_id === currentUser.id) return true;
+            if (adminVisitorId && event.event_data?.visitor_id === adminVisitorId) return true;
+            if (adminSessionId && event.session_id === adminSessionId) return true;
+            return false;
+        }
         
         function filterEvents(type) {
             currentFilter = type;
@@ -1094,7 +1205,7 @@
                 case 'all':
                     break;
                 case 'others':
-                    filtered = filtered.filter(e => e.user_id !== currentUser?.id);
+                    filtered = filtered.filter(e => !isMyEvent(e));
                     break;
                 case 'search':
                 case 'share':
@@ -1104,21 +1215,11 @@
             
             // Masquer mes événements si coché
             if (hideMyEvents) {
-                filtered = filtered.filter(e => {
-                    // Si connecté, filtrer par user_id
-                    if (currentUser?.id && e.user_id === currentUser.id) {
-                        return false;
-                    }
-                    // Sinon, filtrer par visitor_id (navigateur)
-                    if (adminVisitorId && e.event_data?.visitor_id === adminVisitorId) {
-                        return false;
-                    }
-                    // Fallback: filtrer par session_id
-                    if (adminSessionId && e.session_id === adminSessionId) {
-                        return false;
-                    }
-                    return true;
-                });
+                filtered = filtered.filter(e => !isMyEvent(e));
+            }
+
+            if (type === 'all' && hideMyEvents && !aggregateMode) {
+                filtered = filtered.slice(0, 100);
             }
             
             renderEvents(filtered);
