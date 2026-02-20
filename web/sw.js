@@ -5,7 +5,7 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-const CACHE_VERSION = 'palimpseste-v4';
+const CACHE_VERSION = 'palimpseste-v5';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const API_CACHE = CACHE_VERSION + '-api';
 
@@ -13,10 +13,12 @@ const API_CACHE = CACHE_VERSION + '-api';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
+    '/admin.html',
     '/css/variables.css',
     '/css/base.css',
     '/css/styles.css',
     '/css/mobile.css',
+    '/js/config.js',
     '/manifest.json',
     '/icons/icon-192.svg',
     '/icons/icon-512.svg'
